@@ -32,5 +32,10 @@ build/
 ### VS Code ###
 .vscode/
 
-### Personal ####
-./hidden
+### Personal ###
+hidden/
+src/main/resources/application-local.properties
+
+### Local env ###
+.env
+.env.*

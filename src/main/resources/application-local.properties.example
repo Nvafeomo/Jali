@@ -1,0 +1,7 @@
+# Copy to application-local.properties and fill in your Neo4j Aura credentials.
+spring.neo4j.uri=neo4j+s://YOUR_INSTANCE.databases.neo4j.io
+spring.neo4j.authentication.username=YOUR_USERNAME
+spring.neo4j.authentication.password=YOUR_PASSWORD
+
+# Optional: load 4-generation Mandinka sample tree (familyTreeId 999001)
+# jali.graph.seed.enabled=true
