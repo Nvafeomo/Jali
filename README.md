@@ -50,6 +50,14 @@ flowchart TB
     CONF --> NEO
 ```
 
+### Why dual-database?
+
+PostgreSQL handles identity and tenancy — users, family tree ownership, billing, and access control. These are relational problems: a user has one account, owns one tree, and that maps naturally to rows and foreign keys.
+
+Neo4j handles the family graph because a family tree is fundamentally a graph problem, not a relational one. Finding all ancestors 10 generations back in PostgreSQL requires 10 recursive self-joins — cost grows with every degree of separation. In Neo4j, relationships are stored as direct pointers between nodes (index-free adjacency), so traversing from person to person is a constant-time operation regardless of depth. The query `MATCH (p:Person)-[:PARENT_OF*1..10]->(ancestor)` is idiomatic and fast; the SQL equivalent is neither.
+
+The complexity cost of running two databases is real. It's justified here because the core product feature — deep lineage traversal with confidence-weighted paths — is a graph problem that a relational database solves poorly at scale.
+
 ### Package layout
 
 ```
@@ -92,7 +100,7 @@ com.jali/
 
 - Java 21
 - Docker (for local Postgres)
-- Neo4j Aura instance ([neo4j.com/cloud](https://neo4j.com/cloud/aura/))
+- Neo4j AuraDB Free instance ([neo4j.com/cloud/aura](https://neo4j.com/cloud/aura/)) — free tier, no credit card required
 
 ---
 
@@ -194,7 +202,6 @@ query {
 **Nvafeomo K. Konneh**
 
 - **Email:** [nvafeomo05@gmail.com](mailto:nvafeomo05@gmail.com)
-- **Phone:** 267-461-8268
 - **LinkedIn:** [Nvafeomo Konneh](https://www.linkedin.com/in/nvafeomo-konneh-a6a1a9367)
 
 ---
