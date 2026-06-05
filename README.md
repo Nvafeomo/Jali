@@ -1,6 +1,6 @@
 # Jali
 
-**Jali** is a family heritage platform for preserving lineage across generations — built for oral history, probabilistic confidence on relationships, and diaspora family trees.
+**Jali** is a family heritage platform for preserving lineage across generations. It's built for oral history, probabilistic confidence on relationships, and diaspora family trees.
 
 > *Jali* (Mandinka): the griot — keeper of oral history, memory, and family lineage.
 
