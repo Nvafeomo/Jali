@@ -39,3 +39,6 @@ src/main/resources/application-local.properties
 ### Local env ###
 .env
 .env.*
+
+### Local API test payloads (curl/PowerShell debugging) ###
+/*.json
