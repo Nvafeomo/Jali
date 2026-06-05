@@ -9,13 +9,19 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Arrays;
+
+import com.jali.dto.AddEvidenceRequest;
 import com.jali.dto.CreateRelationshipRequest;
+import com.jali.dto.PersonResponse;
+import com.jali.neo4j.EvidenceType;
 import com.jali.neo4j.MarriedToRelationship;
 import com.jali.neo4j.ParentOfRelationship;
 import com.jali.neo4j.Person;
 import com.jali.neo4j.SiblingOfRelationship;
 import com.jali.repository.neo4j.PersonRepository;
 import com.jali.security.UserPrincipal;
+import com.jali.service.ConfidenceScoreService;
 import com.jali.service.PersonGraphService;
 
 import jakarta.validation.Valid;
@@ -26,10 +32,15 @@ public class RelationshipController {
 
 	private final PersonGraphService personGraphService;
 	private final PersonRepository personRepository;
+	private final ConfidenceScoreService confidenceScoreService;
 
-	public RelationshipController(PersonGraphService personGraphService, PersonRepository personRepository) {
+	public RelationshipController(
+			PersonGraphService personGraphService,
+			PersonRepository personRepository,
+			ConfidenceScoreService confidenceScoreService) {
 		this.personGraphService = personGraphService;
 		this.personRepository = personRepository;
+		this.confidenceScoreService = confidenceScoreService;
 	}
 
 	@PostMapping
@@ -64,5 +75,31 @@ public class RelationshipController {
 		}
 
 		personRepository.save(from);
+	}
+
+	@PostMapping("/evidence")
+	@ResponseStatus(HttpStatus.OK)
+	public PersonResponse addEvidence(
+			@Valid @RequestBody AddEvidenceRequest request,
+			@AuthenticationPrincipal UserPrincipal principal) {
+
+		EvidenceType evidenceType;
+		try {
+			evidenceType = EvidenceType.valueOf(request.evidenceType().toUpperCase());
+		}
+		catch (IllegalArgumentException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Unknown evidence type. Valid types: " + Arrays.toString(EvidenceType.values()));
+		}
+
+		Person updated = confidenceScoreService.addEvidenceToRelationship(
+				request.fromUuid(),
+				request.toUuid(),
+				request.relationshipType(),
+				evidenceType,
+				request.source(),
+				principal.familyTreeId());
+
+		return PersonResponse.from(updated);
 	}
 }

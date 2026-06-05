@@ -1,0 +1,43 @@
+type Query {
+	person(uuid: String!): Person
+	myTree: [Person]
+	ancestors(uuid: String!, depth: Int = 4): [Person]
+	descendants(uuid: String!, depth: Int = 4): [Person]
+}
+
+type Mutation {
+	createPerson(input: CreatePersonInput!): Person
+	createRelationship(fromUuid: String!, toUuid: String!, relationshipType: String!): Boolean
+	addEvidence(fromUuid: String!, toUuid: String!, relationshipType: String!, evidenceType: String!, source: String): Person
+}
+
+type Person {
+	uuid: String
+	fullName: String
+	birthDate: String
+	deathDate: String
+	birthplace: String
+	ethnicGroup: String
+	biologicalSex: String
+	confidenceScore: Float
+	isUnknownPlaceholder: Boolean
+	children: [PersonEdge]
+	spouses: [PersonEdge]
+	siblings: [PersonEdge]
+}
+
+type PersonEdge {
+	person: Person
+	confidenceScore: Float
+	disputed: Boolean
+}
+
+input CreatePersonInput {
+	fullName: String!
+	birthDate: String
+	deathDate: String
+	birthplace: String
+	ethnicGroup: String
+	biologicalSex: String
+	isUnknownPlaceholder: Boolean
+}
