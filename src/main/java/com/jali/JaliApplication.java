@@ -10,8 +10,8 @@ import com.jali.config.JwtProperties;
 
 @SpringBootApplication
 @EnableConfigurationProperties(JwtProperties.class)
-@EnableJpaRepositories(basePackages = "com.jali.repository")
-@EnableNeo4jRepositories(basePackages = "com.jali.repository")
+@EnableJpaRepositories(basePackages = "com.jali.repository.jpa", transactionManagerRef = "transactionManager")
+@EnableNeo4jRepositories(basePackages = "com.jali.repository.neo4j", transactionManagerRef = "neo4jTransactionManager")
 public class JaliApplication {
 
 	public static void main(String[] args) {
@@ -19,3 +19,4 @@ public class JaliApplication {
 	}
 
 }
+		

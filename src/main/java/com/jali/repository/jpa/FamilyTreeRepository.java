@@ -1,4 +1,4 @@
-package com.jali.repository;
+package com.jali.repository.jpa;
 
 import java.util.Optional;
 

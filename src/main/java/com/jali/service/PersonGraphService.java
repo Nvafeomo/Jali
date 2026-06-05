@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.jali.neo4j.Person;
-import com.jali.repository.PersonRepository;
+import com.jali.repository.neo4j.PersonRepository;
 
 @Service
 public class PersonGraphService {

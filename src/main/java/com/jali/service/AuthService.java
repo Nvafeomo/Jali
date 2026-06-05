@@ -12,8 +12,8 @@ import com.jali.dto.RegisterRequest;
 import com.jali.entity.FamilyTree;
 import com.jali.entity.Role;
 import com.jali.entity.User;
-import com.jali.repository.FamilyTreeRepository;
-import com.jali.repository.UserRepository;
+import com.jali.repository.jpa.FamilyTreeRepository;
+import com.jali.repository.jpa.UserRepository;
 import com.jali.security.JwtService;
 
 @Service

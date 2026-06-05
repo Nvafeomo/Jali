@@ -1,4 +1,4 @@
-package com.jali.repository;
+package com.jali.repository.neo4j;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,7 +18,7 @@ import com.jali.neo4j.ParentOfRelationship;
 import com.jali.neo4j.Person;
 
 @DataNeo4jTest
-@EnableNeo4jRepositories(basePackages = "com.jali.repository")
+@EnableNeo4jRepositories(basePackages = "com.jali.repository.neo4j")
 @Testcontainers(disabledWithoutDocker = true)
 class PersonRepositoryTest {
 
