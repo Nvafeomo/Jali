@@ -36,28 +36,6 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 			@Param("familyTreeId") Long familyTreeId);
 
 	@Query("""
-			MATCH (start:Person {uuid: $uuid, familyTreeId: $familyTreeId})
-			MATCH (ancestor:Person)-[:PARENT_OF*1..$depth]->(start)
-			WHERE ancestor.familyTreeId = $familyTreeId
-			RETURN DISTINCT ancestor
-			""")
-	List<Person> findAncestors(
-			@Param("uuid") String uuid,
-			@Param("familyTreeId") Long familyTreeId,
-			@Param("depth") int depth);
-
-	@Query("""
-			MATCH (start:Person {uuid: $uuid, familyTreeId: $familyTreeId})
-			MATCH (start)-[:PARENT_OF*1..$depth]->(descendant:Person)
-			WHERE descendant.familyTreeId = $familyTreeId
-			RETURN DISTINCT descendant
-			""")
-	List<Person> findDescendants(
-			@Param("uuid") String uuid,
-			@Param("familyTreeId") Long familyTreeId,
-			@Param("depth") int depth);
-
-	@Query("""
 			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
 			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
 			RETURN EXISTS { (to)-[:PARENT_OF*]->(from) }

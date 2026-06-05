@@ -86,8 +86,7 @@ public class PersonController {
 			@RequestParam(defaultValue = "4") int depth,
 			@AuthenticationPrincipal UserPrincipal principal) {
 
-		personGraphService.requireInTree(uuid, principal.familyTreeId());
-		return personRepository.findAncestors(uuid, principal.familyTreeId(), depth)
+		return personGraphService.findAncestors(uuid, principal.familyTreeId(), depth)
 				.stream()
 				.map(PersonResponse::from)
 				.toList();
@@ -99,8 +98,7 @@ public class PersonController {
 			@RequestParam(defaultValue = "4") int depth,
 			@AuthenticationPrincipal UserPrincipal principal) {
 
-		personGraphService.requireInTree(uuid, principal.familyTreeId());
-		return personRepository.findDescendants(uuid, principal.familyTreeId(), depth)
+		return personGraphService.findDescendants(uuid, principal.familyTreeId(), depth)
 				.stream()
 				.map(PersonResponse::from)
 				.toList();

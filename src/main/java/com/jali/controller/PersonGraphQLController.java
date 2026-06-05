@@ -55,8 +55,7 @@ public class PersonGraphQLController {
 			@Argument Integer depth,
 			@AuthenticationPrincipal UserPrincipal principal) {
 		int resolvedDepth = depth != null ? depth : 4;
-		personGraphService.requireInTree(uuid, principal.familyTreeId());
-		return personRepository.findAncestors(uuid, principal.familyTreeId(), resolvedDepth);
+		return personGraphService.findAncestors(uuid, principal.familyTreeId(), resolvedDepth);
 	}
 
 	@QueryMapping
@@ -65,8 +64,7 @@ public class PersonGraphQLController {
 			@Argument Integer depth,
 			@AuthenticationPrincipal UserPrincipal principal) {
 		int resolvedDepth = depth != null ? depth : 4;
-		personGraphService.requireInTree(uuid, principal.familyTreeId());
-		return personRepository.findDescendants(uuid, principal.familyTreeId(), resolvedDepth);
+		return personGraphService.findDescendants(uuid, principal.familyTreeId(), resolvedDepth);
 	}
 
 	@MutationMapping

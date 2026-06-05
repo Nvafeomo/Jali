@@ -24,9 +24,11 @@ flowchart TB
         AUTH[AuthController / AuthService]
         PC[PersonController]
         RC[RelationshipController]
+        VMC[VoiceMemoController]
         GQC[PersonGraphQLController]
         CONF[ConfidenceScoreService]
         PGS[PersonGraphService]
+        VMS[VoiceMemoService]
     end
 
     subgraph data [Data layer]
@@ -39,11 +41,14 @@ flowchart TB
     SEC --> AUTH
     SEC --> PC
     SEC --> RC
+    SEC --> VMC
     SEC --> GQC
     AUTH --> JPA
     PC --> PGS
     RC --> PGS
     RC --> CONF
+    VMC --> VMS
+    VMS --> NEO
     GQC --> PGS
     GQC --> CONF
     PGS --> NEO
@@ -156,6 +161,30 @@ All other endpoints require: `Authorization: Bearer <token>`
 | POST | `/relationships` | Link two people |
 | POST | `/relationships/evidence` | Add evidence to an edge |
 
+### Voice memos (JWT)
+
+Oral history pipeline: upload audio → Whisper transcription → user review → Claude extraction → apply to graph.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/voice-memos` | Upload audio (`multipart/form-data`: `file`, optional `anchorPersonUuid`) |
+| GET | `/voice-memos/{uuid}` | Get memo status, transcript, applied changes |
+| PATCH | `/voice-memos/{uuid}/transcript` | Edit transcript before confirm (`application/json` body: raw string) |
+| POST | `/voice-memos/{uuid}/confirm` | Run Claude extraction and apply suggestions |
+| POST | `/voice-memos/{uuid}/undo` | Undo within 24 hours of confirm |
+
+**Status lifecycle:** `PENDING_TRANSCRIPTION` → `PENDING_REVIEW` → `APPLIED` (or `FAILED`). Undo sets `UNDONE`.
+
+**Frontend flow (suggest + confirm):** Treat voice memos as *proposals*, not automatic truth.
+
+1. Upload with optional `anchorPersonUuid` (recommended — helps pronoun resolution).
+2. Poll `GET /voice-memos/{uuid}` until `status` is `PENDING_REVIEW` or `FAILED`.
+3. Show `transcript` to the user; let them **edit** via `PATCH .../transcript` (fix misheard or ambiguous names).
+4. On confirm, show `mentionedPeople` and `appliedChangesJson` — nothing creates new relationships; evidence only applies to **existing** edges.
+5. Offer undo while `status` is `APPLIED` and within 24 hours.
+
+Requires `openai.api.key` and `anthropic.api.key` in `application-local.properties` (see example file).
+
 ### GraphQL
 
 - Endpoint: `POST /graphql`
@@ -187,12 +216,44 @@ query {
 
 ---
 
+## Frontend development
+
+CORS is enabled for local Vite/React dev servers. Default allowed origins:
+
+- `http://localhost:5173` (Vite)
+- `http://localhost:3000` (Create React App)
+
+Override in `application.properties`:
+
+```properties
+jali.cors.allowed-origins=http://localhost:5173,http://localhost:3000
+```
+
+Send the JWT on every API call:
+
+```
+Authorization: Bearer <token>
+```
+
+For GraphQL from the browser, `POST /graphql` with the same header. GraphiQL remains public at `/graphiql` for manual testing.
+
+**Recommended API split for the UI:**
+
+| UI concern | API |
+|------------|-----|
+| Login / register | REST `/auth/*` |
+| Tree visualization | GraphQL `person`, `myTree` |
+| Create people / links | REST `/people`, `/relationships` |
+| Voice memos | REST `/voice-memos/*` (multipart upload via `FormData`) |
+
+---
+
 ## Configuration
 
 | File | Purpose |
 |------|---------|
-| `application.properties` | Defaults (Postgres URL, JWT, GraphiQL) |
-| `application-local.properties` | Neo4j secrets (not committed) |
+| `application.properties` | Defaults (Postgres URL, JWT, GraphiQL, CORS) |
+| `application-local.properties` | Neo4j + OpenAI + Anthropic secrets (not committed) |
 | `docker-compose.yml` | Local Postgres |
 
 ---
