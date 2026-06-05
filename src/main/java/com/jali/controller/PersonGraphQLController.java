@@ -52,19 +52,21 @@ public class PersonGraphQLController {
 	@QueryMapping
 	public List<Person> ancestors(
 			@Argument String uuid,
-			@Argument int depth,
+			@Argument Integer depth,
 			@AuthenticationPrincipal UserPrincipal principal) {
+		int resolvedDepth = depth != null ? depth : 4;
 		personGraphService.requireInTree(uuid, principal.familyTreeId());
-		return personRepository.findAncestors(uuid, principal.familyTreeId(), depth);
+		return personRepository.findAncestors(uuid, principal.familyTreeId(), resolvedDepth);
 	}
 
 	@QueryMapping
 	public List<Person> descendants(
 			@Argument String uuid,
-			@Argument int depth,
+			@Argument Integer depth,
 			@AuthenticationPrincipal UserPrincipal principal) {
+		int resolvedDepth = depth != null ? depth : 4;
 		personGraphService.requireInTree(uuid, principal.familyTreeId());
-		return personRepository.findDescendants(uuid, principal.familyTreeId(), depth);
+		return personRepository.findDescendants(uuid, principal.familyTreeId(), resolvedDepth);
 	}
 
 	@MutationMapping

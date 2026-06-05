@@ -32,6 +32,7 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/health").permitAll()
 						.requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
+						.requestMatchers("/graphiql", "/graphiql/**").permitAll()
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 						.anyRequest().authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
