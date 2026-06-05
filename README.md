@@ -189,6 +189,16 @@ query {
 
 ---
 
+## Author
+
+**Nvafeomo K. Konneh**
+
+- **Email:** [nvafeomo05@gmail.com](mailto:nvafeomo05@gmail.com)
+- **Phone:** 267-461-8268
+- **LinkedIn:** [Nvafeomo Konneh](https://www.linkedin.com/in/nvafeomo-konneh-a6a1a9367)
+
+---
+
 ## License
 
 **Proprietary — All Rights Reserved.**
