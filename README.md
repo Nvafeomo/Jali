@@ -2,7 +2,7 @@
 
 **Jali** is a family heritage platform for preserving lineage across generations. It's built for oral history, probabilistic confidence on relationships, and diaspora family trees.
 
-> *Jali* (Mandinka): the griot — keeper of oral history, memory, and family lineage.
+> *Jali* (Mandinka): the griot, keeper of oral history, memory, and family lineage.
 
 This repository is **proprietary**. See [LICENSE](LICENSE). No copying, redistribution, or commercial use without written permission.
 
@@ -57,11 +57,11 @@ flowchart TB
 
 ### Why dual-database?
 
-PostgreSQL handles identity and tenancy — users, family tree ownership, billing, and access control. These are relational problems: a user has one account, owns one tree, and that maps naturally to rows and foreign keys.
+PostgreSQL handles identity and tenancy: users, family tree ownership, billing, and access control. These are relational problems: a user has one account, owns one tree, and that maps naturally to rows and foreign keys.
 
-Neo4j handles the family graph because a family tree is fundamentally a graph problem, not a relational one. Finding all ancestors 10 generations back in PostgreSQL requires 10 recursive self-joins — cost grows with every degree of separation. In Neo4j, relationships are stored as direct pointers between nodes (index-free adjacency), so traversing from person to person is a constant-time operation regardless of depth. The query `MATCH (p:Person)-[:PARENT_OF*1..10]->(ancestor)` is idiomatic and fast; the SQL equivalent is neither.
+Neo4j handles the family graph because a family tree is fundamentally a graph problem, not a relational one. Finding all ancestors 10 generations back in PostgreSQL requires 10 recursive self-joins, and cost grows with every degree of separation. In Neo4j, relationships are stored as direct pointers between nodes (index-free adjacency), so traversing from person to person is a constant-time operation regardless of depth. The query `MATCH (p:Person)-[:PARENT_OF*1..10]->(ancestor)` is idiomatic and fast; the SQL equivalent is neither.
 
-The complexity cost of running two databases is real. It's justified here because the core product feature — deep lineage traversal with confidence-weighted paths — is a graph problem that a relational database solves poorly at scale.
+The complexity cost of running two databases is real. It's justified here because the core product feature, deep lineage traversal with confidence-weighted paths, is a graph problem that a relational database solves poorly at scale.
 
 ### Package layout
 
@@ -180,7 +180,7 @@ Oral history pipeline: upload audio → Whisper transcription → user review �
 1. Upload with optional `anchorPersonUuid` (recommended — helps pronoun resolution).
 2. Poll `GET /voice-memos/{uuid}` until `status` is `PENDING_REVIEW` or `FAILED`.
 3. Show `transcript` to the user; let them **edit** via `PATCH .../transcript` (fix misheard or ambiguous names).
-4. On confirm, show `mentionedPeople` and `appliedChangesJson` — nothing creates new relationships; evidence only applies to **existing** edges.
+4. On confirm, show `mentionedPeople` and `appliedChangesJson`. Nothing creates new relationships; evidence only applies to **existing** edges.
 5. Offer undo while `status` is `APPLIED` and within 24 hours.
 
 Requires `openai.api.key` and `anthropic.api.key` in `application-local.properties` (see example file).
@@ -273,4 +273,4 @@ For GraphQL from the browser, `POST /graphql` with the same header. GraphiQL rem
 
 Unauthorized copying, modification, distribution, or commercial use is prohibited. See [LICENSE](LICENSE) for full terms.
 
-Third-party dependencies (Spring Boot, Neo4j driver, etc.) remain under their respective open-source licenses.
+Third-party dependencies (Spring Boot, Neo4j driver, and others) remain under their respective open-source licenses.
