@@ -43,6 +43,14 @@ public class PersonGraphService {
 		return personRepository.save(person);
 	}
 
+	public List<Person> findAllInTreeWithRelationships(Long familyTreeId) {
+		return personRepository.findAllByFamilyTreeId(familyTreeId).stream()
+				.map(person -> personRepository.findById(person.getId())
+						.orElseThrow(() -> new ResponseStatusException(
+								HttpStatus.NOT_FOUND, "Person not found in this family tree")))
+				.toList();
+	}
+
 	public List<Person> findAncestors(String uuid, Long familyTreeId, int depth) {
 		requireInTree(uuid, familyTreeId);
 		int clampedDepth = clampDepth(depth);

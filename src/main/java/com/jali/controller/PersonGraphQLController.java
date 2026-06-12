@@ -46,7 +46,7 @@ public class PersonGraphQLController {
 
 	@QueryMapping
 	public List<Person> myTree(@AuthenticationPrincipal UserPrincipal principal) {
-		return personRepository.findAllByFamilyTreeId(principal.familyTreeId());
+		return personGraphService.findAllInTreeWithRelationships(principal.familyTreeId());
 	}
 
 	@QueryMapping
