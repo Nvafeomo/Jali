@@ -13,7 +13,7 @@ class PersonFieldMapperTest {
 	private final PersonFieldMapper mapper = new PersonFieldMapper();
 
 	@Test
-	void create_leavesBirthAndDeathUnsetWhenBlank() {
+	void create_leavesBlankLifeStatusUnset() {
 		Person person = new Person("Ada Konneh", 1L);
 
 		mapper.applyCreateFields(person, Map.of(
@@ -25,19 +25,21 @@ class PersonFieldMapperTest {
 	}
 
 	@Test
-	void create_normalizesUnknownDeathMarker() {
-		Person person = new Person("Ada Konneh", 1L);
+	void create_normalizesLivingAndUnknownMarkers() {
+		Person alive = new Person("Ada Konneh", 1L);
+		mapper.applyCreateFields(alive, Map.of("deathDate", " Living "));
+		assertThat(alive.getDeathDate()).isEqualTo("living");
 
-		mapper.applyCreateFields(person, Map.of("deathDate", " Unknown "));
-
-		assertThat(person.getDeathDate()).isEqualTo("unknown");
+		Person deceased = new Person("Bob", 1L);
+		mapper.applyCreateFields(deceased, Map.of("deathDate", " Unknown "));
+		assertThat(deceased.getDeathDate()).isEqualTo("unknown");
 	}
 
 	@Test
-	void update_livingClearsDeathYear() {
+	void update_clearsLifeStatusWhenBlank() {
 		Person person = new Person("Ada Konneh", 1L);
 		person.setBirthDate("1952");
-		person.setDeathDate("2018");
+		person.setDeathDate("living");
 
 		mapper.applyUpdateFields(person, Map.of(
 				"birthDate", "",

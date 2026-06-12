@@ -55,3 +55,48 @@
   color: var(--jali-text-subtle);
   line-height: 1.4;
 }
+
+.toggleGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.toggle,
+.toggleActive {
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--jali-radius-sm);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--jali-border);
+  background: var(--jali-bg);
+  color: var(--jali-text-muted);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.toggle:hover {
+  border-color: var(--jali-text-subtle);
+  color: var(--jali-text);
+}
+
+.toggleActive {
+  background: var(--jali-accent);
+  border-color: var(--jali-accent);
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.subLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--jali-text);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--jali-text-subtle);
+}

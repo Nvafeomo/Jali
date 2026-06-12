@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Person, StoryMemory } from '../../types';
 import {
   formatBirthDisplay,
-  formatDeathDisplay,
+  formatLifeStatusDisplay,
   isLiving,
 } from '../../utils/vitalYears';
 import LinkRelationshipForm from './LinkRelationshipForm';
@@ -148,7 +148,7 @@ const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Pr
                 isLiving(person.deathDate) ? styles.living : '',
               ].join(' ')}
             >
-              {formatDeathDisplay(person.deathDate)}
+              {formatLifeStatusDisplay(person.deathDate)}
             </span>
           </div>
           {person.ethnicGroup && (

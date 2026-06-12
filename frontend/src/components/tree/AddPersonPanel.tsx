@@ -4,10 +4,10 @@ import { CREATE_PERSON_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import {
   encodeBirthYear,
-  encodeDeathYear,
+  encodeLifeStatus,
   optionalField,
   type BirthMode,
-  type DeathStatus,
+  type LifeStatus,
 } from '../../utils/vitalYears';
 import VitalYearFields from '../profile/VitalYearFields';
 import styles from './AddPersonPanel.module.css';
@@ -21,7 +21,7 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
   const [fullName, setFullName] = useState('');
   const [birthMode, setBirthMode] = useState<BirthMode>('unknown');
   const [birthYear, setBirthYear] = useState('');
-  const [deathStatus, setDeathStatus] = useState<DeathStatus>('living');
+  const [lifeStatus, setLifeStatus] = useState<LifeStatus>('unspecified');
   const [deathYear, setDeathYear] = useState('');
   const [birthplace, setBirthplace] = useState('');
   const [ethnicGroup, setEthnicGroup] = useState('');
@@ -50,17 +50,13 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
       setError('Enter a birth year or choose Unknown.');
       return;
     }
-    if (deathStatus === 'year' && !deathYear.trim()) {
-      setError('Enter a death year or choose another status.');
-      return;
-    }
 
     await createPerson({
       variables: {
         input: {
           fullName: fullName.trim(),
           birthDate: encodeBirthYear(birthMode, birthYear),
-          deathDate: encodeDeathYear(deathStatus, deathYear),
+          deathDate: encodeLifeStatus(lifeStatus, deathYear),
           birthplace: optionalField(birthplace),
           ethnicGroup: optionalField(ethnicGroup),
           bio: optionalField(bio),
@@ -94,11 +90,11 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
         <VitalYearFields
           birthMode={birthMode}
           birthYear={birthYear}
-          deathStatus={deathStatus}
+          lifeStatus={lifeStatus}
           deathYear={deathYear}
           onBirthModeChange={setBirthMode}
           onBirthYearChange={setBirthYear}
-          onDeathStatusChange={setDeathStatus}
+          onLifeStatusChange={setLifeStatus}
           onDeathYearChange={setDeathYear}
         />
 

@@ -6,13 +6,13 @@ import type { Person } from '../../types';
 import {
   birthModeFromStored,
   birthYearFromStored,
-  deathStatusFromStored,
-  deathYearFromStored,
+  deceasedYearFromStored,
   encodeBirthYear,
-  encodeDeathYear,
+  encodeLifeStatus,
+  lifeStatusFromStored,
   optionalField,
   type BirthMode,
-  type DeathStatus,
+  type LifeStatus,
 } from '../../utils/vitalYears';
 import { editDaysRemaining } from '../../utils/gracePeriod';
 import VitalYearFields from './VitalYearFields';
@@ -29,8 +29,8 @@ const PersonProfileEditor = ({ person }: Props) => {
   const [bio, setBio] = useState(person.bio ?? '');
   const [birthMode, setBirthMode] = useState<BirthMode>(() => birthModeFromStored(person.birthDate));
   const [birthYear, setBirthYear] = useState(() => birthYearFromStored(person.birthDate));
-  const [deathStatus, setDeathStatus] = useState<DeathStatus>(() => deathStatusFromStored(person.deathDate));
-  const [deathYear, setDeathYear] = useState(() => deathYearFromStored(person.deathDate));
+  const [lifeStatus, setLifeStatus] = useState<LifeStatus>(() => lifeStatusFromStored(person.deathDate));
+  const [deathYear, setDeathYear] = useState(() => deceasedYearFromStored(person.deathDate));
   const [birthplace, setBirthplace] = useState(person.birthplace ?? '');
   const [ethnicGroup, setEthnicGroup] = useState(person.ethnicGroup ?? '');
   const [biologicalSex, setBiologicalSex] = useState(person.biologicalSex ?? '');
@@ -42,8 +42,8 @@ const PersonProfileEditor = ({ person }: Props) => {
     setBio(person.bio ?? '');
     setBirthMode(birthModeFromStored(person.birthDate));
     setBirthYear(birthYearFromStored(person.birthDate));
-    setDeathStatus(deathStatusFromStored(person.deathDate));
-    setDeathYear(deathYearFromStored(person.deathDate));
+    setLifeStatus(lifeStatusFromStored(person.deathDate));
+    setDeathYear(deceasedYearFromStored(person.deathDate));
     setBirthplace(person.birthplace ?? '');
     setEthnicGroup(person.ethnicGroup ?? '');
     setBiologicalSex(person.biologicalSex ?? '');
@@ -62,7 +62,7 @@ const PersonProfileEditor = ({ person }: Props) => {
   });
 
   const encodedBirth = encodeBirthYear(birthMode, birthYear);
-  const encodedDeath = encodeDeathYear(deathStatus, deathYear);
+  const encodedDeath = encodeLifeStatus(lifeStatus, deathYear);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,10 +74,6 @@ const PersonProfileEditor = ({ person }: Props) => {
     }
     if (birthMode === 'year' && !birthYear.trim()) {
       setError('Enter a birth year or choose Unknown.');
-      return;
-    }
-    if (deathStatus === 'year' && !deathYear.trim()) {
-      setError('Enter a death year or choose another status.');
       return;
     }
 
@@ -97,11 +93,12 @@ const PersonProfileEditor = ({ person }: Props) => {
     });
   };
 
+  const storedDeath = person.deathDate ?? null;
   const isDirty =
     fullName !== person.fullName ||
     bio !== (person.bio ?? '') ||
     encodedBirth !== (person.birthDate ?? null) ||
-    encodedDeath !== (person.deathDate ?? null) ||
+    encodedDeath !== storedDeath ||
     birthplace !== (person.birthplace ?? '') ||
     ethnicGroup !== (person.ethnicGroup ?? '') ||
     biologicalSex !== (person.biologicalSex ?? '');
@@ -142,11 +139,11 @@ const PersonProfileEditor = ({ person }: Props) => {
       <VitalYearFields
         birthMode={birthMode}
         birthYear={birthYear}
-        deathStatus={deathStatus}
+        lifeStatus={lifeStatus}
         deathYear={deathYear}
         onBirthModeChange={setBirthMode}
         onBirthYearChange={setBirthYear}
-        onDeathStatusChange={setDeathStatus}
+        onLifeStatusChange={setLifeStatus}
         onDeathYearChange={setDeathYear}
       />
 

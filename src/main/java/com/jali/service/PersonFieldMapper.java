@@ -17,11 +17,14 @@ public class PersonFieldMapper {
 		return trimmed.isEmpty() ? null : trimmed;
 	}
 
-	/** Birth/death year: blank = absent; "unknown" (any case) stored as lowercase marker. */
+	/** Life/death markers and years — blank = not set; "living" / "unknown" normalized. */
 	private static String vitalYearString(Object value) {
 		String trimmed = optionalString(value);
 		if (trimmed == null) {
 			return null;
+		}
+		if ("living".equalsIgnoreCase(trimmed)) {
+			return "living";
 		}
 		if ("unknown".equalsIgnoreCase(trimmed)) {
 			return "unknown";

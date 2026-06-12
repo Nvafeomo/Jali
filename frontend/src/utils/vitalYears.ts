@@ -1,37 +1,43 @@
-/** Stored in Neo4j when a year is explicitly marked unknown (not the same as blank). */
-export const UNKNOWN_YEAR = 'unknown';
+/** Deceased but death year not known. */
+export const UNKNOWN_DEATH_YEAR = 'unknown';
+/** Explicitly marked alive. */
+export const LIVING_MARKER = 'living';
 
-export type DeathStatus = 'living' | 'unknown' | 'year';
+export type LifeStatus = 'unspecified' | 'alive' | 'deceased';
 export type BirthMode = 'unknown' | 'year';
 
 export interface LifeDisplay {
-  /** Main date line under the name on tree nodes. */
   primary: string | null;
-  /** Shown when death is blank (= living) and there is no birth year line. */
   showLivingBadge?: boolean;
 }
 
-export function isUnknownMarker(value?: string | null): boolean {
-  return value?.trim().toLowerCase() === UNKNOWN_YEAR;
+export function isUnknownDeathYear(value?: string | null): boolean {
+  return value?.trim().toLowerCase() === UNKNOWN_DEATH_YEAR;
+}
+
+export function isLivingMarker(value?: string | null): boolean {
+  return value?.trim().toLowerCase() === LIVING_MARKER;
+}
+
+export function lifeStatusFromStored(deathDate?: string | null): LifeStatus {
+  const trimmed = deathDate?.trim();
+  if (!trimmed) return 'unspecified';
+  if (isLivingMarker(trimmed)) return 'alive';
+  return 'deceased';
 }
 
 export function isLiving(deathDate?: string | null): boolean {
-  const trimmed = deathDate?.trim();
-  return !trimmed;
+  return lifeStatusFromStored(deathDate) === 'alive';
 }
 
-export function deathStatusFromStored(deathDate?: string | null): DeathStatus {
-  if (isLiving(deathDate)) return 'living';
-  if (isUnknownMarker(deathDate)) return 'unknown';
-  return 'year';
-}
-
-export function deathYearFromStored(deathDate?: string | null): string {
-  return deathStatusFromStored(deathDate) === 'year' ? (deathDate?.trim() ?? '') : '';
+export function deceasedYearFromStored(deathDate?: string | null): string {
+  if (lifeStatusFromStored(deathDate) !== 'deceased') return '';
+  if (isUnknownDeathYear(deathDate)) return '';
+  return deathDate!.trim();
 }
 
 export function birthModeFromStored(birthDate?: string | null): BirthMode {
-  if (!birthDate?.trim() || isUnknownMarker(birthDate)) return 'unknown';
+  if (!birthDate?.trim() || isUnknownDeathYear(birthDate)) return 'unknown';
   return 'year';
 }
 
@@ -45,11 +51,12 @@ export function encodeBirthYear(mode: BirthMode, year: string): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export function encodeDeathYear(status: DeathStatus, year: string): string | null {
-  if (status === 'living') return null;
-  if (status === 'unknown') return UNKNOWN_YEAR;
-  const trimmed = year.trim();
-  return trimmed.length > 0 ? trimmed : null;
+/** Maps UI life status (+ optional death year when deceased) to stored deathDate. */
+export function encodeLifeStatus(status: LifeStatus, deathYear: string): string | null {
+  if (status === 'unspecified') return null;
+  if (status === 'alive') return LIVING_MARKER;
+  const trimmed = deathYear.trim();
+  return trimmed.length > 0 ? trimmed : UNKNOWN_DEATH_YEAR;
 }
 
 export function formatBirthDisplay(birthDate?: string | null, birthDateApproximate?: boolean): string {
@@ -60,11 +67,12 @@ export function formatBirthDisplay(birthDate?: string | null, birthDateApproxima
   return 'Unknown';
 }
 
-export function formatDeathDisplay(deathDate?: string | null): string {
-  const status = deathStatusFromStored(deathDate);
-  if (status === 'living') return 'Living';
-  if (status === 'unknown') return 'Unknown';
-  return deathDate!.trim();
+export function formatLifeStatusDisplay(deathDate?: string | null): string {
+  const status = lifeStatusFromStored(deathDate);
+  if (status === 'unspecified') return 'Not recorded';
+  if (status === 'alive') return 'Living';
+  if (isUnknownDeathYear(deathDate)) return 'Deceased (year unknown)';
+  return `Died ${deathDate!.trim()}`;
 }
 
 export function formatLifeDisplay(
@@ -72,30 +80,29 @@ export function formatLifeDisplay(
   deathDate?: string,
   birthDateApproximate?: boolean,
 ): LifeDisplay {
+  const lifeStatus = lifeStatusFromStored(deathDate);
   const birthMode = birthModeFromStored(birthDate);
-  const deathStatus = deathStatusFromStored(deathDate);
   const approx = birthDateApproximate ? ' (approx.)' : '';
   const birthYear = birthMode === 'year' ? birthDate!.trim() : null;
-  const deathYear = deathStatus === 'year' ? deathDate!.trim() : null;
 
-  if (deathStatus === 'living') {
-    if (birthYear) {
-      return { primary: `${birthYear}${approx} –` };
-    }
+  if (lifeStatus === 'unspecified') {
+    if (birthYear) return { primary: `b. ${birthYear}${approx}` };
+    return { primary: null };
+  }
+
+  if (lifeStatus === 'alive') {
+    if (birthYear) return { primary: `${birthYear}${approx} –` };
     return { primary: null, showLivingBadge: true };
   }
 
-  if (deathStatus === 'unknown') {
-    if (birthYear) return { primary: `${birthYear}${approx} – ?` };
-    return { primary: 'Death unknown' };
-  }
-
-  // Deceased with known death year
-  if (birthYear) return { primary: `${birthYear}${approx} – ${deathYear}` };
-  return { primary: `d. ${deathYear}` };
+  // Deceased
+  const deathYear = isUnknownDeathYear(deathDate) ? null : deathDate!.trim();
+  if (birthYear && deathYear) return { primary: `${birthYear}${approx} – ${deathYear}` };
+  if (birthYear) return { primary: `${birthYear}${approx} – ?` };
+  if (deathYear) return { primary: `d. ${deathYear}` };
+  return { primary: 'Deceased' };
 }
 
-/** @deprecated use formatLifeDisplay — kept for simple string callers */
 export function formatLifeYears(
   birthDate?: string,
   deathDate?: string,
@@ -104,7 +111,6 @@ export function formatLifeYears(
   return formatLifeDisplay(birthDate, deathDate, birthDateApproximate).primary;
 }
 
-/** Trim generic optional text fields (not vital years). */
 export function optionalField(value: string): string | null {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
