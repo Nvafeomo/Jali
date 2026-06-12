@@ -58,7 +58,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 	@Query("""
 			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
 			MATCH (b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
-			RETURN EXISTS { (a)-[:PARENT_OF]->(b) OR (b)-[:PARENT_OF]->(a) }
+			RETURN EXISTS { (a)-[:PARENT_OF]->(b) } OR EXISTS { (b)-[:PARENT_OF]->(a) }
 			""")
 	boolean hasParentChildBetween(
 			@Param("aUuid") String aUuid,
@@ -68,7 +68,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 	@Query("""
 			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
 			MATCH (b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
-			RETURN EXISTS { (a)-[:SIBLING_OF]->(b) OR (b)-[:SIBLING_OF]->(a) }
+			RETURN EXISTS { (a)-[:SIBLING_OF]->(b) } OR EXISTS { (b)-[:SIBLING_OF]->(a) }
 			""")
 	boolean hasSiblingBetween(
 			@Param("aUuid") String aUuid,
@@ -78,7 +78,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 	@Query("""
 			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
 			MATCH (b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
-			RETURN EXISTS { (a)-[:MARRIED_TO]->(b) OR (b)-[:MARRIED_TO]->(a) }
+			RETURN EXISTS { (a)-[:MARRIED_TO]->(b) } OR EXISTS { (b)-[:MARRIED_TO]->(a) }
 			""")
 	boolean hasMarriageBetween(
 			@Param("aUuid") String aUuid,
