@@ -13,6 +13,7 @@ interface RawEdge {
 interface RawPerson {
   uuid: string;
   fullName: string;
+  bio?: string;
   birthDate?: string;
   deathDate?: string;
   birthplace?: string;
@@ -39,6 +40,7 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
     byId.set(raw.uuid, {
       id: raw.uuid,
       fullName: raw.fullName,
+      bio: raw.bio ?? undefined,
       birthDate: raw.birthDate ?? undefined,
       deathDate: raw.deathDate ?? undefined,
       birthplace: raw.birthplace ?? undefined,

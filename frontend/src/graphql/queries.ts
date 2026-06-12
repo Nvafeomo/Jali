@@ -13,6 +13,7 @@ export const MY_TREE_QUERY = gql`
     myTree {
       uuid
       fullName
+      bio
       birthDate
       deathDate
       birthplace

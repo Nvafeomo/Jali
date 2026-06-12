@@ -20,6 +20,7 @@ public class Person {
 
     private String uuid;
     private String fullName;
+    private String bio;
     private String birthDate;
     private String deathDate;
     private String birthplace;

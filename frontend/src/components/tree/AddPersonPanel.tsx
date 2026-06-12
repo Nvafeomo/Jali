@@ -21,6 +21,7 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
   const [deathDate, setDeathDate] = useState('');
   const [birthplace, setBirthplace] = useState('');
   const [ethnicGroup, setEthnicGroup] = useState('');
+  const [bio, setBio] = useState('');
   const [biologicalSex, setBiologicalSex] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +54,7 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
           deathDate: deathDate || null,
           birthplace: birthplace || null,
           ethnicGroup: ethnicGroup || null,
+          bio: bio.trim() || null,
           biologicalSex: biologicalSex || null,
         },
       },
@@ -124,6 +126,17 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
             value={ethnicGroup}
             onChange={e => setEthnicGroup(e.target.value)}
             placeholder="e.g. Mandinka"
+          />
+        </label>
+
+        <label className={styles.label}>
+          Bio
+          <textarea
+            className={styles.textarea}
+            value={bio}
+            onChange={e => setBio(e.target.value)}
+            placeholder="A short story about this person…"
+            rows={3}
           />
         </label>
 

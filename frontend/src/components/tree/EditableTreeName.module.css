@@ -1,0 +1,84 @@
+.display {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 14px;
+  color: var(--jali-text-muted);
+  text-align: left;
+  cursor: default;
+}
+
+.editable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.editable:hover {
+  background: var(--jali-surface-muted);
+  color: var(--jali-text);
+}
+
+.pencil {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.editForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--jali-border);
+  border-radius: 6px;
+  background: var(--jali-bg);
+  color: var(--jali-text);
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--jali-accent);
+}
+
+.saveBtn,
+.cancelBtn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.saveBtn {
+  background: var(--jali-accent);
+  border: none;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid var(--jali-border);
+  color: var(--jali-text-muted);
+}
+
+.error {
+  font-size: 11px;
+  color: #f87171;
+  flex-shrink: 0;
+}

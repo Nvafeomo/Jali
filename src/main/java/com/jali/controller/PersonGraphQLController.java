@@ -82,11 +82,26 @@ public class PersonGraphQLController {
 		if (input.get("ethnicGroup") != null) {
 			person.setEthnicGroup((String) input.get("ethnicGroup"));
 		}
+		if (input.get("bio") != null) {
+			person.setBio((String) input.get("bio"));
+		}
 		if (input.get("biologicalSex") != null) {
 			person.setBiologicalSex((String) input.get("biologicalSex"));
 		}
 		if (input.get("isUnknownPlaceholder") != null) {
 			person.setIsUnknownPlaceholder((Boolean) input.get("isUnknownPlaceholder"));
+		}
+		return personGraphService.saveInTree(person, principal.familyTreeId());
+	}
+
+	@MutationMapping
+	public Person updatePerson(
+			@Argument String uuid,
+			@Argument Map<String, Object> input,
+			@AuthenticationPrincipal UserPrincipal principal) {
+		Person person = personGraphService.requireInTree(uuid, principal.familyTreeId());
+		if (input.containsKey("bio")) {
+			person.setBio((String) input.get("bio"));
 		}
 		return personGraphService.saveInTree(person, principal.familyTreeId());
 	}

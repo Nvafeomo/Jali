@@ -4,5 +4,6 @@ public record UserResponse(
 		Long userId,
 		String email,
 		String role,
-		Long familyTreeId) {
+		Long familyTreeId,
+		String familyTreeName) {
 }

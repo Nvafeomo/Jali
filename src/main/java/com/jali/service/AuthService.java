@@ -9,12 +9,14 @@ import org.springframework.web.server.ResponseStatusException;
 import com.jali.dto.AuthResponse;
 import com.jali.dto.LoginRequest;
 import com.jali.dto.RegisterRequest;
+import com.jali.dto.UserResponse;
 import com.jali.entity.FamilyTree;
 import com.jali.entity.Role;
 import com.jali.entity.User;
 import com.jali.repository.jpa.FamilyTreeRepository;
 import com.jali.repository.jpa.UserRepository;
 import com.jali.security.JwtService;
+import com.jali.security.UserPrincipal;
 
 @Service
 public class AuthService {
@@ -74,6 +76,42 @@ public class AuthService {
 
 		return AuthResponse.bearer(
 				token, user.getId(), user.getEmail(), user.getRole().name(), familyTree.getId());
+	}
+
+	public UserResponse getCurrentUser(UserPrincipal principal) {
+		FamilyTree familyTree = requireFamilyTreeForUser(principal.userId());
+		return toUserResponse(principal, familyTree);
+	}
+
+	@Transactional
+	public UserResponse updateFamilyTreeName(UserPrincipal principal, String name) {
+		if (name == null || name.isBlank()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tree name is required");
+		}
+
+		FamilyTree familyTree = requireFamilyTreeForUser(principal.userId());
+		if (!familyTree.getId().equals(principal.familyTreeId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Family tree access denied");
+		}
+
+		familyTree.setName(name.trim());
+		familyTreeRepository.save(familyTree);
+		return toUserResponse(principal, familyTree);
+	}
+
+	private FamilyTree requireFamilyTreeForUser(Long userId) {
+		return familyTreeRepository.findByOwnerId(userId)
+				.orElseThrow(() -> new ResponseStatusException(
+						HttpStatus.INTERNAL_SERVER_ERROR, "Family tree not found for user"));
+	}
+
+	private static UserResponse toUserResponse(UserPrincipal principal, FamilyTree familyTree) {
+		return new UserResponse(
+				principal.userId(),
+				principal.email(),
+				principal.role().name(),
+				principal.familyTreeId(),
+				familyTree.getName());
 	}
 
 	private static String defaultTreeName(String email) {

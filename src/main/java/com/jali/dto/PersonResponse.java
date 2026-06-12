@@ -5,6 +5,7 @@ import com.jali.neo4j.Person;
 public record PersonResponse(
 		String uuid,
 		String fullName,
+		String bio,
 		String birthDate,
 		String deathDate,
 		String birthplace,
@@ -17,6 +18,7 @@ public record PersonResponse(
 		return new PersonResponse(
 				p.getUuid(),
 				p.getFullName(),
+				p.getBio(),
 				p.getBirthDate(),
 				p.getDeathDate(),
 				p.getBirthplace(),

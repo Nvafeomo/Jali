@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Person, StoryMemory } from '../../types';
 import LinkRelationshipForm from './LinkRelationshipForm';
+import PersonBioEditor from './PersonBioEditor';
 import styles from './PersonDrawer.module.css';
 
 interface Props {
@@ -110,10 +111,7 @@ const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Pr
       </div>
 
       {/* ── Bio ─────────────────────────────────────────── */}
-      {/* Sits right under the header — no section title, reads like a caption */}
-      {person.bio && (
-        <p className={styles.bio}>{person.bio}</p>
-      )}
+      <PersonBioEditor personId={person.id} bio={person.bio} />
 
       {/* ── Vitals ──────────────────────────────────────── */}
       <section className={styles.section}>

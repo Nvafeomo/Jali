@@ -1,0 +1,75 @@
+.section {
+  padding: 14px 0 16px;
+  border-bottom: 1px solid var(--jali-bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--jali-text-subtle);
+  margin: 0;
+}
+
+.saved {
+  font-size: 11px;
+  color: var(--jali-confidence-high);
+  font-weight: 600;
+}
+
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--jali-border);
+  border-radius: var(--jali-radius-sm);
+  background: var(--jali-bg);
+  color: var(--jali-text);
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 88px;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--jali-accent);
+}
+
+.error {
+  font-size: 12px;
+  color: #f87171;
+  margin: 8px 0 0;
+}
+
+.saveBtn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--jali-border);
+  border-radius: 6px;
+  color: var(--jali-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.saveBtn:hover:not(:disabled) {
+  border-color: var(--jali-accent);
+  color: var(--jali-accent);
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

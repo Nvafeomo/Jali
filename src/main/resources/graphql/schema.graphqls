@@ -7,6 +7,7 @@ type Query {
 
 type Mutation {
 	createPerson(input: CreatePersonInput!): Person
+	updatePerson(uuid: String!, input: UpdatePersonInput!): Person
 	createRelationship(fromUuid: String!, toUuid: String!, relationshipType: String!): Boolean
 	addEvidence(fromUuid: String!, toUuid: String!, relationshipType: String!, evidenceType: String!, source: String): Person
 }
@@ -14,6 +15,7 @@ type Mutation {
 type Person {
 	uuid: String
 	fullName: String
+	bio: String
 	birthDate: String
 	deathDate: String
 	birthplace: String
@@ -34,10 +36,15 @@ type PersonEdge {
 
 input CreatePersonInput {
 	fullName: String!
+	bio: String
 	birthDate: String
 	deathDate: String
 	birthplace: String
 	ethnicGroup: String
 	biologicalSex: String
 	isUnknownPlaceholder: Boolean
+}
+
+input UpdatePersonInput {
+	bio: String
 }

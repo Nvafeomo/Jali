@@ -53,6 +53,9 @@ public class PersonController {
 		if (request.ethnicGroup() != null) {
 			person.setEthnicGroup(request.ethnicGroup());
 		}
+		if (request.bio() != null) {
+			person.setBio(request.bio());
+		}
 		if (request.biologicalSex() != null) {
 			person.setBiologicalSex(request.biologicalSex());
 		}

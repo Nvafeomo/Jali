@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import FamilyTree from '../components/tree/FamilyTree';
+import EditableTreeName from '../components/tree/EditableTreeName';
 import PersonDrawer from '../components/profile/PersonDrawer';
 import AddPersonPanel from '../components/tree/AddPersonPanel';
 import { useAuth } from '../hooks/useAuth';
+import { useFamilyTree } from '../hooks/useFamilyTree';
 import { useMyTree } from '../hooks/useMyTree';
 import { peopleById } from '../utils/enrichPeople';
 import type { Person } from '../types';
@@ -13,6 +15,7 @@ const TreePage = () => {
   const [showAddPanel, setShowAddPanel] = useState(false);
 
   const { email, isAuthenticated, logout } = useAuth();
+  const { treeName, updateTreeName, canEdit: canEditTreeName } = useFamilyTree();
   const { people, loading, error } = useMyTree();
 
   const lookup = useMemo(() => peopleById(people), [people]);
@@ -39,7 +42,11 @@ const TreePage = () => {
     <div className={styles.page}>
       <header className={styles.header}>
         <span className={styles.logo}>Jali</span>
-        <span className={styles.treeName}>My Family Tree</span>
+        <EditableTreeName
+          name={treeName}
+          canEdit={canEditTreeName}
+          onSave={updateTreeName}
+        />
 
         <div className={styles.headerActions}>
           {isAuthenticated && email && (

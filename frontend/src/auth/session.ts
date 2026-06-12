@@ -6,6 +6,11 @@ export interface AuthSessionPayload {
   email: string;
 }
 
+export interface CurrentUser {
+  email: string;
+  familyTreeName: string;
+}
+
 export function saveAuthSession({ token, email }: AuthSessionPayload) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(EMAIL_KEY, email);
@@ -24,7 +29,7 @@ export function getStoredEmail() {
   return localStorage.getItem(EMAIL_KEY);
 }
 
-export async function fetchCurrentUserEmail(): Promise<string | null> {
+export async function fetchCurrentUser(): Promise<CurrentUser | null> {
   const token = getAuthToken();
   if (!token) return null;
 
@@ -39,5 +44,35 @@ export async function fetchCurrentUserEmail(): Promise<string | null> {
 
   const data = await res.json();
   localStorage.setItem(EMAIL_KEY, data.email);
-  return data.email as string;
+  return {
+    email: data.email as string,
+    familyTreeName: data.familyTreeName as string,
+  };
+}
+
+export async function fetchCurrentUserEmail(): Promise<string | null> {
+  const user = await fetchCurrentUser();
+  return user?.email ?? null;
+}
+
+export async function updateFamilyTreeName(name: string): Promise<string | null> {
+  const token = getAuthToken();
+  if (!token) return null;
+
+  const res = await fetch('http://localhost:8080/auth/family-tree', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  if (!res.ok) {
+    if (res.status === 401) clearAuthSession();
+    return null;
+  }
+
+  const data = await res.json();
+  return data.familyTreeName as string;
 }

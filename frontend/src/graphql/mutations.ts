@@ -7,8 +7,18 @@ export const CREATE_PERSON_MUTATION = gql`
     createPerson(input: $input) {
       uuid
       fullName
+      bio
       confidenceScore
       isUnknownPlaceholder
+    }
+  }
+`;
+
+export const UPDATE_PERSON_MUTATION = gql`
+  mutation UpdatePerson($uuid: String!, $input: UpdatePersonInput!) {
+    updatePerson(uuid: $uuid, input: $input) {
+      uuid
+      bio
     }
   }
 `;
