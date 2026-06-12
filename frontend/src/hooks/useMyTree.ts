@@ -1,0 +1,127 @@
+import { useQuery } from '@apollo/client';
+import { MY_TREE_QUERY } from '../graphql/queries';
+import { MOCK_PEOPLE } from '../graphql/mockData';
+import type { Person, RelationshipEdge } from '../types';
+
+// --- Raw GraphQL shapes (what Apollo gives us before we map) ---
+
+interface RawEdge {
+  person: { uuid: string; fullName: string; confidenceScore: number; isUnknownPlaceholder: boolean };
+  confidenceScore: number;
+  disputed: boolean;
+}
+
+interface RawPerson {
+  uuid: string;
+  fullName: string;
+  birthDate?: string;
+  deathDate?: string;
+  birthplace?: string;
+  ethnicGroup?: string;
+  biologicalSex?: string;
+  confidenceScore: number;
+  isUnknownPlaceholder: boolean;
+  children: RawEdge[];
+  spouses: RawEdge[];
+  siblings: RawEdge[];
+}
+
+// --- Mapping ---
+
+// The backend returns `uuid` as the node ID and only gives us children/
+// spouses/siblings — not parents. This function:
+//   1. Maps uuid → id so the rest of the frontend code works unchanged
+//   2. Derives parent edges by inverting the children relationships
+//   3. Wires all relationship edges to full Person objects (not just stubs)
+function mapToPersons(rawList: RawPerson[]): Person[] {
+  // First pass: build id-keyed stubs with all scalar fields
+  const byId = new Map<string, Person>();
+  for (const raw of rawList) {
+    byId.set(raw.uuid, {
+      id: raw.uuid,
+      fullName: raw.fullName,
+      birthDate: raw.birthDate ?? undefined,
+      deathDate: raw.deathDate ?? undefined,
+      birthplace: raw.birthplace ?? undefined,
+      ethnicGroup: raw.ethnicGroup ?? undefined,
+      biologicalSex: raw.biologicalSex ?? undefined,
+      confidenceScore: raw.confidenceScore ?? 1.0,
+      isUnknownPlaceholder: raw.isUnknownPlaceholder ?? false,
+      children: [],
+      parents: [],
+      spouses: [],
+      siblings: [],
+    });
+  }
+
+  // Second pass: wire relationships using the full Person objects from the map
+  for (const raw of rawList) {
+    const person = byId.get(raw.uuid)!;
+
+    // Children — and derive parents on the child side
+    for (const edge of raw.children ?? []) {
+      const child = byId.get(edge.person.uuid);
+      if (!child) continue;
+
+      const childEdge: RelationshipEdge = {
+        person: child,
+        type: 'PARENT_OF',
+        confidenceScore: edge.confidenceScore,
+        disputed: edge.disputed,
+      };
+      person.children!.push(childEdge);
+
+      // The inverse: this person is a parent of `child`
+      const parentEdge: RelationshipEdge = {
+        person,
+        type: 'PARENT_OF',
+        confidenceScore: edge.confidenceScore,
+        disputed: edge.disputed,
+      };
+      child.parents!.push(parentEdge);
+    }
+
+    // Spouses
+    for (const edge of raw.spouses ?? []) {
+      const spouse = byId.get(edge.person.uuid);
+      if (!spouse) continue;
+      person.spouses!.push({
+        person: spouse,
+        type: 'MARRIED_TO',
+        confidenceScore: edge.confidenceScore,
+        disputed: edge.disputed,
+      });
+    }
+
+    // Siblings
+    for (const edge of raw.siblings ?? []) {
+      const sibling = byId.get(edge.person.uuid);
+      if (!sibling) continue;
+      person.siblings!.push({
+        person: sibling,
+        type: 'SIBLING_OF',
+        confidenceScore: edge.confidenceScore,
+        disputed: edge.disputed,
+      });
+    }
+  }
+
+  return Array.from(byId.values());
+}
+
+// --- Hook ---
+
+export function useMyTree() {
+  const { data, loading, error } = useQuery<{ myTree: RawPerson[] }>(MY_TREE_QUERY);
+
+  let people: Person[] = data?.myTree ? mapToPersons(data.myTree) : [];
+
+  // DEV fallback: if the real tree is empty, show the mock Kouyaté tree.
+  // Useful for the tester account (test@test.com) as a visual reference
+  // while building. Stripped out automatically in production builds.
+  if (import.meta.env.DEV && !loading && !error && people.length === 0) {
+    people = MOCK_PEOPLE;
+  }
+
+  return { people, loading, error };
+}

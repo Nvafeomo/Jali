@@ -48,3 +48,25 @@
   overflow: hidden;
   flex-shrink: 0;
 }
+
+/* Loading / error / empty state — centered in the tree area */
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 0.5rem;
+  color: var(--jali-text-muted);
+  font-size: 0.95rem;
+}
+
+.errorDetail {
+  font-size: 0.8rem;
+  color: #f87171;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: var(--jali-text-subtle, #888);
+}

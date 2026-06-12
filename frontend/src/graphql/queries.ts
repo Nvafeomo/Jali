@@ -1,64 +1,54 @@
 import { gql } from '@apollo/client';
 
-// gql is a tagged template literal - it parses the string into a format
-// Apollo understands. The query below asks the backend for the logged-in
-// user's family tree, including each person and their immediate relationships.
+// Fetches every person in the authenticated user's family tree.
+// The backend scopes this to the JWT's familyTreeId automatically —
+// no need to pass a tree ID from the frontend.
 //
-// Notice we ask for 'parents', 'children', 'spouses', 'siblings' as nested
-// fields on each Person. This is what makes GraphQL powerful - one request
-// gets us the whole tree structure, not N separate requests.
+// myTree returns a flat [Person] list. We get children/spouses/siblings
+// on each person and derive parent edges ourselves in useMyTree.
 //
-// depth: 10 means "traverse up to 10 hops from any node". For most family
-// trees this covers everything. We can make this configurable later.
-export const GET_MY_TREE = gql`
-  query GetMyTree {
+// The backend uses `uuid` (not `id`) as the node identifier.
+export const MY_TREE_QUERY = gql`
+  query MyTree {
     myTree {
-      id
-      name
-      people {
-        id
-        fullName
-        birthDate
-        birthDateApproximate
-        deathDate
-        birthplace
-        ethnicGroup
-        biologicalSex
+      uuid
+      fullName
+      birthDate
+      deathDate
+      birthplace
+      ethnicGroup
+      biologicalSex
+      confidenceScore
+      isUnknownPlaceholder
+      children {
+        person {
+          uuid
+          fullName
+          confidenceScore
+          isUnknownPlaceholder
+        }
         confidenceScore
-        isUnknownPlaceholder
-        photoUrl
-        parents {
-          person {
-            id
-            fullName
-          }
+        disputed
+      }
+      spouses {
+        person {
+          uuid
+          fullName
           confidenceScore
-          disputed
+          isUnknownPlaceholder
         }
-        children {
-          person {
-            id
-            fullName
-          }
+        confidenceScore
+        disputed
+      }
+      siblings {
+        person {
+          uuid
+          fullName
           confidenceScore
-          disputed
+          isUnknownPlaceholder
         }
-        spouses {
-          person {
-            id
-            fullName
-          }
-          confidenceScore
-          disputed
-        }
-        siblings {
-          person {
-            id
-            fullName
-          }
-          confidenceScore
-          disputed
-        }
+        confidenceScore
+        disputed
       }
     }
   }
