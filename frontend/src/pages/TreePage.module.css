@@ -5,55 +5,89 @@
   height: 100vh;
   background: var(--jali-bg);
   color: var(--jali-text);
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 .header {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 24px;
+  padding: 0 24px;
+  min-height: 56px;
   background: var(--jali-surface);
   border-bottom: 1px solid var(--jali-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.headerBrand {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
 
 .logo {
-  font-size: 20px;
+  font-size: 1.15rem;
   font-weight: 800;
   color: var(--jali-accent);
-  letter-spacing: 1px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.treeName {
-  font-size: 14px;
-  color: var(--jali-text-muted);
+.headerDivider {
+  width: 1px;
+  height: 24px;
+  background: var(--jali-border);
+  flex-shrink: 0;
+}
+
+.headerMain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex: 1;
+  min-width: 0;
+}
+
+.memberCount {
+  flex-shrink: 0;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--jali-text-subtle);
+  background: var(--jali-bg);
+  border: 1px solid var(--jali-border);
+  border-radius: 999px;
 }
 
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
 .userEmail {
-  max-width: 220px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--jali-text-muted);
+  padding: 0.35rem 0.65rem;
+  background: var(--jali-bg);
+  border-radius: 999px;
+  border: 1px solid transparent;
 }
 
 .logoutButton {
-  padding: 0.4rem 0.85rem;
+  padding: 0.45rem 0.9rem;
   background: transparent;
   color: var(--jali-text-muted);
   border: 1px solid var(--jali-border);
-  border-radius: var(--jali-radius-sm, 6px);
-  font-size: 0.85rem;
+  border-radius: var(--jali-radius-sm);
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
@@ -66,37 +100,43 @@
 }
 
 .addButton {
-  padding: 0.4rem 1rem;
-  background: var(--jali-accent);
+  padding: 0.45rem 1rem;
+  background: linear-gradient(180deg, var(--jali-accent) 0%, #9370db 100%);
   color: #0f172a;
   border: none;
-  border-radius: var(--jali-radius-sm, 6px);
-  font-size: 0.85rem;
+  border-radius: var(--jali-radius-sm);
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: filter 0.15s, transform 0.1s;
+  box-shadow: 0 2px 10px rgba(167, 139, 250, 0.2);
 }
 
 .addButton:hover {
-  background: var(--jali-accent-hover, #a87c52);
+  filter: brightness(1.06);
   color: #fff;
+}
+
+.addButton:active {
+  transform: translateY(1px);
 }
 
 .emptyAddButton {
   margin-top: 0.5rem;
-  padding: 0.65rem 1.5rem;
-  background: var(--jali-accent);
+  padding: 0.85rem 1.75rem;
+  background: linear-gradient(180deg, var(--jali-accent) 0%, #9370db 100%);
   color: #0f172a;
   border: none;
-  border-radius: var(--jali-radius-sm, 6px);
-  font-size: 0.95rem;
+  border-radius: var(--jali-radius-sm);
+  font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: filter 0.15s, transform 0.1s;
+  box-shadow: 0 2px 12px rgba(167, 139, 250, 0.25);
 }
 
 .emptyAddButton:hover {
-  background: var(--jali-accent-hover, #a87c52);
+  filter: brightness(1.06);
   color: #fff;
 }
 
@@ -104,39 +144,139 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, var(--jali-accent-glow), transparent 55%),
+    var(--jali-bg);
 }
 
 .treeArea {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .drawer {
   width: 360px;
   background: var(--jali-surface);
   border-left: 1px solid var(--jali-border);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   flex-shrink: 0;
 }
 
-/* Loading / error / empty state — centered in the tree area */
 .centered {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loadingState {
   color: var(--jali-text-muted);
   font-size: 0.95rem;
 }
 
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--jali-border);
+  border-top-color: var(--jali-accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  margin-bottom: 0.25rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: min(480px, 100%);
+  padding: 2.5rem 2rem;
+  background: var(--jali-surface);
+  border: 1px solid var(--jali-border-accent);
+  border-radius: var(--jali-radius-lg);
+  box-shadow: var(--jali-shadow-lg);
+}
+
+.emptyGraphic {
+  width: 120px;
+  height: 88px;
+  color: var(--jali-accent);
+  opacity: 0.7;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--jali-text-heading);
+  letter-spacing: -0.01em;
+}
+
+.emptyHint {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--jali-text-muted);
+  max-width: 36ch;
+}
+
+.errorState {
+  color: var(--jali-text-muted);
+}
+
+.errorTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--jali-text-heading);
+}
+
 .errorDetail {
-  font-size: 0.8rem;
+  margin: 0;
+  font-size: 0.82rem;
   color: #f87171;
+  max-width: 320px;
+  line-height: 1.45;
 }
 
 .hint {
   font-size: 0.85rem;
-  color: var(--jali-text-subtle, #888);
+  color: var(--jali-text-subtle);
+}
+
+@media (max-width: 720px) {
+  .header {
+    padding: 0 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+    min-height: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .headerMain {
+    order: 3;
+    flex-basis: 100%;
+    padding-bottom: 2px;
+  }
+
+  .userEmail {
+    display: none;
+  }
 }

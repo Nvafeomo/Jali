@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { saveAuthSession, authRegister } from '../auth/session';
-import styles from './LoginPage.module.css'; // same visual design as login
-
-// SignupPage calls POST /auth/register.
-// On success the backend returns a JWT (same shape as login) — we store it
-// and send the user straight to /tree so they don't have to log in again.
+import AuthShell from '../components/auth/AuthShell';
+import formStyles from '../components/auth/AuthForm.module.css';
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -19,7 +16,6 @@ const SignupPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side check before hitting the server
     if (password !== confirm) {
       setError('Passwords do not match.');
       return;
@@ -44,60 +40,58 @@ const SignupPage = () => {
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <h1 className={styles.logo}>Jali</h1>
-        <p className={styles.tagline}>Start preserving your family's story.</p>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <label className={styles.label}>
-            Email
-            <input
-              type="email"
-              className={styles.input}
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-            />
-          </label>
-
-          <label className={styles.label}>
-            Password
-            <input
-              type="password"
-              className={styles.input}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              autoComplete="new-password"
-              required
-            />
-          </label>
-
-          <label className={styles.label}>
-            Confirm password
-            <input
-              type="password"
-              className={styles.input}
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              autoComplete="new-password"
-              required
-            />
-          </label>
-
-          {error && <p className={styles.error}>{error}</p>}
-
-          <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? 'Creating account…' : 'Create account'}
-          </button>
-        </form>
-
-        <p className={styles.signup}>
+    <AuthShell
+      tagline="Start preserving your family's story."
+      footer={
+        <>
           Already have an account? <Link to="/login">Sign in</Link>
-        </p>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className={formStyles.form}>
+        <label className={formStyles.label}>
+          Email
+          <input
+            type="email"
+            className={formStyles.input}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
+        </label>
+
+        <label className={formStyles.label}>
+          Password
+          <input
+            type="password"
+            className={formStyles.input}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            autoComplete="new-password"
+            required
+          />
+        </label>
+
+        <label className={formStyles.label}>
+          Confirm password
+          <input
+            type="password"
+            className={formStyles.input}
+            value={confirm}
+            onChange={e => setConfirm(e.target.value)}
+            autoComplete="new-password"
+            required
+          />
+        </label>
+
+        {error && <p className={formStyles.error}>{error}</p>}
+
+        <button type="submit" className={formStyles.button} disabled={loading}>
+          {loading ? 'Creating account…' : 'Create account'}
+        </button>
+      </form>
+    </AuthShell>
   );
 };
 

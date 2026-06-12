@@ -87,10 +87,14 @@ com.jali/
 | **Tenancy** | Each user owns a `familyTreeId` (Postgres). All graph nodes carry `familyTreeId`; queries are scoped by JWT. |
 | **Graph model** | `Person` nodes with relationship edges (`PARENT_OF`, `MARRIED_TO`, `SIBLING_OF`). Edge properties hold `confidenceScore`, `evidenceList`, `disputed`. |
 | **Confidence** | `EvidenceType` weights + `ConfidenceScoreService`; evidence stored as JSON on edges. |
+| **Profile edits** | Person details editable for 7 days after creation (`createdAt` / `canEditDetails`); enforced in API. |
+| **Relationships** | Validation blocks duplicates, parent cycles, and incompatible parent/sibling/spouse combos. |
 | **Transactions** | Explicit `transactionManager` (JPA) and `neo4jTransactionManager` — required when both stacks are active. |
-| **APIs** | REST for CRUD + evidence; GraphQL for flexible tree reads (including edge confidence in `PersonEdge`). |
+| **APIs** | REST for auth and voice memos; GraphQL for tree reads and person/relationship writes from the web app. |
 
 ### Tech stack
+
+**Backend**
 
 - Java 21, Spring Boot 4.0.6
 - PostgreSQL 16 (Docker) — auth & family trees
@@ -99,11 +103,45 @@ com.jali/
 - Spring Security + JWT (jjwt)
 - Spring GraphQL + GraphiQL
 
+**Frontend** (`frontend/`)
+
+- React 19, TypeScript, Vite
+- React Router — login, signup, tree
+- Apollo Client — GraphQL (`myTree`, mutations)
+- React Flow (`@xyflow/react`) — interactive family tree canvas
+- Dark theme (`jali-theme.css`) shared across auth and app shell
+
+---
+
+## Current features
+
+### Web app (frontend)
+
+| Area | What works today |
+|------|------------------|
+| **Auth** | Register, login, JWT in `localStorage`, logout; polished login/signup screens |
+| **Tree view** | React Flow canvas with zoom, minimap, legend; confidence-colored person nodes |
+| **People** | Add person panel; click a node to open profile drawer |
+| **Profiles** | Bio, dates, birthplace, ethnic group; editable for **7 days** after creation (`canEditDetails`) |
+| **Relationships** | Link parent / spouse / sibling from the drawer; backend validates incompatible or duplicate edges |
+| **Tree name** | Editable family tree title in the header (`PATCH /auth/family-tree`) |
+| **Empty state** | Centered onboarding card when a new account has no people yet |
+
+Voice memo UI is **not** wired in the frontend yet; the backend pipeline exists (see below).
+
+### Backend highlights
+
+- **GraphQL** — `myTree`, `createPerson`, `updatePerson`, `createRelationship`, `addEvidence`
+- **Person fields** — `bio`, `createdAt`, `canEditDetails` (7-day edit grace period enforced server-side)
+- **Relationship rules** — `RelationshipValidationService` blocks cycles, duplicates, and incompatible combos; `RelationshipDedupeService` for maintenance
+- **Tenancy** — every graph query scoped by JWT `familyTreeId`
+
 ---
 
 ## Prerequisites
 
 - Java 21
+- Node.js 20+ and npm (for the frontend)
 - Docker (for local Postgres)
 - Neo4j AuraDB Free instance ([neo4j.com/cloud/aura](https://neo4j.com/cloud/aura/)) — free tier, no credit card required
 
@@ -136,6 +174,27 @@ Edit `application-local.properties` with your Aura URI, username, and password. 
 
 Health check: `GET http://localhost:8080/health`
 
+### 4. Frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local   # optional — defaults to http://localhost:8080
+npm run dev
+```
+
+Open **http://localhost:5173**. Routes:
+
+| Path | Page |
+|------|------|
+| `/login` | Sign in |
+| `/signup` | Create account |
+| `/tree` | Family tree (default redirect from `/`) |
+
+Set `VITE_API_URL` in `.env.local` if the backend is not on port 8080. See [DEPLOY.md](DEPLOY.md) for production (Vercel + Render).
+
+**Note:** In dev, `ProtectedRoute` skips the login redirect so you can hit `/tree` without a token. In production builds, unauthenticated users are sent to `/login`.
+
 ---
 
 ## API overview
@@ -147,7 +206,14 @@ Health check: `GET http://localhost:8080/health`
 | POST | `/auth/register` | Create account + family tree |
 | POST | `/auth/login` | Obtain JWT |
 
-All other endpoints require: `Authorization: Bearer <token>`
+### Auth (JWT)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/auth/me` | Current user (email, `familyTreeName`) |
+| PATCH | `/auth/family-tree` | Rename your family tree (`{ "name": "..." }`) |
+
+All other protected endpoints require: `Authorization: Bearer <token>`
 
 ### REST (JWT)
 
@@ -160,6 +226,15 @@ All other endpoints require: `Authorization: Bearer <token>`
 | GET | `/people/{uuid}/descendants` | Descendants (depth param) |
 | POST | `/relationships` | Link two people |
 | POST | `/relationships/evidence` | Add evidence to an edge |
+
+### Graph maintenance (JWT)
+
+Admin-style cleanup for duplicate relationship edges in Neo4j.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/graph/maintenance/duplicate-relationships` | List duplicate edges |
+| POST | `/graph/maintenance/dedupe-relationships` | Remove duplicates (keeps one per pair) |
 
 ### Voice memos (JWT)
 
@@ -191,6 +266,12 @@ Requires `openai.api.key` and `anthropic.api.key` in `application-local.properti
 - Playground: `http://localhost:8080/graphiql`
 - Schema: `src/main/resources/graphql/schema.graphqls`
 
+**Queries:** `person`, `myTree`, `ancestors`, `descendants`
+
+**Mutations:** `createPerson`, `updatePerson`, `createRelationship`, `addEvidence`
+
+The web app uses GraphQL for tree reads and person/relationship writes. Auth stays on REST (`/auth/*`).
+
 In GraphiQL, add headers:
 
 ```json
@@ -199,12 +280,15 @@ In GraphiQL, add headers:
 }
 ```
 
-Example query:
+Example — load your tree:
 
 ```graphql
 query {
-  person(uuid: "YOUR_PERSON_UUID") {
+  myTree {
+    uuid
     fullName
+    bio
+    canEditDetails
     children {
       person { fullName }
       confidenceScore
@@ -214,37 +298,50 @@ query {
 }
 ```
 
+Example — create a person:
+
+```graphql
+mutation {
+  createPerson(input: { fullName: "Ada Konneh", bio: "Family matriarch" }) {
+    uuid
+    fullName
+    canEditDetails
+  }
+}
+```
+
 ---
 
-## Frontend development
+## Frontend architecture
 
-CORS is enabled for local Vite/React dev servers. Default allowed origins:
+```
+frontend/src/
+├── pages/              LoginPage, SignupPage, TreePage
+├── components/
+│   ├── auth/           AuthShell (shared auth layout)
+│   ├── tree/           FamilyTree, PersonNode, AddPersonPanel, EditableTreeName
+│   └── profile/        PersonDrawer, PersonProfileEditor, LinkRelationshipForm
+├── graphql/            Apollo client, queries, mutations
+├── hooks/              useAuth, useMyTree, useFamilyTree
+├── auth/               session.ts (JWT storage, REST auth helpers)
+└── styles/             jali-theme.css
+```
 
-- `http://localhost:5173` (Vite)
-- `http://localhost:3000` (Create React App)
-
-Override in `application.properties`:
+CORS is enabled for local Vite dev (`http://localhost:5173`). Override in `application.properties`:
 
 ```properties
 jali.cors.allowed-origins=http://localhost:5173,http://localhost:3000
 ```
 
-Send the JWT on every API call:
-
-```
-Authorization: Bearer <token>
-```
-
-For GraphQL from the browser, `POST /graphql` with the same header. GraphiQL remains public at `/graphiql` for manual testing.
-
-**Recommended API split for the UI:**
+**API usage in the UI:**
 
 | UI concern | API |
 |------------|-----|
-| Login / register | REST `/auth/*` |
-| Tree visualization | GraphQL `person`, `myTree` |
-| Create people / links | REST `/people`, `/relationships` |
-| Voice memos | REST `/voice-memos/*` (multipart upload via `FormData`) |
+| Login / register / me / tree name | REST `/auth/*` |
+| Load tree, add/update people, link relationships | GraphQL `myTree`, mutations |
+| Voice memos (future UI) | REST `/voice-memos/*` |
+
+Apollo attaches the JWT from `localStorage` on every GraphQL request (`graphql/client.ts`).
 
 ---
 
@@ -255,6 +352,8 @@ For GraphQL from the browser, `POST /graphql` with the same header. GraphiQL rem
 | `application.properties` | Defaults (Postgres URL, JWT, GraphiQL, CORS) |
 | `application-local.properties` | Neo4j + OpenAI + Anthropic secrets (not committed) |
 | `docker-compose.yml` | Local Postgres |
+| `frontend/.env.local` | `VITE_API_URL` for local/dev overrides (not committed) |
+| `frontend/.env.example` | Template for `VITE_API_URL` |
 
 ---
 

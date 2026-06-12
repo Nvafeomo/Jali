@@ -10,6 +10,25 @@ import { peopleById } from '../utils/enrichPeople';
 import type { Person } from '../types';
 import styles from './TreePage.module.css';
 
+const EmptyTreeGraphic = () => (
+  <svg
+    className={styles.emptyGraphic}
+    viewBox="0 0 88 64"
+    fill="none"
+    aria-hidden
+  >
+    <circle cx="44" cy="14" r="9" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="22" cy="44" r="8" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="66" cy="44" r="8" stroke="currentColor" strokeWidth="1.5" />
+    <path
+      d="M44 23v11M44 34l-18 10M44 34l18 10"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 const TreePage = () => {
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [showAddPanel, setShowAddPanel] = useState(false);
@@ -23,30 +42,34 @@ const TreePage = () => {
 
   const handlePersonSelect = (person: Person) => {
     setSelectedPersonId(person.id);
-    setShowAddPanel(false); // close add panel if open
+    setShowAddPanel(false);
   };
 
   const handleOpenAdd = () => {
-    setSelectedPersonId(null); // close drawer if open
+    setSelectedPersonId(null);
     setShowAddPanel(true);
   };
 
-  // Determine what's showing in the right panel
-  const rightPanel = showAddPanel
-    ? 'add'
-    : selectedPerson
-    ? 'drawer'
-    : null;
+  const rightPanel = showAddPanel ? 'add' : selectedPerson ? 'drawer' : null;
+  const memberLabel = people.length === 1 ? '1 member' : `${people.length} members`;
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <span className={styles.logo}>Jali</span>
-        <EditableTreeName
-          name={treeName}
-          canEdit={canEditTreeName}
-          onSave={updateTreeName}
-        />
+        <div className={styles.headerBrand}>
+          <span className={styles.logo}>Jali</span>
+        </div>
+        <div className={styles.headerDivider} aria-hidden />
+        <div className={styles.headerMain}>
+          <EditableTreeName
+            name={treeName}
+            canEdit={canEditTreeName}
+            onSave={updateTreeName}
+          />
+          {!loading && !error && people.length > 0 && (
+            <span className={styles.memberCount}>{memberLabel}</span>
+          )}
+        </div>
 
         <div className={styles.headerActions}>
           {isAuthenticated && email && (
@@ -68,22 +91,31 @@ const TreePage = () => {
       <div className={styles.main}>
         <div className={styles.treeArea}>
           {loading && (
-            <div className={styles.centered}>Loading your family tree…</div>
+            <div className={`${styles.centered} ${styles.loadingState}`}>
+              <div className={styles.spinner} aria-hidden />
+              <p>Loading your family tree…</p>
+            </div>
           )}
 
           {error && (
-            <div className={styles.centered}>
-              <p>Could not load tree.</p>
+            <div className={`${styles.centered} ${styles.errorState}`}>
+              <p className={styles.errorTitle}>Could not load tree</p>
               <p className={styles.errorDetail}>{error.message}</p>
             </div>
           )}
 
           {!loading && !error && people.length === 0 && (
             <div className={styles.centered}>
-              <p>Your family tree is empty.</p>
-              <button className={styles.emptyAddButton} onClick={handleOpenAdd}>
-                + Add your first family member
-              </button>
+              <div className={styles.emptyState}>
+                <EmptyTreeGraphic />
+                <h2 className={styles.emptyTitle}>Your family tree is empty</h2>
+                <p className={styles.emptyHint}>
+                  Add your first person to begin mapping your lineage and preserving their story.
+                </p>
+                <button className={styles.emptyAddButton} onClick={handleOpenAdd}>
+                  + Add your first family member
+                </button>
+              </div>
             </div>
           )}
 

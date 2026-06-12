@@ -12,8 +12,13 @@
   --jali-text-subtle: #64748b;
   --jali-accent: #a78bfa;
   --jali-accent-hover: #8b5cf6;
+  --jali-accent-glow: rgba(167, 139, 250, 0.14);
+  --jali-accent-ring: rgba(167, 139, 250, 0.22);
+  --jali-border-accent: rgba(167, 139, 250, 0.18);
   --jali-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --jali-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   --jali-radius: 12px;
+  --jali-radius-lg: 16px;
   --jali-radius-sm: 8px;
 
   --jali-confidence-high: #4ade80;
