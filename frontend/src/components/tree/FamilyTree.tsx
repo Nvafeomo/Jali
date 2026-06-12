@@ -6,12 +6,12 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  type Node,
   type NodeMouseHandler,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import type { Person } from '../../types';
-import { MOCK_TREE } from '../../graphql/mockData';
 import { buildLayout } from './treeLayout';
 import PersonNode from './PersonNode';
 import TreeLegend from './TreeLegend';
@@ -23,15 +23,11 @@ import styles from './FamilyTree.module.css';
 const nodeTypes = { person: PersonNode };
 
 interface FamilyTreeProps {
-  // When a node is clicked, we pass the Person up to the parent (TreePage)
-  // so it can open the drawer. This keeps the drawer logic out of the tree.
+  people: Person[];
   onPersonSelect: (person: Person) => void;
 }
 
-const FamilyTree = ({ onPersonSelect }: FamilyTreeProps) => {
-  // For now we use mock data. Later we'll swap this for a useQuery(GET_MY_TREE) call.
-  // The swap will be one line: replace MOCK_TREE.people with data.myTree.people
-  const people = MOCK_TREE.people;
+const FamilyTree = ({ people, onPersonSelect }: FamilyTreeProps) => {
 
   // Build the React Flow nodes and edges from our person data.
   // useMemo means this only recalculates when `people` changes, not on every render.
@@ -40,7 +36,13 @@ const FamilyTree = ({ onPersonSelect }: FamilyTreeProps) => {
       const { nodes, edges } = buildLayout(people);
       // Tag each node with type: 'person' so React Flow uses our PersonNode component
       return {
-        nodes: nodes.map(n => ({ ...n, type: 'person', draggable: false })),
+        nodes: nodes.map(n => ({
+          id: n.id,
+          type: 'person',
+          position: n.position,
+          draggable: false,
+          data: n.data as unknown as Record<string, unknown>,
+        })) as Node[],
         edges,
       };
     },
@@ -89,7 +91,7 @@ const FamilyTree = ({ onPersonSelect }: FamilyTreeProps) => {
         {/* MiniMap: small overview in the corner for large trees */}
         <MiniMap
           nodeColor={node => {
-            const person = node.data as Person;
+            const person = node.data as unknown as Person;
             if (person.isUnknownPlaceholder) return '#475569';
             const score = person.confidenceScore;
             return score >= 0.7 ? '#4ade80' : score >= 0.4 ? '#facc15' : '#f87171';

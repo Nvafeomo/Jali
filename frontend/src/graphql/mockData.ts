@@ -1,4 +1,5 @@
 import type { FamilyTree, Person, RelationshipEdge } from '../types';
+import { enrichPeople } from '../utils/enrichPeople';
 
 function personRef(id: string, fullName: string): Person {
   return {
@@ -104,7 +105,7 @@ export const MOCK_TREE: FamilyTree = {
       biologicalSex: 'FEMALE',
       confidenceScore: 0.78,
       isUnknownPlaceholder: false,
-      parents: [parentOf('p3', 'Unknown Ancestor', 0.1)],
+      parents: [parentOf('p3', 'Unknown Ancestor', 0.1, true)],
       spouses: [marriedTo('p4', 'Ibrahim Kouyaté', 0.75)],
     },
 
@@ -165,3 +166,5 @@ export const MOCK_TREE: FamilyTree = {
     },
   ],
 };
+
+export const MOCK_PEOPLE = enrichPeople(MOCK_TREE.people);

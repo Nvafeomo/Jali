@@ -41,42 +41,11 @@
   overflow: hidden;
 }
 
-/* Drawer slides in from the right */
+/* Drawer panel — PersonDrawer handles its own padding */
 .drawer {
   width: 360px;
   background: #1e1e2e;
   border-left: 1px solid #334155;
-  overflow-y: auto;
-  padding: 24px;
-  position: relative;
+  overflow: hidden;
   flex-shrink: 0;
-}
-
-.closeBtn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.closeBtn:hover {
-  background: #334155;
-  color: #e2e8f0;
-}
-
-.drawerPlaceholder h2 {
-  font-size: 18px;
-  color: #e2e8f0;
-  margin: 0 0 8px;
-}
-
-.drawerPlaceholder p {
-  color: #94a3b8;
-  font-size: 14px;
 }
