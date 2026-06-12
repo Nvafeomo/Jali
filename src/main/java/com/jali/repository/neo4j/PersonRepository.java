@@ -84,4 +84,34 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 			@Param("aUuid") String aUuid,
 			@Param("bUuid") String bUuid,
 			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
+			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
+			CREATE (from)-[:PARENT_OF {confidenceScore: 0.10, disputed: false}]->(to)
+			""")
+	void createParentOfEdge(
+			@Param("fromUuid") String fromUuid,
+			@Param("toUuid") String toUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
+			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
+			CREATE (from)-[:MARRIED_TO {confidenceScore: 1.0}]->(to)
+			""")
+	void createMarriedToEdge(
+			@Param("fromUuid") String fromUuid,
+			@Param("toUuid") String toUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
+			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
+			CREATE (from)-[:SIBLING_OF {confidenceScore: 1.0}]->(to)
+			""")
+	void createSiblingOfEdge(
+			@Param("fromUuid") String fromUuid,
+			@Param("toUuid") String toUuid,
+			@Param("familyTreeId") Long familyTreeId);
 }

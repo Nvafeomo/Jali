@@ -117,7 +117,9 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
 // --- Hook ---
 
 export function useMyTree() {
-  const { data, loading, error } = useQuery<{ myTree: RawPerson[] }>(MY_TREE_QUERY);
+  const { data, loading, error } = useQuery<{ myTree: RawPerson[] }>(MY_TREE_QUERY, {
+    errorPolicy: 'all',
+  });
 
   const people: Person[] = data?.myTree ? mapToPersons(data.myTree) : [];
 

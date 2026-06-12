@@ -7,11 +7,15 @@ import { formatLifeYears } from '../../utils/vitalYears';
 import styles from './LinkRelationshipForm.module.css';
 
 function graphQLErrorMessage(error: unknown): string {
-  if (error && typeof error === 'object' && 'graphQLErrors' in error) {
-    const gqlErrors = (error as { graphQLErrors?: Array<{ message?: string }> }).graphQLErrors;
-    if (gqlErrors?.[0]?.message) return gqlErrors[0].message;
+  if (error && typeof error === 'object') {
+    const withErrors = error as { errors?: Array<{ message?: string }>; graphQLErrors?: Array<{ message?: string }> };
+    const first = withErrors.errors?.[0]?.message ?? withErrors.graphQLErrors?.[0]?.message;
+    if (first && !first.startsWith('INTERNAL_ERROR for')) return first;
+    if (first) return 'Something went wrong on the server. Try again or check backend logs.';
   }
-  if (error instanceof Error && error.message) return error.message;
+  if (error instanceof Error && error.message && !error.message.startsWith('INTERNAL_ERROR for')) {
+    return error.message;
+  }
   return 'Could not create relationship.';
 }
 
@@ -89,6 +93,8 @@ const LinkRelationshipForm = ({
 
   const [linkPeople, { loading }] = useMutation(CREATE_RELATIONSHIP_MUTATION, {
     refetchQueries: [{ query: MY_TREE_QUERY }],
+    awaitRefetchQueries: true,
+    errorPolicy: 'all',
     onCompleted: () => {
       setOpen(false);
       onLinkTargetChange(null);
@@ -107,9 +113,16 @@ const LinkRelationshipForm = ({
       return;
     }
 
-    await linkPeople({
-      variables: toMutationVars(person.id, linkTargetId, role),
-    });
+    try {
+      const result = await linkPeople({
+        variables: toMutationVars(person.id, linkTargetId, role),
+      });
+      if (result.error) {
+        setError(graphQLErrorMessage(result.error));
+      }
+    } catch (err) {
+      setError(graphQLErrorMessage(err));
+    }
   };
 
   if (candidates.length === 0) {

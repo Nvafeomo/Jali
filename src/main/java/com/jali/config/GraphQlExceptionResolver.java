@@ -1,5 +1,6 @@
 package com.jali.config;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
 import org.springframework.graphql.execution.ErrorType;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,29 @@ public class GraphQlExceptionResolver extends DataFetcherExceptionResolverAdapte
 					.build();
 		}
 
+		if (ex instanceof IllegalStateException ise) {
+			return GraphqlErrorBuilder.newError(env)
+					.errorType(ErrorType.BAD_REQUEST)
+					.message(ise.getMessage())
+					.build();
+		}
+
+		if (ex instanceof DataAccessException dae) {
+			String message = rootMessage(dae);
+			return GraphqlErrorBuilder.newError(env)
+					.errorType(ErrorType.INTERNAL)
+					.message(message != null ? message : "Database error while processing request")
+					.build();
+		}
+
+		String message = rootMessage(ex);
+		if (message != null && !message.isBlank() && !message.startsWith("INTERNAL_ERROR for")) {
+			return GraphqlErrorBuilder.newError(env)
+					.errorType(ErrorType.INTERNAL)
+					.message(message)
+					.build();
+		}
+
 		return null;
 	}
 
@@ -47,6 +71,18 @@ public class GraphQlExceptionResolver extends DataFetcherExceptionResolverAdapte
 			current = current.getCause();
 		}
 		return null;
+	}
+
+	private static String rootMessage(Throwable ex) {
+		Throwable current = ex;
+		String message = null;
+		while (current != null) {
+			if (current.getMessage() != null && !current.getMessage().isBlank()) {
+				message = current.getMessage();
+			}
+			current = current.getCause();
+		}
+		return message;
 	}
 
 	private static ErrorType mapStatus(HttpStatusCode statusCode) {

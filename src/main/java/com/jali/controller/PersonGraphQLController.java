@@ -130,6 +130,11 @@ public class PersonGraphQLController {
 		return personGracePeriodService.isWithinGracePeriod(person);
 	}
 
+	@SchemaMapping(typeName = "Person", field = "createdAt")
+	public String createdAt(Person person) {
+		return person.getCreatedAt() != null ? person.getCreatedAt().toString() : null;
+	}
+
 	@SchemaMapping(typeName = "Person", field = "children")
 	public List<Map<String, Object>> children(Person person) {
 		if (person.getChildren() == null) {
@@ -140,7 +145,7 @@ public class PersonGraphQLController {
 				.map(r -> {
 			Map<String, Object> edge = new HashMap<>();
 			edge.put("person", r.getChild());
-			edge.put("confidenceScore", r.getConfidenceScore());
+			edge.put("confidenceScore", r.getConfidenceScore() != null ? r.getConfidenceScore() : 1.0);
 			edge.put("disputed", Boolean.TRUE.equals(r.getDisputed()));
 			return edge;
 		}).toList();
@@ -156,7 +161,7 @@ public class PersonGraphQLController {
 				.map(r -> {
 			Map<String, Object> edge = new HashMap<>();
 			edge.put("person", r.getSpouse());
-			edge.put("confidenceScore", r.getConfidenceScore());
+			edge.put("confidenceScore", r.getConfidenceScore() != null ? r.getConfidenceScore() : 1.0);
 			edge.put("disputed", false);
 			return edge;
 		}).toList();
@@ -172,7 +177,7 @@ public class PersonGraphQLController {
 				.map(r -> {
 			Map<String, Object> edge = new HashMap<>();
 			edge.put("person", r.getSibling());
-			edge.put("confidenceScore", r.getConfidenceScore());
+			edge.put("confidenceScore", r.getConfidenceScore() != null ? r.getConfidenceScore() : 1.0);
 			edge.put("disputed", false);
 			return edge;
 		}).toList();
