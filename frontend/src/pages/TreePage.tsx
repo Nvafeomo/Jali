@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import FamilyTree from '../components/tree/FamilyTree';
 import PersonDrawer from '../components/profile/PersonDrawer';
 import AddPersonPanel from '../components/tree/AddPersonPanel';
+import { useAuth } from '../hooks/useAuth';
 import { useMyTree } from '../hooks/useMyTree';
 import { peopleById } from '../utils/enrichPeople';
 import type { Person } from '../types';
@@ -11,6 +12,7 @@ const TreePage = () => {
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [showAddPanel, setShowAddPanel] = useState(false);
 
+  const { email, isAuthenticated, logout } = useAuth();
   const { people, loading, error } = useMyTree();
 
   const lookup = useMemo(() => peopleById(people), [people]);
@@ -38,9 +40,22 @@ const TreePage = () => {
       <header className={styles.header}>
         <span className={styles.logo}>Jali</span>
         <span className={styles.treeName}>My Family Tree</span>
-        <button className={styles.addButton} onClick={handleOpenAdd}>
-          + Add person
-        </button>
+
+        <div className={styles.headerActions}>
+          {isAuthenticated && email && (
+            <span className={styles.userEmail} title={email}>
+              {email}
+            </span>
+          )}
+          {isAuthenticated && (
+            <button type="button" className={styles.logoutButton} onClick={logout}>
+              Log out
+            </button>
+          )}
+          <button className={styles.addButton} onClick={handleOpenAdd}>
+            + Add person
+          </button>
+        </div>
       </header>
 
       <div className={styles.main}>
@@ -83,6 +98,7 @@ const TreePage = () => {
           <aside className={styles.drawer}>
             <PersonDrawer
               person={selectedPerson}
+              allPeople={people}
               lookup={lookup}
               onPersonSelect={handlePersonSelect}
               onClose={() => setSelectedPersonId(null)}

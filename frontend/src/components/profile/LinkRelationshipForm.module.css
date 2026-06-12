@@ -1,0 +1,101 @@
+.hint {
+  font-size: 12px;
+  color: var(--jali-text-subtle);
+  margin: 0;
+}
+
+.toggle {
+  background: none;
+  border: 1px dashed var(--jali-border);
+  color: var(--jali-text-subtle);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.toggle:hover {
+  border-color: var(--jali-accent);
+  color: var(--jali-accent);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--jali-bg);
+  border: 1px solid var(--jali-border);
+  border-radius: var(--jali-radius-sm);
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--jali-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input {
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--jali-border);
+  background: var(--jali-surface);
+  color: var(--jali-text);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--jali-accent);
+}
+
+.error {
+  font-size: 12px;
+  color: #f87171;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancel,
+.submit {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel {
+  background: transparent;
+  border: 1px solid var(--jali-border);
+  color: var(--jali-text-muted);
+}
+
+.cancel:hover {
+  color: var(--jali-text);
+}
+
+.submit {
+  background: var(--jali-accent);
+  border: none;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -126,7 +126,14 @@
 .vitalValue { color: var(--jali-text); }
 .living { color: var(--jali-confidence-high); font-weight: 500; }
 
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+
+.relGroupLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--jali-text-muted);
+  margin: 0 0 6px;
+}
 
 .chip {
   background: var(--jali-bg);

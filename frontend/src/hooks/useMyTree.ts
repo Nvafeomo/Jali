@@ -1,6 +1,5 @@
 import { useQuery } from '@apollo/client/react';
 import { MY_TREE_QUERY } from '../graphql/queries';
-import { MOCK_PEOPLE } from '../graphql/mockData';
 import type { Person, RelationshipEdge } from '../types';
 
 // --- Raw GraphQL shapes (what Apollo gives us before we map) ---
@@ -114,14 +113,7 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
 export function useMyTree() {
   const { data, loading, error } = useQuery<{ myTree: RawPerson[] }>(MY_TREE_QUERY);
 
-  let people: Person[] = data?.myTree ? mapToPersons(data.myTree) : [];
-
-  // DEV fallback: if the real tree is empty, show the mock Kouyaté tree.
-  // Useful for the tester account (test@test.com) as a visual reference
-  // while building. Stripped out automatically in production builds.
-  if (import.meta.env.DEV && !loading && !error && people.length === 0) {
-    people = MOCK_PEOPLE;
-  }
+  const people: Person[] = data?.myTree ? mapToPersons(data.myTree) : [];
 
   return { people, loading, error };
 }

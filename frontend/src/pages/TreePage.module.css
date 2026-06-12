@@ -28,7 +28,41 @@
 .treeName {
   font-size: 14px;
   color: var(--jali-text-muted);
-  flex: 1; /* pushes add button to the right */
+  flex: 1;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.userEmail {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--jali-text-muted);
+}
+
+.logoutButton {
+  padding: 0.4rem 0.85rem;
+  background: transparent;
+  color: var(--jali-text-muted);
+  border: 1px solid var(--jali-border);
+  border-radius: var(--jali-radius-sm, 6px);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.logoutButton:hover {
+  color: var(--jali-text);
+  border-color: var(--jali-text-subtle);
+  background: var(--jali-surface-muted);
 }
 
 .addButton {

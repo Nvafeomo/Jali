@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import type { Person, StoryMemory } from '../../types';
+import LinkRelationshipForm from './LinkRelationshipForm';
 import styles from './PersonDrawer.module.css';
 
 interface Props {
   person: Person;
+  allPeople: Person[];
   lookup: Map<string, Person>;
   onPersonSelect: (person: Person) => void;
   onClose: () => void;
@@ -68,7 +70,7 @@ const StoryItem = ({ story }: { story: StoryMemory }) => {
 };
 
 // ── Main drawer ─────────────────────────────────────────────────────────────
-const PersonDrawer = ({ person, lookup, onPersonSelect, onClose }: Props) => {
+const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Props) => {
   const { label: scoreLabel, cls: scoreCls } = confidenceLabel(person.confidenceScore);
 
   // When a chip is clicked, look up the full enriched Person from the lookup map.
@@ -161,63 +163,76 @@ const PersonDrawer = ({ person, lookup, onPersonSelect, onClose }: Props) => {
       </section>
 
       {/* ── Relationships ───────────────────────────────── */}
-      {person.parents && person.parents.length > 0 && (
-        <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Parents</h3>
-          <div className={styles.chips}>
-            {person.parents.map(rel => (
-              <button
-                key={rel.person.id}
-                className={[styles.chip, rel.disputed ? styles.chipDisputed : ''].join(' ')}
-                onClick={() => handleChipClick(rel.person)}
-                title={`${Math.round(rel.confidenceScore * 100)}% confidence${rel.disputed ? ' · disputed' : ''}`}
-              >
-                {rel.person.fullName}
-                {rel.disputed && <span className={styles.disputedDot}>⚠</span>}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Relationships</h3>
 
-      {person.children && person.children.length > 0 && (
-        <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Children</h3>
-          <div className={styles.chips}>
-            {person.children.map(rel => (
-              <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
-                {rel.person.fullName}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+        {person.parents && person.parents.length > 0 && (
+          <>
+            <p className={styles.relGroupLabel}>Parents</p>
+            <div className={styles.chips}>
+              {person.parents.map(rel => (
+                <button
+                  key={rel.person.id}
+                  className={[styles.chip, rel.disputed ? styles.chipDisputed : ''].join(' ')}
+                  onClick={() => handleChipClick(rel.person)}
+                  title={`${Math.round(rel.confidenceScore * 100)}% confidence${rel.disputed ? ' · disputed' : ''}`}
+                >
+                  {rel.person.fullName}
+                  {rel.disputed && <span className={styles.disputedDot}>⚠</span>}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
-      {person.spouses && person.spouses.length > 0 && (
-        <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Spouse{person.spouses.length > 1 ? 's' : ''}</h3>
-          <div className={styles.chips}>
-            {person.spouses.map(rel => (
-              <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
-                {rel.person.fullName}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+        {person.children && person.children.length > 0 && (
+          <>
+            <p className={styles.relGroupLabel}>Children</p>
+            <div className={styles.chips}>
+              {person.children.map(rel => (
+                <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
+                  {rel.person.fullName}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
-      {person.siblings && person.siblings.length > 0 && (
-        <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Siblings</h3>
-          <div className={styles.chips}>
-            {person.siblings.map(rel => (
-              <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
-                {rel.person.fullName}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+        {person.spouses && person.spouses.length > 0 && (
+          <>
+            <p className={styles.relGroupLabel}>Spouse{person.spouses.length > 1 ? 's' : ''}</p>
+            <div className={styles.chips}>
+              {person.spouses.map(rel => (
+                <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
+                  {rel.person.fullName}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {person.siblings && person.siblings.length > 0 && (
+          <>
+            <p className={styles.relGroupLabel}>Siblings</p>
+            <div className={styles.chips}>
+              {person.siblings.map(rel => (
+                <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
+                  {rel.person.fullName}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {!person.parents?.length &&
+          !person.children?.length &&
+          !person.spouses?.length &&
+          !person.siblings?.length && (
+            <p className={styles.emptyState}>No relationships linked yet.</p>
+          )}
+
+        <LinkRelationshipForm person={person} allPeople={allPeople} />
+      </section>
 
       {/* ── Stories & memories ──────────────────────────── */}
       <section className={styles.section}>

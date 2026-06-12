@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { saveAuthSession } from '../auth/session';
 import styles from './LoginPage.module.css'; // same visual design as login
 
 // SignupPage calls POST /auth/register.
@@ -48,8 +49,7 @@ const SignupPage = () => {
 
       const data = await res.json();
 
-      // Register returns a token just like login — skip the extra login step
-      localStorage.setItem('jali_token', data.token);
+      saveAuthSession({ token: data.token, email: data.email });
       navigate('/tree', { replace: true });
     } catch {
       setError('Could not connect to server. Is the backend running?');

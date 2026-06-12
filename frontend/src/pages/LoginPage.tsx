@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { saveAuthSession } from '../auth/session';
 import styles from './LoginPage.module.css';
 
 // LoginPage handles email/password authentication.
@@ -43,8 +44,7 @@ const LoginPage = () => {
 
       const data = await res.json();
 
-      // Store the JWT — Apollo reads this key before every GraphQL request
-      localStorage.setItem('jali_token', data.token);
+      saveAuthSession({ token: data.token, email: data.email });
 
       // Navigate to the tree; replace=true so back button doesn't return to login
       navigate('/tree', { replace: true });
