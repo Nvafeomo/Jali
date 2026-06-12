@@ -173,3 +173,76 @@
   transition: border-color 0.15s, color 0.15s;
 }
 .addBtn:hover { border-color: #a78bfa; color: #a78bfa; }
+
+/* ── Bio ──────────────────────────────────────────── */
+.bio {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin: 0;
+  padding: 14px 0 0;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 16px;
+}
+
+/* ── Stories accordion ────────────────────────────── */
+.storyList { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+
+.storyItem {
+  border: 1px solid #334155;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.storyHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #1e293b;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: #e2e8f0;
+}
+.storyHeader:hover { background: #253047; }
+
+.storyIcon { font-size: 14px; flex-shrink: 0; }
+
+.storyTitle {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.storyMeta { font-size: 10px; color: #64748b; white-space: nowrap; flex-shrink: 0; }
+.storyChevron { font-size: 9px; color: #64748b; flex-shrink: 0; }
+
+.storyBody {
+  padding: 12px;
+  background: #0f172a;
+  border-top: 1px solid #334155;
+}
+
+.audioPlayer { width: 100%; margin-bottom: 10px; }
+
+.audioPlaceholder {
+  font-size: 11px;
+  color: #475569;
+  padding: 6px 0 10px;
+}
+
+.transcript {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.7;
+  margin: 0;
+  font-style: italic;
+}
+
+.addBtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }

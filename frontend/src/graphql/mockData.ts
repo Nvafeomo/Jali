@@ -82,6 +82,7 @@ export const MOCK_TREE: FamilyTree = {
     {
       id: 'p4',
       fullName: 'Ibrahim Kouyaté',
+      bio: 'Ibrahim was a respected elder in the Mandinka community of Monrovia. He was known for his knowledge of family genealogy and oral history, and spent his later years recording stories of his ancestors.',
       birthDate: '1928',
       deathDate: '2001',
       birthplace: 'Monrovia, Liberia',
@@ -89,6 +90,26 @@ export const MOCK_TREE: FamilyTree = {
       biologicalSex: 'MALE',
       confidenceScore: 0.82,
       isUnknownPlaceholder: false,
+      stories: [
+        {
+          id: 's1',
+          memoryType: 'AUDIO',
+          title: 'His journey from Guinea to Liberia',
+          transcript: 'My father told me that we came from Kankan, near the Niger River. The journey took many weeks. He was young, maybe twelve years old, when his family crossed into Liberia seeking work...',
+          recordedBy: 'Amadou Kouyaté',
+          createdAt: '2019-03-14',
+          status: 'APPLIED',
+        },
+        {
+          id: 's2',
+          memoryType: 'TEXT',
+          title: 'What the elders said about our clan name',
+          transcript: 'The Kouyaté name belongs to the jali tradition. We are hereditary griots — keepers of history for the Keita kings of the Mali Empire. This is what my grandfather told me before he passed.',
+          recordedBy: 'Kadiatou Kouyaté',
+          createdAt: '2021-07-02',
+          status: 'APPLIED',
+        },
+      ],
       parents: [
         parentOf('p1', 'Musa Kouyaté', 0.55),
         parentOf('p2', 'Fatoumata Diabaté', 0.55),

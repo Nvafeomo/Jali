@@ -1,9 +1,9 @@
-import type { Person, RelationshipEdge } from '../../types';
+import { useState } from 'react';
+import type { Person, StoryMemory } from '../../types';
 import styles from './PersonDrawer.module.css';
 
 interface Props {
   person: Person;
-  /** Full tree records keyed by id — chip clicks resolve through this. */
   lookup: Map<string, Person>;
   onPersonSelect: (person: Person) => void;
   onClose: () => void;
@@ -16,60 +16,73 @@ function confidenceLabel(score: number): { label: string; cls: string } {
 }
 
 function initials(name: string): string {
-  return name
-    .split(' ')
-    .map(w => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
-function RelationshipChips({
-  title,
-  relationships,
-  lookup,
-  onPersonSelect,
-}: {
-  title: string;
-  relationships: RelationshipEdge[];
-  lookup: Map<string, Person>;
-  onPersonSelect: (person: Person) => void;
-}) {
+// Derives a display title for a story:
+// uses the user-set title if present, otherwise the first sentence of transcript.
+function storyTitle(story: StoryMemory): string {
+  if (story.title) return story.title;
+  if (story.transcript) {
+    const first = story.transcript.split(/[.!?]/)[0].trim();
+    return first.length > 60 ? first.slice(0, 60) + '…' : first;
+  }
+  return 'Untitled memory';
+}
+
+// ── Accordion item for a single story ──────────────────────────────────────
+const StoryItem = ({ story }: { story: StoryMemory }) => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <section className={styles.section}>
-      <h3 className={styles.sectionTitle}>{title}</h3>
-      <div className={styles.chips}>
-        {relationships.map(rel => {
-          const resolved = lookup.get(rel.person.id) ?? rel.person;
-          const label = resolved.isUnknownPlaceholder ? 'Unknown Ancestor' : resolved.fullName;
+    <div className={styles.storyItem}>
+      <button className={styles.storyHeader} onClick={() => setOpen(o => !o)}>
+        <span className={styles.storyIcon}>
+          {story.memoryType === 'AUDIO' ? '🎙' : '✍️'}
+        </span>
+        <span className={styles.storyTitle}>{storyTitle(story)}</span>
+        <span className={styles.storyMeta}>
+          {story.recordedBy && <span>{story.recordedBy} · </span>}
+          {story.createdAt}
+        </span>
+        <span className={styles.storyChevron}>{open ? '▲' : '▼'}</span>
+      </button>
 
-          return (
-            <button
-              key={rel.person.id}
-              type="button"
-              className={[styles.chip, rel.disputed ? styles.chipDisputed : ''].join(' ')}
-              onClick={() => onPersonSelect(resolved)}
-              title={`${Math.round(rel.confidenceScore * 100)}% confidence${rel.disputed ? ' · disputed' : ''}`}
-            >
-              {label}
-              {rel.disputed && <span className={styles.disputedDot}>⚠</span>}
-            </button>
-          );
-        })}
-      </div>
-    </section>
+      {open && (
+        <div className={styles.storyBody}>
+          {/* Audio player stub — will use <audio> tag once S3 URLs are real */}
+          {story.memoryType === 'AUDIO' && story.audioUrl && (
+            <audio controls src={story.audioUrl} className={styles.audioPlayer} />
+          )}
+          {story.memoryType === 'AUDIO' && !story.audioUrl && (
+            <div className={styles.audioPlaceholder}>Audio not yet available</div>
+          )}
+
+          {story.transcript && (
+            <p className={styles.transcript}>"{story.transcript}"</p>
+          )}
+        </div>
+      )}
+    </div>
   );
-}
+};
 
+// ── Main drawer ─────────────────────────────────────────────────────────────
 const PersonDrawer = ({ person, lookup, onPersonSelect, onClose }: Props) => {
   const { label: scoreLabel, cls: scoreCls } = confidenceLabel(person.confidenceScore);
 
+  // When a chip is clicked, look up the full enriched Person from the lookup map.
+  // The chip only has a stub Person (id + fullName), so we need the full record.
+  const handleChipClick = (stubPerson: Person) => {
+    const full = lookup.get(stubPerson.id);
+    if (full) onPersonSelect(full);
+  };
+
   return (
     <div className={styles.drawer}>
-      <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close profile">
-        ✕
-      </button>
+      <button className={styles.closeBtn} onClick={onClose}>✕</button>
 
+      {/* ── Header ──────────────────────────────────────── */}
       <div className={styles.header}>
         <div className={[styles.avatar, person.isUnknownPlaceholder ? styles.avatarPlaceholder : ''].join(' ')}>
           {person.isUnknownPlaceholder ? (
@@ -80,7 +93,6 @@ const PersonDrawer = ({ person, lookup, onPersonSelect, onClose }: Props) => {
             <span className={styles.avatarInitials}>{initials(person.fullName)}</span>
           )}
         </div>
-
         <div className={styles.headerInfo}>
           <h2 className={styles.name}>
             {person.isUnknownPlaceholder ? 'Unknown Ancestor' : person.fullName}
@@ -95,6 +107,13 @@ const PersonDrawer = ({ person, lookup, onPersonSelect, onClose }: Props) => {
         </div>
       </div>
 
+      {/* ── Bio ─────────────────────────────────────────── */}
+      {/* Sits right under the header — no section title, reads like a caption */}
+      {person.bio && (
+        <p className={styles.bio}>{person.bio}</p>
+      )}
+
+      {/* ── Vitals ──────────────────────────────────────── */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Details</h3>
         <div className={styles.vitals}>
@@ -135,64 +154,94 @@ const PersonDrawer = ({ person, lookup, onPersonSelect, onClose }: Props) => {
           {person.biologicalSex && (
             <div className={styles.vitalRow}>
               <span className={styles.vitalLabel}>Sex</span>
-              <span className={styles.vitalValue}>
-                {person.biologicalSex === 'MALE' ? 'Male' : 'Female'}
-              </span>
+              <span className={styles.vitalValue}>{person.biologicalSex === 'MALE' ? 'Male' : 'Female'}</span>
             </div>
           )}
         </div>
       </section>
 
+      {/* ── Relationships ───────────────────────────────── */}
       {person.parents && person.parents.length > 0 && (
-        <RelationshipChips
-          title="Parents"
-          relationships={person.parents}
-          lookup={lookup}
-          onPersonSelect={onPersonSelect}
-        />
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Parents</h3>
+          <div className={styles.chips}>
+            {person.parents.map(rel => (
+              <button
+                key={rel.person.id}
+                className={[styles.chip, rel.disputed ? styles.chipDisputed : ''].join(' ')}
+                onClick={() => handleChipClick(rel.person)}
+                title={`${Math.round(rel.confidenceScore * 100)}% confidence${rel.disputed ? ' · disputed' : ''}`}
+              >
+                {rel.person.fullName}
+                {rel.disputed && <span className={styles.disputedDot}>⚠</span>}
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {person.children && person.children.length > 0 && (
-        <RelationshipChips
-          title="Children"
-          relationships={person.children}
-          lookup={lookup}
-          onPersonSelect={onPersonSelect}
-        />
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Children</h3>
+          <div className={styles.chips}>
+            {person.children.map(rel => (
+              <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
+                {rel.person.fullName}
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {person.spouses && person.spouses.length > 0 && (
-        <RelationshipChips
-          title={person.spouses.length > 1 ? 'Spouses' : 'Spouse'}
-          relationships={person.spouses}
-          lookup={lookup}
-          onPersonSelect={onPersonSelect}
-        />
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Spouse{person.spouses.length > 1 ? 's' : ''}</h3>
+          <div className={styles.chips}>
+            {person.spouses.map(rel => (
+              <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
+                {rel.person.fullName}
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {person.siblings && person.siblings.length > 0 && (
-        <RelationshipChips
-          title="Siblings"
-          relationships={person.siblings}
-          lookup={lookup}
-          onPersonSelect={onPersonSelect}
-        />
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Siblings</h3>
+          <div className={styles.chips}>
+            {person.siblings.map(rel => (
+              <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
+                {rel.person.fullName}
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
+      {/* ── Stories & memories ──────────────────────────── */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Voice Memos</h3>
-        <p className={styles.emptyState}>No voice memos yet.</p>
-        <button type="button" className={styles.addBtn}>
-          + Record or upload memo
-        </button>
+        <h3 className={styles.sectionTitle}>Stories &amp; Memories</h3>
+        {person.stories && person.stories.length > 0 ? (
+          <div className={styles.storyList}>
+            {person.stories.map(story => (
+              <StoryItem key={story.id} story={story} />
+            ))}
+          </div>
+        ) : (
+          <p className={styles.emptyState}>No stories recorded yet.</p>
+        )}
+        <div className={styles.addBtns}>
+          <button className={styles.addBtn}>🎙 Record audio</button>
+          <button className={styles.addBtn}>✍️ Write memory</button>
+        </div>
       </section>
 
+      {/* ── Photos ──────────────────────────────────────── */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Photos</h3>
         <p className={styles.emptyState}>No photos uploaded yet.</p>
-        <button type="button" className={styles.addBtn}>
-          + Upload photo
-        </button>
+        <button className={styles.addBtn}>+ Upload photo</button>
       </section>
     </div>
   );
