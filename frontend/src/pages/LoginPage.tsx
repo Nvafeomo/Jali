@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { saveAuthSession } from '../auth/session';
+import { saveAuthSession, authLogin } from '../auth/session';
 import styles from './LoginPage.module.css';
 
 // LoginPage handles email/password authentication.
@@ -25,32 +25,12 @@ const LoginPage = () => {
     setError(null);
 
     try {
-      // We use fetch (not Apollo) here because auth is a REST endpoint.
-      // GraphQL is for data once you're logged in — auth is the gate before that.
-      const res = await fetch('http://localhost:8080/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        // HTTP 401 = wrong credentials, anything else = server error
-        const msg = res.status === 401
-          ? 'Incorrect email or password.'
-          : 'Something went wrong. Please try again.';
-        setError(msg);
-        return;
-      }
-
-      const data = await res.json();
-
+      // authLogin lives in session.ts so the API URL stays in one place.
+      const data = await authLogin(email, password);
       saveAuthSession({ token: data.token, email: data.email });
-
-      // Navigate to the tree; replace=true so back button doesn't return to login
       navigate('/tree', { replace: true });
-    } catch {
-      // Network error (backend not running, no internet, etc.)
-      setError('Could not connect to server. Is the backend running?');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not connect to server.');
     } finally {
       setLoading(false);
     }

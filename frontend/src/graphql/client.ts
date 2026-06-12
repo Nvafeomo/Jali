@@ -1,9 +1,12 @@
 import { ApolloClient, InMemoryCache, createHttpLink, ApolloLink } from '@apollo/client';
 
-// The URL where your Spring Boot GraphQL API lives.
-// In dev this points to localhost; in production this will be your deployed backend URL.
+// VITE_API_URL is set at build time.
+// In dev it defaults to localhost. In production, Vercel (or your host) injects
+// the real backend URL via the VITE_API_URL environment variable.
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
 const httpLink = createHttpLink({
-  uri: 'http://localhost:8080/graphql',
+  uri: `${API_URL}/graphql`,
 });
 
 // This middleware runs before every GraphQL request and attaches the JWT token.

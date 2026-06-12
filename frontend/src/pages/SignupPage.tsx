@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { saveAuthSession } from '../auth/session';
+import { saveAuthSession, authRegister } from '../auth/session';
 import styles from './LoginPage.module.css'; // same visual design as login
 
 // SignupPage calls POST /auth/register.
@@ -33,26 +33,11 @@ const SignupPage = () => {
     setError(null);
 
     try {
-      const res = await fetch('http://localhost:8080/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const msg = res.status === 409
-          ? 'An account with that email already exists.'
-          : 'Something went wrong. Please try again.';
-        setError(msg);
-        return;
-      }
-
-      const data = await res.json();
-
+      const data = await authRegister(email, password);
       saveAuthSession({ token: data.token, email: data.email });
       navigate('/tree', { replace: true });
-    } catch {
-      setError('Could not connect to server. Is the backend running?');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not connect to server.');
     } finally {
       setLoading(false);
     }
