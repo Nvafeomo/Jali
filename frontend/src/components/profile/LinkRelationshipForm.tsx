@@ -6,6 +6,15 @@ import type { Person } from '../../types';
 import { formatLifeYears } from '../../utils/vitalYears';
 import styles from './LinkRelationshipForm.module.css';
 
+function graphQLErrorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'graphQLErrors' in error) {
+    const gqlErrors = (error as { graphQLErrors?: Array<{ message?: string }> }).graphQLErrors;
+    if (gqlErrors?.[0]?.message) return gqlErrors[0].message;
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return 'Could not create relationship.';
+}
+
 type RelRole = 'parent' | 'child' | 'spouse' | 'sibling';
 
 interface Props {
@@ -86,7 +95,7 @@ const LinkRelationshipForm = ({
       setError(null);
       onLinked();
     },
-    onError: (err) => setError(err.message),
+    onError: (err) => setError(graphQLErrorMessage(err)),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

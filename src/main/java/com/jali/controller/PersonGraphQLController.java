@@ -132,7 +132,12 @@ public class PersonGraphQLController {
 
 	@SchemaMapping(typeName = "Person", field = "children")
 	public List<Map<String, Object>> children(Person person) {
-		return person.getChildren().stream().map(r -> {
+		if (person.getChildren() == null) {
+			return List.of();
+		}
+		return person.getChildren().stream()
+				.filter(r -> r.getChild() != null)
+				.map(r -> {
 			Map<String, Object> edge = new HashMap<>();
 			edge.put("person", r.getChild());
 			edge.put("confidenceScore", r.getConfidenceScore());
@@ -143,7 +148,12 @@ public class PersonGraphQLController {
 
 	@SchemaMapping(typeName = "Person", field = "spouses")
 	public List<Map<String, Object>> spouses(Person person) {
-		return person.getSpouses().stream().map(r -> {
+		if (person.getSpouses() == null) {
+			return List.of();
+		}
+		return person.getSpouses().stream()
+				.filter(r -> r.getSpouse() != null)
+				.map(r -> {
 			Map<String, Object> edge = new HashMap<>();
 			edge.put("person", r.getSpouse());
 			edge.put("confidenceScore", r.getConfidenceScore());
@@ -154,7 +164,12 @@ public class PersonGraphQLController {
 
 	@SchemaMapping(typeName = "Person", field = "siblings")
 	public List<Map<String, Object>> siblings(Person person) {
-		return person.getSiblings().stream().map(r -> {
+		if (person.getSiblings() == null) {
+			return List.of();
+		}
+		return person.getSiblings().stream()
+				.filter(r -> r.getSibling() != null)
+				.map(r -> {
 			Map<String, Object> edge = new HashMap<>();
 			edge.put("person", r.getSibling());
 			edge.put("confidenceScore", r.getConfidenceScore());

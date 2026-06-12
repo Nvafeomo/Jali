@@ -1,5 +1,8 @@
 package com.jali.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.jali.neo4j.MarriedToRelationship;
@@ -32,7 +35,8 @@ public class RelationshipService {
 		relationshipValidationService.validateCreate(fromUuid, toUuid, relationshipType, familyTreeId);
 
 		Person from = personGraphService.requireInTreeWithRelationships(fromUuid, familyTreeId);
-		Person to = personGraphService.requireInTree(toUuid, familyTreeId);
+		Person to = personGraphService.requireInTreeWithRelationships(toUuid, familyTreeId);
+		ensureRelationshipLists(from);
 
 		switch (relationshipType.toUpperCase()) {
 			case "PARENT_OF" -> from.getChildren().add(new ParentOfRelationship(to));
@@ -42,5 +46,17 @@ public class RelationshipService {
 		}
 
 		personRepository.save(from);
+	}
+
+	private static void ensureRelationshipLists(Person person) {
+		if (person.getChildren() == null) {
+			person.setChildren(new ArrayList<>());
+		}
+		if (person.getSpouses() == null) {
+			person.setSpouses(new ArrayList<>());
+		}
+		if (person.getSiblings() == null) {
+			person.setSiblings(new ArrayList<>());
+		}
 	}
 }
