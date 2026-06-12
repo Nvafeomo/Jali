@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import FamilyTree from '../components/tree/FamilyTree';
-import { Person } from '../types';
+import type { Person } from '../types';
 import styles from './TreePage.module.css';
 
 const TreePage = () => {

@@ -1,18 +1,48 @@
-import { FamilyTree } from '../types';
+import type { FamilyTree, Person, RelationshipEdge } from '../types';
+
+function personRef(id: string, fullName: string): Person {
+  return {
+    id,
+    fullName,
+    confidenceScore: 0,
+    isUnknownPlaceholder: false,
+  };
+}
+
+function parentOf(
+  id: string,
+  fullName: string,
+  confidenceScore: number,
+  disputed = false,
+): RelationshipEdge {
+  return {
+    person: personRef(id, fullName),
+    type: 'PARENT_OF',
+    confidenceScore,
+    disputed,
+  };
+}
+
+function marriedTo(
+  id: string,
+  fullName: string,
+  confidenceScore: number,
+  disputed = false,
+): RelationshipEdge {
+  return {
+    person: personRef(id, fullName),
+    type: 'MARRIED_TO',
+    confidenceScore,
+    disputed,
+  };
+}
 
 // Sample Mandinka family tree spanning 4 generations.
-// Covers the key visual states we need to style:
-//   - Normal nodes (high confidence)
-//   - Low-confidence nodes (great-grandparents with limited evidence)
-//   - Unknown placeholder node (missing ancestor)
-//   - Deceased members (deathDate set)
-//   - No photo (most nodes - shows initials fallback)
 export const MOCK_TREE: FamilyTree = {
   id: 'tree-1',
   name: 'Kouyaté Family Tree',
   originRegion: 'Guinea / Liberia',
   people: [
-    // ── Generation 1 (great-grandparents) ──────────────────────────────
     {
       id: 'p1',
       fullName: 'Musa Kouyaté',
@@ -22,8 +52,9 @@ export const MOCK_TREE: FamilyTree = {
       birthplace: 'Kankan, Guinea',
       ethnicGroup: 'Mandinka',
       biologicalSex: 'MALE',
-      confidenceScore: 0.55,  // moderate - oral history only
+      confidenceScore: 0.55,
       isUnknownPlaceholder: false,
+      spouses: [marriedTo('p2', 'Fatoumata Diabaté', 0.6)],
     },
     {
       id: 'p2',
@@ -34,19 +65,19 @@ export const MOCK_TREE: FamilyTree = {
       birthplace: 'Kankan, Guinea',
       ethnicGroup: 'Mandinka',
       biologicalSex: 'FEMALE',
-      confidenceScore: 0.45,  // lower - fewer corroborations
+      confidenceScore: 0.45,
       isUnknownPlaceholder: false,
+      spouses: [marriedTo('p1', 'Musa Kouyaté', 0.6)],
     },
     {
       id: 'p3',
       fullName: 'Unknown Ancestor',
       ethnicGroup: 'Mandinka',
       biologicalSex: 'MALE',
-      confidenceScore: 0.1,   // placeholder - existence inferred only
-      isUnknownPlaceholder: true,  // renders with dashed border + ? avatar
+      confidenceScore: 0.1,
+      isUnknownPlaceholder: true,
     },
 
-    // ── Generation 2 (grandparents) ────────────────────────────────────
     {
       id: 'p4',
       fullName: 'Ibrahim Kouyaté',
@@ -58,9 +89,10 @@ export const MOCK_TREE: FamilyTree = {
       confidenceScore: 0.82,
       isUnknownPlaceholder: false,
       parents: [
-        { person: { id: 'p1', fullName: 'Musa Kouyaté' }, confidenceScore: 0.55, disputed: false },
-        { person: { id: 'p2', fullName: 'Fatoumata Diabaté' }, confidenceScore: 0.55, disputed: false },
+        parentOf('p1', 'Musa Kouyaté', 0.55),
+        parentOf('p2', 'Fatoumata Diabaté', 0.55),
       ],
+      spouses: [marriedTo('p5', 'Mariama Camara', 0.75)],
     },
     {
       id: 'p5',
@@ -72,12 +104,10 @@ export const MOCK_TREE: FamilyTree = {
       biologicalSex: 'FEMALE',
       confidenceScore: 0.78,
       isUnknownPlaceholder: false,
-      parents: [
-        { person: { id: 'p3', fullName: 'Unknown Ancestor' }, confidenceScore: 0.1, disputed: false },
-      ],
+      parents: [parentOf('p3', 'Unknown Ancestor', 0.1)],
+      spouses: [marriedTo('p4', 'Ibrahim Kouyaté', 0.75)],
     },
 
-    // ── Generation 3 (parents) ─────────────────────────────────────────
     {
       id: 'p6',
       fullName: 'Amadou Kouyaté',
@@ -88,9 +118,10 @@ export const MOCK_TREE: FamilyTree = {
       confidenceScore: 0.95,
       isUnknownPlaceholder: false,
       parents: [
-        { person: { id: 'p4', fullName: 'Ibrahim Kouyaté' }, confidenceScore: 0.82, disputed: false },
-        { person: { id: 'p5', fullName: 'Mariama Camara' }, confidenceScore: 0.78, disputed: false },
+        parentOf('p4', 'Ibrahim Kouyaté', 0.82),
+        parentOf('p5', 'Mariama Camara', 0.78),
       ],
+      spouses: [marriedTo('p7', 'Aïssatou Bah', 0.91)],
     },
     {
       id: 'p7',
@@ -101,9 +132,9 @@ export const MOCK_TREE: FamilyTree = {
       biologicalSex: 'FEMALE',
       confidenceScore: 0.91,
       isUnknownPlaceholder: false,
+      spouses: [marriedTo('p6', 'Amadou Kouyaté', 0.91)],
     },
 
-    // ── Generation 4 (current generation) ─────────────────────────────
     {
       id: 'p8',
       fullName: 'Karamo Kouyaté',
@@ -114,8 +145,8 @@ export const MOCK_TREE: FamilyTree = {
       confidenceScore: 1.0,
       isUnknownPlaceholder: false,
       parents: [
-        { person: { id: 'p6', fullName: 'Amadou Kouyaté' }, confidenceScore: 0.95, disputed: false },
-        { person: { id: 'p7', fullName: 'Aïssatou Bah' }, confidenceScore: 0.91, disputed: false },
+        parentOf('p6', 'Amadou Kouyaté', 0.95),
+        parentOf('p7', 'Aïssatou Bah', 0.91),
       ],
     },
     {
@@ -128,8 +159,8 @@ export const MOCK_TREE: FamilyTree = {
       confidenceScore: 1.0,
       isUnknownPlaceholder: false,
       parents: [
-        { person: { id: 'p6', fullName: 'Amadou Kouyaté' }, confidenceScore: 0.95, disputed: false },
-        { person: { id: 'p7', fullName: 'Aïssatou Bah' }, confidenceScore: 0.91, disputed: false },
+        parentOf('p6', 'Amadou Kouyaté', 0.95),
+        parentOf('p7', 'Aïssatou Bah', 0.91),
       ],
     },
   ],

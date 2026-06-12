@@ -1,5 +1,5 @@
 import { Handle, Position } from '@xyflow/react';
-import { Person } from '../../types';
+import type { Person } from '../../types';
 import styles from './PersonNode.module.css';
 
 interface PersonNodeProps {
@@ -43,6 +43,12 @@ const PersonNode = ({ data, selected }: PersonNodeProps) => {
           'target' handle is on top (parents connect down into it).
           'source' handle is on bottom (children connect up from it). */}
       <Handle type="target" position={Position.Top} className={styles.handle} />
+      <Handle
+        id="spouse-in"
+        type="target"
+        position={Position.Left}
+        className={styles.handle}
+      />
 
       {/* Avatar: photo if available, initials otherwise */}
       <div className={styles.avatar}>
@@ -70,6 +76,12 @@ const PersonNode = ({ data, selected }: PersonNodeProps) => {
       )}
 
       <Handle type="source" position={Position.Bottom} className={styles.handle} />
+      <Handle
+        id="spouse-out"
+        type="source"
+        position={Position.Right}
+        className={styles.handle}
+      />
     </div>
   );
 };

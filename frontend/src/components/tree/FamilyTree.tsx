@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -6,14 +6,15 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
-  NodeMouseHandler,
+  type NodeMouseHandler,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import { Person } from '../../types';
+import type { Person } from '../../types';
 import { MOCK_TREE } from '../../graphql/mockData';
 import { buildLayout } from './treeLayout';
 import PersonNode from './PersonNode';
+import TreeLegend from './TreeLegend';
 import styles from './FamilyTree.module.css';
 
 // Register our custom node type.
@@ -39,7 +40,7 @@ const FamilyTree = ({ onPersonSelect }: FamilyTreeProps) => {
       const { nodes, edges } = buildLayout(people);
       // Tag each node with type: 'person' so React Flow uses our PersonNode component
       return {
-        nodes: nodes.map(n => ({ ...n, type: 'person' })),
+        nodes: nodes.map(n => ({ ...n, type: 'person', draggable: false })),
         edges,
       };
     },
@@ -69,7 +70,11 @@ const FamilyTree = ({ onPersonSelect }: FamilyTreeProps) => {
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
-        fitView           // automatically zooms to fit all nodes on first load
+        nodesDraggable={false}
+        nodesConnectable={false}
+        edgesReconnectable={false}
+        defaultEdgeOptions={{ type: 'step' }}
+        fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.2}
         maxZoom={2}
@@ -92,6 +97,7 @@ const FamilyTree = ({ onPersonSelect }: FamilyTreeProps) => {
           style={{ background: '#1e1e2e' }}
         />
       </ReactFlow>
+      <TreeLegend />
     </div>
   );
 };
