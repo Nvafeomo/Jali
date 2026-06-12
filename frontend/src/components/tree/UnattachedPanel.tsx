@@ -31,7 +31,7 @@ const UnattachedPanel = ({ people, onSelect }: Props) => {
       {!collapsed && (
         <>
           <p className={styles.hint}>
-            Connect each person to someone on the tree. Names can repeat — link by
+            Connect each person to someone on the tree. Names can repeat: link by
             relationship, not name alone.
           </p>
           <ul className={styles.list}>

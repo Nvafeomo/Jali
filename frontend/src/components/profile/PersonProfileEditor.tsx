@@ -109,7 +109,7 @@ const PersonProfileEditor = ({ person }: Props) => {
         <span className={styles.graceIcon}>✎</span>
         <span>
           {daysLeft === 0
-            ? 'Edit window closing today — fix mistakes while you can.'
+            ? 'Edit window closing today: fix mistakes while you can.'
             : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left to edit this person's details.`}
         </span>
         {saved && <span className={styles.saved}>Saved</span>}
@@ -172,7 +172,7 @@ const PersonProfileEditor = ({ person }: Props) => {
           value={biologicalSex}
           onChange={e => setBiologicalSex(e.target.value)}
         >
-          <option value="">— select —</option>
+          <option value="">Select</option>
           <option value="MALE">Male</option>
           <option value="FEMALE">Female</option>
         </select>

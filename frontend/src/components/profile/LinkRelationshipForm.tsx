@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { CREATE_RELATIONSHIP_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
@@ -79,11 +79,6 @@ const LinkRelationshipForm = ({
   const [role, setRole] = useState<RelRole>('parent');
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setOpen(isUnlinked);
-    setError(null);
-  }, [person.id, isUnlinked]);
-
   const candidates = allPeople
     .filter(p => p.id !== person.id)
     .filter(p => !isUnlinked || treeMemberIds.has(p.id))
@@ -140,7 +135,7 @@ const LinkRelationshipForm = ({
       <>
         {isUnlinked && (
           <p className={styles.unlinkedNotice}>
-            Not on the tree yet — link to someone already on the canvas.
+            Not on the tree yet: link to someone on the canvas.
           </p>
         )}
         <button type="button" className={styles.toggle} onClick={() => setOpen(true)}>
@@ -154,7 +149,7 @@ const LinkRelationshipForm = ({
     <form className={styles.form} onSubmit={handleSubmit}>
       {isUnlinked && (
         <p className={styles.unlinkedNotice}>
-          Pick someone on the tree by clicking their node — best when names match.
+          Pick someone on the tree by clicking their node (best when names match).
         </p>
       )}
 
@@ -173,7 +168,7 @@ const LinkRelationshipForm = ({
       </label>
 
       <div className={styles.targetSection}>
-        <span className={styles.label}>Person on tree</span>
+        <span className={styles.label}>{isUnlinked ? 'Person on tree' : 'Person'}</span>
 
         {selectedTarget ? (
           <div className={styles.selectedTarget}>
@@ -239,7 +234,7 @@ const LinkRelationshipForm = ({
             value={linkTargetId ?? ''}
             onChange={e => onLinkTargetChange(e.target.value || null)}
           >
-            <option value="">— select —</option>
+            <option value="">Select</option>
             {candidates.map(p => (
               <option key={p.id} value={p.id}>
                 {candidateLabel(p, treeMemberIds.has(p.id))}

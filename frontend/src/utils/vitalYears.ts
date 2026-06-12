@@ -91,14 +91,14 @@ export function formatLifeDisplay(
   }
 
   if (lifeStatus === 'alive') {
-    if (birthYear) return { primary: `${birthYear}${approx} –` };
+    if (birthYear) return { primary: `b. ${birthYear}${approx}` };
     return { primary: null, showLivingBadge: true };
   }
 
   // Deceased
   const deathYear = isUnknownDeathYear(deathDate) ? null : deathDate!.trim();
-  if (birthYear && deathYear) return { primary: `${birthYear}${approx} – ${deathYear}` };
-  if (birthYear) return { primary: `${birthYear}${approx} – ?` };
+  if (birthYear && deathYear) return { primary: `${birthYear}${approx} - ${deathYear}` };
+  if (birthYear) return { primary: `${birthYear}${approx} - ?` };
   if (deathYear) return { primary: `d. ${deathYear}` };
   return { primary: 'Deceased' };
 }

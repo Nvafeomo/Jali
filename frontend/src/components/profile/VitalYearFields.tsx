@@ -79,7 +79,7 @@ const VitalYearFields = ({
       </div>
       {lifeStatus === 'unspecified' && (
         <p className={styles.hint}>
-          Default — we do not assume living or deceased until you choose.
+          Default: we do not assume living or deceased until you choose.
         </p>
       )}
       {lifeStatus === 'alive' && (
@@ -98,7 +98,7 @@ const VitalYearFields = ({
             />
           </label>
           <p className={styles.hint}>
-            Deceased with no year stored means death year is unknown — not the same as alive.
+            Deceased with no year stored means death year is unknown, not the same as alive.
           </p>
         </>
       )}

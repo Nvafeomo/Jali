@@ -147,7 +147,7 @@ const AddPersonPanel = ({ onClose, onCreated, treeHasMembers = false }: Props) =
             value={biologicalSex}
             onChange={e => setBiologicalSex(e.target.value)}
           >
-            <option value="">— select —</option>
+            <option value="">Select</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
           </select>

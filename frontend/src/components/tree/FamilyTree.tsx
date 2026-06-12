@@ -92,7 +92,7 @@ const FamilyTree = ({
         <div className={styles.pickBanner} role="status">
           <p className={styles.pickBannerText}>
             {linkTargetId
-              ? 'Target selected — click another node to change, then Link in the drawer.'
+              ? 'Target selected. Click another node to change, then Link in the drawer.'
               : `Click someone on the tree to link to ${anchorName}`}
           </p>
           <button type="button" className={styles.pickBannerCancel} onClick={onCancelLinkPick}>

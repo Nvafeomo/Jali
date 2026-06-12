@@ -13,7 +13,7 @@ const TreeLegend = () => (
         </li>
         <li>
           <span className={styles.swatch} style={{ background: '#facc15' }} />
-          Medium (40–69%)
+          Medium (40-69%)
         </li>
         <li>
           <span className={styles.swatch} style={{ background: '#f87171' }} />

@@ -138,7 +138,7 @@ const PersonDrawer = ({
             <span className={styles.placeholderBadge}>Placeholder node</span>
           )}
           {isUnlinked && (
-            <span className={styles.unlinkedBadge}>Not on tree — link below</span>
+            <span className={styles.unlinkedBadge}>Not on tree: link below</span>
           )}
         </div>
       </div>
@@ -270,6 +270,7 @@ const PersonDrawer = ({
           )}
 
         <LinkRelationshipForm
+          key={person.id}
           person={person}
           allPeople={allPeople}
           treeMemberIds={treeMemberIds}

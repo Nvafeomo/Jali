@@ -104,7 +104,7 @@ export const MOCK_TREE: FamilyTree = {
           id: 's2',
           memoryType: 'TEXT',
           title: 'What the elders said about our clan name',
-          transcript: 'The Kouyaté name belongs to the jali tradition. We are hereditary griots — keepers of history for the Keita kings of the Mali Empire. This is what my grandfather told me before he passed.',
+          transcript: 'The Kouyaté name belongs to the jali tradition. We are hereditary griots, keepers of history for the Keita kings of the Mali Empire. This is what my grandfather told me before he passed.',
           recordedBy: 'Kadiatou Kouyaté',
           createdAt: '2021-07-02',
           status: 'APPLIED',
