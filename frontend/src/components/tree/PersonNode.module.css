@@ -5,7 +5,7 @@
   width: 110px;
   padding: 8px 6px 10px;
   border-radius: 12px;
-  background: #1e1e2e;
+  background: var(--jali-surface);
   border: 3px solid transparent;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
@@ -16,21 +16,18 @@
   transform: scale(1.05);
 }
 
-/* Confidence ring colors applied to the border */
-.high   { border-color: #4ade80; }  /* green */
-.medium { border-color: #facc15; }  /* yellow */
-.low    { border-color: #f87171; }  /* red */
+.high   { border-color: var(--jali-confidence-high); }
+.medium { border-color: var(--jali-confidence-medium); }
+.low    { border-color: var(--jali-confidence-low); }
 
-/* Unknown placeholder: dashed border, muted background */
 .placeholder {
   border-style: dashed;
   opacity: 0.65;
-  background: #2a2a3e;
+  background: var(--jali-surface-muted);
 }
 
-/* Selected state: glow effect */
 .selected {
-  box-shadow: 0 0 0 3px #a78bfa;
+  box-shadow: 0 0 0 3px var(--jali-accent);
 }
 
 .avatar {
@@ -54,19 +51,19 @@
 .initials {
   font-size: 18px;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--jali-text);
   letter-spacing: 1px;
 }
 
 .unknown {
   font-size: 22px;
-  color: #94a3b8;
+  color: var(--jali-text-muted);
 }
 
 .name {
   font-size: 11px;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--jali-text);
   text-align: center;
   line-height: 1.3;
   max-width: 100px;
@@ -75,12 +72,11 @@
 
 .dates {
   font-size: 9px;
-  color: #94a3b8;
+  color: var(--jali-text-muted);
   margin-top: 3px;
   text-align: center;
 }
 
-/* Hide the default React Flow handle dots */
 .handle {
   opacity: 0;
   pointer-events: none;

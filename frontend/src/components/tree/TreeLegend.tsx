@@ -30,11 +30,11 @@ const TreeLegend = () => (
       <p className={styles.heading}>Lines between people</p>
       <ul>
         <li>
-          <span className={styles.lineParentArrow} style={{ borderColor: '#4ade80' }} />
+          <span className={styles.lineParentArrow} />
           Parent → child (arrow points to child)
         </li>
         <li>
-          <span className={styles.lineMarriage} style={{ borderColor: '#a78bfa' }} />
+          <span className={styles.lineMarriage} />
           Marriage / partnership
         </li>
         <li>

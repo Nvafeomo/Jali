@@ -85,10 +85,8 @@ const FamilyTree = ({ people, onPersonSelect }: FamilyTreeProps) => {
         {/* Background: subtle dot grid */}
         <Background color="#334155" gap={20} />
 
-        {/* Controls: zoom in/out/fit buttons (bottom-left) */}
         <Controls />
 
-        {/* MiniMap: small overview in the corner for large trees */}
         <MiniMap
           nodeColor={node => {
             const person = node.data as unknown as Person;

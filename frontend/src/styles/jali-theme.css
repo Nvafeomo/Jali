@@ -1,0 +1,25 @@
+/* Shared Jali dark theme — tree app + login */
+:root {
+  --jali-bg: #0f172a;
+  --jali-surface: #1e1e2e;
+  --jali-surface-muted: #2a2a3e;
+  --jali-canvas: #0f172a;
+  --jali-border: #334155;
+  --jali-border-light: #334155;
+  --jali-text: #e2e8f0;
+  --jali-text-heading: #f1f5f9;
+  --jali-text-muted: #94a3b8;
+  --jali-text-subtle: #64748b;
+  --jali-accent: #a78bfa;
+  --jali-accent-hover: #8b5cf6;
+  --jali-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --jali-radius: 12px;
+  --jali-radius-sm: 8px;
+
+  --jali-confidence-high: #4ade80;
+  --jali-confidence-medium: #facc15;
+  --jali-confidence-low: #f87171;
+  --jali-confidence-high-bg: #14532d;
+  --jali-confidence-medium-bg: #713f12;
+  --jali-confidence-low-bg: #7f1d1d;
+}

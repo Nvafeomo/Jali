@@ -1,20 +1,19 @@
-/* Full-page centered layout */
 .page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f0e8; /* warm off-white — matches the heritage feel */
+  background: var(--jali-bg);
 }
 
-/* The white card in the center */
 .card {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--jali-surface);
+  border: 1px solid var(--jali-border);
+  border-radius: var(--jali-radius);
   padding: 2.5rem 2rem;
   width: 100%;
   max-width: 380px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--jali-shadow);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -23,14 +22,14 @@
 
 .logo {
   font-size: 2rem;
-  font-weight: 700;
-  color: #2c1810; /* deep brown */
+  font-weight: 800;
+  color: var(--jali-accent);
   margin: 0;
   letter-spacing: 0.05em;
 }
 
 .tagline {
-  color: #7a6652;
+  color: var(--jali-text-muted);
   font-size: 0.9rem;
   margin: 0 0 1.5rem;
 }
@@ -42,56 +41,56 @@
   gap: 1rem;
 }
 
-/* Label wraps the text and input together */
 .label {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #3d2b1f;
+  color: var(--jali-text);
 }
 
 .input {
   padding: 0.65rem 0.85rem;
-  border: 1.5px solid #d4c4b0;
-  border-radius: 8px;
+  border: 1.5px solid var(--jali-border);
+  border-radius: var(--jali-radius-sm);
   font-size: 1rem;
-  color: #1a1a1a;
-  background: #faf8f5;
+  color: var(--jali-text-heading);
+  background: var(--jali-bg);
   transition: border-color 0.15s;
 }
 
 .input:focus {
   outline: none;
-  border-color: #8b5e3c; /* warm brown focus ring */
+  border-color: var(--jali-accent);
 }
 
 .error {
-  color: #c0392b;
+  color: #fca5a5;
   font-size: 0.85rem;
   margin: 0;
   padding: 0.5rem 0.75rem;
-  background: #fdf0ef;
+  background: #450a0a;
   border-radius: 6px;
-  border-left: 3px solid #c0392b;
+  border-left: 3px solid #f87171;
 }
 
 .button {
   margin-top: 0.5rem;
   padding: 0.75rem;
-  background: #8b5e3c;
-  color: #fff;
+  background: var(--jali-accent);
+  color: #0f172a;
   font-size: 1rem;
   font-weight: 600;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--jali-radius-sm);
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s;
 }
 
 .button:hover:not(:disabled) {
-  background: #7a5233;
+  background: var(--jali-accent-hover);
+  color: #fff;
 }
 
 .button:disabled {
@@ -102,11 +101,11 @@
 .signup {
   margin-top: 1.25rem;
   font-size: 0.875rem;
-  color: #7a6652;
+  color: var(--jali-text-muted);
 }
 
 .signup a {
-  color: #8b5e3c;
+  color: var(--jali-accent);
   font-weight: 600;
   text-decoration: none;
 }
@@ -118,9 +117,9 @@
 .devNote {
   margin-top: 0.75rem;
   font-size: 0.75rem;
-  color: #aaa;
+  color: var(--jali-text-subtle);
 }
 
 .devNote a {
-  color: #8b5e3c;
+  color: var(--jali-accent);
 }

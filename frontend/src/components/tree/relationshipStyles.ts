@@ -19,7 +19,7 @@ export function edgeStyle(
 
   return {
     stroke,
-    strokeWidth: relationshipType === 'MARRIED_TO' ? 2 : 2,
+    strokeWidth: 2,
     ...(disputed ? { strokeDasharray: '5,5' } : {}),
   };
 }

@@ -3,8 +3,8 @@
   flex-direction: column;
   width: 100vw;
   height: 100vh;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--jali-bg);
+  color: var(--jali-text);
   font-family: system-ui, sans-serif;
 }
 
@@ -13,21 +13,21 @@
   align-items: center;
   gap: 16px;
   padding: 12px 24px;
-  background: #1e1e2e;
-  border-bottom: 1px solid #334155;
+  background: var(--jali-surface);
+  border-bottom: 1px solid var(--jali-border);
   flex-shrink: 0;
 }
 
 .logo {
   font-size: 20px;
   font-weight: 800;
-  color: #a78bfa;
+  color: var(--jali-accent);
   letter-spacing: 1px;
 }
 
 .treeName {
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--jali-text-muted);
 }
 
 .main {
@@ -41,11 +41,10 @@
   overflow: hidden;
 }
 
-/* Drawer panel — PersonDrawer handles its own padding */
 .drawer {
   width: 360px;
-  background: #1e1e2e;
-  border-left: 1px solid #334155;
+  background: var(--jali-surface);
+  border-left: 1px solid var(--jali-border);
   overflow: hidden;
   flex-shrink: 0;
 }

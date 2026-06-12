@@ -2,9 +2,33 @@
   position: relative;
   width: 100%;
   height: 100%;
-  background: #0f172a;
+  background: var(--jali-canvas);
 }
 
 .canvas :global(.react-flow__node) {
   cursor: pointer;
+}
+
+.canvas :global(.react-flow__controls) {
+  box-shadow: var(--jali-shadow);
+  border-radius: var(--jali-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--jali-border);
+}
+
+.canvas :global(.react-flow__controls-button) {
+  background: var(--jali-surface);
+  border-bottom: 1px solid var(--jali-border);
+  fill: var(--jali-text);
+}
+
+.canvas :global(.react-flow__controls-button:hover) {
+  background: var(--jali-surface-muted);
+}
+
+.canvas :global(.react-flow__minimap) {
+  border-radius: var(--jali-radius-sm);
+  border: 1px solid var(--jali-border);
+  box-shadow: var(--jali-shadow);
+  overflow: hidden;
 }

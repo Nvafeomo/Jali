@@ -7,7 +7,7 @@
   padding: 12px 14px;
   border-radius: 10px;
   background: rgba(30, 30, 46, 0.92);
-  border: 1px solid #334155;
+  border: 1px solid var(--jali-border);
   font-size: 11px;
   color: #cbd5e1;
   pointer-events: none;
@@ -17,13 +17,13 @@
   margin: 0 0 8px;
   font-size: 12px;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--jali-text);
 }
 
 .section + .section {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid #334155;
+  border-top: 1px solid var(--jali-border);
 }
 
 .heading {
@@ -32,7 +32,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #94a3b8;
+  color: var(--jali-text-muted);
 }
 
 .legend ul {
@@ -61,7 +61,7 @@
 
 .swatch.dashed {
   border: 2px dashed #64748b;
-  background: #2a2a3e;
+  background: var(--jali-surface-muted);
 }
 
 .lineParent,
@@ -74,7 +74,7 @@
 
 .lineParentArrow {
   position: relative;
-  color: #4ade80;
+  color: var(--jali-confidence-high);
   border-top-color: currentColor;
 }
 
@@ -88,10 +88,10 @@
 }
 
 .lineMarriage {
-  border-top-style: solid;
+  border-top-color: var(--jali-accent);
 }
 
 .lineParent.dashed {
   border-top-style: dashed;
-  border-top-color: #94a3b8;
+  border-top-color: var(--jali-text-muted);
 }
