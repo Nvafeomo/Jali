@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { CREATE_RELATIONSHIP_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
@@ -11,9 +11,16 @@ type RelRole = 'parent' | 'child' | 'spouse' | 'sibling';
 interface Props {
   person: Person;
   allPeople: Person[];
-  /** IDs of people already on the canvas — required link targets for unlinked people. */
   treeMemberIds: Set<string>;
   isUnlinked: boolean;
+  lookup: Map<string, Person>;
+  linkTargetId: string | null;
+  linkPickActive: boolean;
+  onLinkTargetChange: (id: string | null) => void;
+  onStartLinkPick: () => void;
+  onCancelLinkPick: () => void;
+  onViewPerson: (person: Person) => void;
+  onLinked: () => void;
 }
 
 function toMutationVars(anchorId: string, otherId: string, role: RelRole) {
@@ -33,26 +40,51 @@ function candidateLabel(person: Person, onTree: boolean): string {
   const dates = formatLifeYears(person.birthDate, person.deathDate, person.birthDateApproximate);
   const suffix = dates ? ` · ${dates}` : '';
   const treeTag = onTree ? '' : ' · unlinked';
-  return `${person.fullName}${suffix}${treeTag}`;
+  const place = person.birthplace ? ` · ${person.birthplace}` : '';
+  return `${person.fullName}${suffix}${place}${treeTag}`;
 }
 
-const LinkRelationshipForm = ({ person, allPeople, treeMemberIds, isUnlinked }: Props) => {
+function initials(name: string): string {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+const LinkRelationshipForm = ({
+  person,
+  allPeople,
+  treeMemberIds,
+  isUnlinked,
+  lookup,
+  linkTargetId,
+  linkPickActive,
+  onLinkTargetChange,
+  onStartLinkPick,
+  onCancelLinkPick,
+  onViewPerson,
+  onLinked,
+}: Props) => {
   const [open, setOpen] = useState(isUnlinked);
   const [role, setRole] = useState<RelRole>('parent');
-  const [otherId, setOtherId] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOpen(isUnlinked);
+    setError(null);
+  }, [person.id, isUnlinked]);
 
   const candidates = allPeople
     .filter(p => p.id !== person.id)
     .filter(p => !isUnlinked || treeMemberIds.has(p.id))
     .sort((a, b) => a.fullName.localeCompare(b.fullName));
 
+  const selectedTarget = linkTargetId ? lookup.get(linkTargetId) ?? null : null;
+
   const [linkPeople, { loading }] = useMutation(CREATE_RELATIONSHIP_MUTATION, {
     refetchQueries: [{ query: MY_TREE_QUERY }],
     onCompleted: () => {
       setOpen(false);
-      setOtherId('');
+      onLinkTargetChange(null);
       setError(null);
+      onLinked();
     },
     onError: (err) => setError(err.message),
   });
@@ -61,13 +93,13 @@ const LinkRelationshipForm = ({ person, allPeople, treeMemberIds, isUnlinked }: 
     e.preventDefault();
     setError(null);
 
-    if (!otherId) {
+    if (!linkTargetId) {
       setError('Choose someone on the tree to link to.');
       return;
     }
 
     await linkPeople({
-      variables: toMutationVars(person.id, otherId, role),
+      variables: toMutationVars(person.id, linkTargetId, role),
     });
   };
 
@@ -100,7 +132,7 @@ const LinkRelationshipForm = ({ person, allPeople, treeMemberIds, isUnlinked }: 
     <form className={styles.form} onSubmit={handleSubmit}>
       {isUnlinked && (
         <p className={styles.unlinkedNotice}>
-          Choose someone already on the tree. Dates help tell apart same names.
+          Pick someone on the tree by clicking their node — best when names match.
         </p>
       )}
 
@@ -118,21 +150,82 @@ const LinkRelationshipForm = ({ person, allPeople, treeMemberIds, isUnlinked }: 
         </select>
       </label>
 
-      <label className={styles.label}>
-        {isUnlinked ? 'Person on tree' : 'Person'}
-        <select
-          className={styles.input}
-          value={otherId}
-          onChange={e => setOtherId(e.target.value)}
-        >
-          <option value="">— select —</option>
-          {candidates.map(p => (
-            <option key={p.id} value={p.id}>
-              {candidateLabel(p, treeMemberIds.has(p.id))}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className={styles.targetSection}>
+        <span className={styles.label}>Person on tree</span>
+
+        {selectedTarget ? (
+          <div className={styles.selectedTarget}>
+            <div className={styles.selectedAvatar}>
+              {selectedTarget.photoUrl ? (
+                <img src={selectedTarget.photoUrl} alt="" className={styles.selectedPhoto} />
+              ) : (
+                <span>{initials(selectedTarget.fullName)}</span>
+              )}
+            </div>
+            <div className={styles.selectedInfo}>
+              <span className={styles.selectedName}>{selectedTarget.fullName}</span>
+              {formatLifeYears(
+                selectedTarget.birthDate,
+                selectedTarget.deathDate,
+                selectedTarget.birthDateApproximate,
+              ) && (
+                <span className={styles.selectedDates}>
+                  {formatLifeYears(
+                    selectedTarget.birthDate,
+                    selectedTarget.deathDate,
+                    selectedTarget.birthDateApproximate,
+                  )}
+                </span>
+              )}
+            </div>
+            <div className={styles.selectedActions}>
+              <button
+                type="button"
+                className={styles.viewProfile}
+                onClick={() => onViewPerson(selectedTarget)}
+              >
+                View
+              </button>
+              <button
+                type="button"
+                className={styles.clearTarget}
+                onClick={() => onLinkTargetChange(null)}
+                aria-label="Clear selection"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className={styles.noTarget}>No one selected yet</p>
+        )}
+
+        <div className={styles.pickActions}>
+          <button
+            type="button"
+            className={[styles.pickBtn, linkPickActive ? styles.pickBtnActive : ''].join(' ')}
+            onClick={linkPickActive ? onCancelLinkPick : onStartLinkPick}
+          >
+            {linkPickActive ? 'Cancel pick mode' : 'Pick from tree'}
+          </button>
+        </div>
+
+        <details className={styles.listFallback}>
+          <summary>Or choose from list</summary>
+          <select
+            className={styles.input}
+            value={linkTargetId ?? ''}
+            onChange={e => onLinkTargetChange(e.target.value || null)}
+          >
+            <option value="">— select —</option>
+            {candidates.map(p => (
+              <option key={p.id} value={p.id}>
+                {candidateLabel(p, treeMemberIds.has(p.id))}
+              </option>
+            ))}
+          </select>
+        </details>
+      </div>
 
       {error && <p className={styles.error}>{error}</p>}
 
@@ -142,12 +235,13 @@ const LinkRelationshipForm = ({ person, allPeople, treeMemberIds, isUnlinked }: 
           className={styles.cancel}
           onClick={() => {
             setOpen(false);
+            onCancelLinkPick();
             setError(null);
           }}
         >
           Cancel
         </button>
-        <button type="submit" className={styles.submit} disabled={loading}>
+        <button type="submit" className={styles.submit} disabled={loading || !linkTargetId}>
           {loading ? 'Linking…' : 'Link'}
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import FamilyTree from '../components/tree/FamilyTree';
 import EditableTreeName from '../components/tree/EditableTreeName';
 import PersonDrawer from '../components/profile/PersonDrawer';
@@ -9,6 +9,7 @@ import { useMyTree } from '../hooks/useMyTree';
 import { peopleById } from '../utils/enrichPeople';
 import { isOnTree, partitionTreeMembers } from '../utils/treeMembership';
 import type { Person } from '../types';
+import type { LinkPickState } from '../types/linkPick';
 import styles from './TreePage.module.css';
 
 const EmptyTreeGraphic = () => (
@@ -33,6 +34,7 @@ const EmptyTreeGraphic = () => (
 const TreePage = () => {
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [showAddPanel, setShowAddPanel] = useState(false);
+  const [linkPick, setLinkPick] = useState<LinkPickState | null>(null);
 
   const { email, isAuthenticated, logout } = useAuth();
   const { treeName, updateTreeName, canEdit: canEditTreeName } = useFamilyTree();
@@ -50,21 +52,99 @@ const TreePage = () => {
     ? !isOnTree(selectedPerson.id, treePartition)
     : false;
 
-  const handlePersonSelect = (person: Person) => {
-    setSelectedPersonId(person.id);
-    setShowAddPanel(false);
-  };
+  const drawerLinkTargetId =
+    linkPick && linkPick.anchorId === selectedPersonId ? linkPick.targetId : null;
+  const drawerLinkPickActive = Boolean(
+    linkPick?.picking && linkPick.anchorId === selectedPersonId,
+  );
+
+  const handlePersonSelect = useCallback(
+    (person: Person) => {
+      setShowAddPanel(false);
+      const onTree = treeMemberIds.has(person.id);
+
+      if (linkPick?.picking) {
+        if (person.id === linkPick.anchorId) return;
+
+        if (onTree) {
+          setLinkPick(prev => {
+            if (!prev) return null;
+            const nextTarget = prev.targetId === person.id ? null : person.id;
+            return { ...prev, targetId: nextTarget };
+          });
+          return;
+        }
+
+        setSelectedPersonId(person.id);
+        setLinkPick({ anchorId: person.id, targetId: null, picking: true });
+        return;
+      }
+
+      setSelectedPersonId(person.id);
+      if (!onTree) {
+        setLinkPick({ anchorId: person.id, targetId: null, picking: true });
+      } else {
+        setLinkPick(null);
+      }
+    },
+    [linkPick, treeMemberIds],
+  );
 
   const handleOpenAdd = () => {
     setSelectedPersonId(null);
     setShowAddPanel(true);
+    setLinkPick(null);
   };
+
+  const handleCloseDrawer = () => {
+    setSelectedPersonId(null);
+    setLinkPick(null);
+  };
+
+  const handleStartLinkPick = useCallback(() => {
+    if (!selectedPersonId) return;
+    setLinkPick(prev => ({
+      anchorId: selectedPersonId,
+      targetId: prev?.anchorId === selectedPersonId ? prev.targetId : null,
+      picking: true,
+    }));
+  }, [selectedPersonId]);
+
+  const handleCancelLinkPick = useCallback(() => {
+    setLinkPick(prev => (prev ? { ...prev, picking: false } : null));
+  }, []);
+
+  const handleLinkTargetChange = useCallback(
+    (id: string | null) => {
+      setLinkPick(prev => {
+        if (!prev && selectedPersonId) {
+          return { anchorId: selectedPersonId, targetId: id, picking: false };
+        }
+        if (!prev) return null;
+        return { ...prev, targetId: id };
+      });
+    },
+    [selectedPersonId],
+  );
+
+  const handleViewPerson = useCallback((person: Person) => {
+    setLinkPick(null);
+    setSelectedPersonId(person.id);
+  }, []);
+
+  const handleLinked = useCallback(() => {
+    setLinkPick(null);
+  }, []);
 
   const rightPanel = showAddPanel ? 'add' : selectedPerson ? 'drawer' : null;
   const memberLabel =
     people.length === 1
       ? '1 member'
       : `${people.length} members${unattached.length > 0 ? ` · ${unattached.length} unlinked` : ''}`;
+
+  const linkPickAnchorName = linkPick
+    ? lookup.get(linkPick.anchorId)?.fullName ?? null
+    : null;
 
   return (
     <div className={styles.page}>
@@ -136,7 +216,10 @@ const TreePage = () => {
             <FamilyTree
               people={connected}
               unattached={unattached}
+              linkPick={linkPick}
+              anchorName={linkPickAnchorName}
               onPersonSelect={handlePersonSelect}
+              onCancelLinkPick={handleCancelLinkPick}
             />
           )}
         </div>
@@ -159,8 +242,15 @@ const TreePage = () => {
               lookup={lookup}
               treeMemberIds={treeMemberIds}
               isUnlinked={selectedIsUnlinked}
+              linkTargetId={drawerLinkTargetId}
+              linkPickActive={drawerLinkPickActive}
+              onLinkTargetChange={handleLinkTargetChange}
+              onStartLinkPick={handleStartLinkPick}
+              onCancelLinkPick={handleCancelLinkPick}
+              onViewPerson={handleViewPerson}
+              onLinked={handleLinked}
               onPersonSelect={handlePersonSelect}
-              onClose={() => setSelectedPersonId(null)}
+              onClose={handleCloseDrawer}
             />
           </aside>
         )}

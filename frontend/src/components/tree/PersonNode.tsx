@@ -3,8 +3,14 @@ import type { Person } from '../../types';
 import { formatLifeDisplay } from '../../utils/vitalYears';
 import styles from './PersonNode.module.css';
 
+type PersonNodeData = Person & {
+  linkPickTarget?: boolean;
+  linkPickDimmed?: boolean;
+  linkPickHover?: boolean;
+};
+
 interface PersonNodeProps {
-  data: Person;
+  data: PersonNodeData;
   selected: boolean;
 }
 
@@ -24,7 +30,7 @@ function initials(name: string): string {
 }
 
 const PersonNode = ({ data, selected }: PersonNodeProps) => {
-  const person = data;
+  const { linkPickTarget, linkPickDimmed, linkPickHover, ...person } = data;
   const life = formatLifeDisplay(
     person.birthDate,
     person.deathDate,
@@ -37,7 +43,10 @@ const PersonNode = ({ data, selected }: PersonNodeProps) => {
         styles.node,
         confidenceColor(person.confidenceScore),
         person.isUnknownPlaceholder ? styles.placeholder : '',
-        selected ? styles.selected : '',
+        selected || linkPickTarget ? styles.selected : '',
+        linkPickTarget ? styles.linkPickTarget : '',
+        linkPickDimmed ? styles.linkPickDimmed : '',
+        linkPickHover && !linkPickDimmed ? styles.linkPickHover : '',
       ].join(' ')}
     >
       <Handle type="target" position={Position.Top} className={styles.handle} />

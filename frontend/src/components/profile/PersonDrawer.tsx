@@ -16,6 +16,13 @@ interface Props {
   lookup: Map<string, Person>;
   treeMemberIds: Set<string>;
   isUnlinked: boolean;
+  linkTargetId: string | null;
+  linkPickActive: boolean;
+  onLinkTargetChange: (id: string | null) => void;
+  onStartLinkPick: () => void;
+  onCancelLinkPick: () => void;
+  onViewPerson: (person: Person) => void;
+  onLinked: () => void;
   onPersonSelect: (person: Person) => void;
   onClose: () => void;
 }
@@ -85,6 +92,13 @@ const PersonDrawer = ({
   lookup,
   treeMemberIds,
   isUnlinked,
+  linkTargetId,
+  linkPickActive,
+  onLinkTargetChange,
+  onStartLinkPick,
+  onCancelLinkPick,
+  onViewPerson,
+  onLinked,
   onPersonSelect,
   onClose,
 }: Props) => {
@@ -260,6 +274,14 @@ const PersonDrawer = ({
           allPeople={allPeople}
           treeMemberIds={treeMemberIds}
           isUnlinked={isUnlinked}
+          lookup={lookup}
+          linkTargetId={linkTargetId}
+          linkPickActive={linkPickActive}
+          onLinkTargetChange={onLinkTargetChange}
+          onStartLinkPick={onStartLinkPick}
+          onCancelLinkPick={onCancelLinkPick}
+          onViewPerson={onViewPerson}
+          onLinked={onLinked}
         />
       </section>
 

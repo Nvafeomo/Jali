@@ -106,3 +106,152 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.targetSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.noTarget {
+  margin: 0;
+  font-size: 12px;
+  color: var(--jali-text-subtle);
+  font-style: italic;
+}
+
+.selectedTarget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--jali-accent);
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.selectedAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #3b3b52;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--jali-text);
+}
+
+.selectedPhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selectedInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.selectedName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--jali-text);
+  line-height: 1.3;
+}
+
+.selectedDates {
+  font-size: 11px;
+  color: var(--jali-text-muted);
+}
+
+.selectedActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.viewProfile {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--jali-border);
+  background: transparent;
+  color: var(--jali-text-muted);
+  cursor: pointer;
+}
+
+.viewProfile:hover {
+  color: var(--jali-text);
+  border-color: var(--jali-text-muted);
+}
+
+.clearTarget {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--jali-text-muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.clearTarget:hover {
+  color: var(--jali-text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pickActions {
+  display: flex;
+}
+
+.pickBtn {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px dashed var(--jali-accent);
+  background: rgba(167, 139, 250, 0.06);
+  color: var(--jali-accent);
+  cursor: pointer;
+  transition: background 0.15s, border-style 0.15s;
+}
+
+.pickBtn:hover {
+  background: rgba(167, 139, 250, 0.12);
+}
+
+.pickBtnActive {
+  border-style: solid;
+  background: rgba(167, 139, 250, 0.15);
+}
+
+.listFallback {
+  font-size: 11px;
+  color: var(--jali-text-subtle);
+}
+
+.listFallback summary {
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+}
+
+.listFallback summary:hover {
+  color: var(--jali-text-muted);
+}
+
+.listFallback .input {
+  margin-top: 6px;
+}
