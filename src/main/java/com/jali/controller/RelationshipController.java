@@ -15,14 +15,9 @@ import com.jali.dto.AddEvidenceRequest;
 import com.jali.dto.CreateRelationshipRequest;
 import com.jali.dto.PersonResponse;
 import com.jali.neo4j.EvidenceType;
-import com.jali.neo4j.MarriedToRelationship;
-import com.jali.neo4j.ParentOfRelationship;
-import com.jali.neo4j.Person;
-import com.jali.neo4j.SiblingOfRelationship;
-import com.jali.repository.neo4j.PersonRepository;
 import com.jali.security.UserPrincipal;
 import com.jali.service.ConfidenceScoreService;
-import com.jali.service.PersonGraphService;
+import com.jali.service.RelationshipService;
 
 import jakarta.validation.Valid;
 
@@ -30,16 +25,13 @@ import jakarta.validation.Valid;
 @RequestMapping("/relationships")
 public class RelationshipController {
 
-	private final PersonGraphService personGraphService;
-	private final PersonRepository personRepository;
+	private final RelationshipService relationshipService;
 	private final ConfidenceScoreService confidenceScoreService;
 
 	public RelationshipController(
-			PersonGraphService personGraphService,
-			PersonRepository personRepository,
+			RelationshipService relationshipService,
 			ConfidenceScoreService confidenceScoreService) {
-		this.personGraphService = personGraphService;
-		this.personRepository = personRepository;
+		this.relationshipService = relationshipService;
 		this.confidenceScoreService = confidenceScoreService;
 	}
 
@@ -49,32 +41,11 @@ public class RelationshipController {
 			@Valid @RequestBody CreateRelationshipRequest request,
 			@AuthenticationPrincipal UserPrincipal principal) {
 
-		Person from = personGraphService.requireInTreeWithRelationships(
-				request.fromUuid(), principal.familyTreeId());
-		Person to = personGraphService.requireInTree(
-				request.toUuid(), principal.familyTreeId());
-
-		if (request.fromUuid().equals(request.toUuid())) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot relate a person to themselves");
-		}
-
-		switch (request.relationshipType().toUpperCase()) {
-			case "PARENT_OF" -> {
-				if (personRepository.wouldCreateParentCycle(
-						request.fromUuid(), request.toUuid(), principal.familyTreeId())) {
-					throw new ResponseStatusException(
-							HttpStatus.BAD_REQUEST, "PARENT_OF would create a cycle in the family tree");
-				}
-				from.getChildren().add(new ParentOfRelationship(to));
-			}
-			case "MARRIED_TO" -> from.getSpouses().add(new MarriedToRelationship(to));
-			case "SIBLING_OF" -> from.getSiblings().add(new SiblingOfRelationship(to));
-			default -> throw new ResponseStatusException(
-					HttpStatus.BAD_REQUEST,
-					"Unknown relationship type. Use PARENT_OF, MARRIED_TO, or SIBLING_OF");
-		}
-
-		personRepository.save(from);
+		relationshipService.create(
+				request.fromUuid(),
+				request.toUuid(),
+				request.relationshipType(),
+				principal.familyTreeId());
 	}
 
 	@PostMapping("/evidence")
@@ -92,7 +63,7 @@ public class RelationshipController {
 					"Unknown evidence type. Valid types: " + Arrays.toString(EvidenceType.values()));
 		}
 
-		Person updated = confidenceScoreService.addEvidenceToRelationship(
+		var updated = confidenceScoreService.addEvidenceToRelationship(
 				request.fromUuid(),
 				request.toUuid(),
 				request.relationshipType(),

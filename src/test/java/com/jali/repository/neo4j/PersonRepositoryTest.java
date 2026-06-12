@@ -16,6 +16,7 @@ import org.testcontainers.utility.DockerImageName;
 import com.jali.neo4j.MarriedToRelationship;
 import com.jali.neo4j.ParentOfRelationship;
 import com.jali.neo4j.Person;
+import com.jali.neo4j.SiblingOfRelationship;
 
 @DataNeo4jTest
 @EnableNeo4jRepositories(basePackages = "com.jali.repository.neo4j")
@@ -101,5 +102,37 @@ class PersonRepositoryTest {
 
 		assertThat(personRepository.findByUuidAndFamilyTreeId(saved.getUuid(), TREE_B)).isEmpty();
 		assertThat(personRepository.existsByUuidAndFamilyTreeId(saved.getUuid(), TREE_A)).isTrue();
+	}
+
+	@Test
+	void relationshipExistenceQueries_detectParentChildAndConflicts() {
+		Person parent = personRepository.save(new Person("Ibrahim Keita", TREE_A));
+		Person child = personRepository.save(new Person("Aminata Keita", TREE_A));
+		parent.getChildren().add(new ParentOfRelationship(child));
+		personRepository.save(parent);
+
+		assertThat(personRepository.hasDirectParentOf(parent.getUuid(), child.getUuid(), TREE_A)).isTrue();
+		assertThat(personRepository.hasParentChildBetween(parent.getUuid(), child.getUuid(), TREE_A)).isTrue();
+		assertThat(personRepository.wouldCreateParentCycle(child.getUuid(), parent.getUuid(), TREE_A)).isTrue();
+		assertThat(personRepository.hasSiblingBetween(parent.getUuid(), child.getUuid(), TREE_A)).isFalse();
+	}
+
+	@Test
+	void relationshipExistenceQueries_detectSiblingAndMarriage() {
+		Person alice = personRepository.save(new Person("Alice", TREE_A));
+		Person bob = personRepository.save(new Person("Bob", TREE_A));
+
+		alice.getSiblings().add(new SiblingOfRelationship(bob));
+		personRepository.save(alice);
+
+		assertThat(personRepository.hasSiblingBetween(alice.getUuid(), bob.getUuid(), TREE_A)).isTrue();
+		assertThat(personRepository.hasParentChildBetween(alice.getUuid(), bob.getUuid(), TREE_A)).isFalse();
+
+		Person carol = personRepository.save(new Person("Carol", TREE_A));
+		Person dave = personRepository.save(new Person("Dave", TREE_A));
+		carol.getSpouses().add(new MarriedToRelationship(dave));
+		personRepository.save(carol);
+
+		assertThat(personRepository.hasMarriageBetween(carol.getUuid(), dave.getUuid(), TREE_A)).isTrue();
 	}
 }

@@ -44,4 +44,44 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 			@Param("fromUuid") String fromUuid,
 			@Param("toUuid") String toUuid,
 			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
+			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
+			RETURN EXISTS { (from)-[:PARENT_OF]->(to) }
+			""")
+	boolean hasDirectParentOf(
+			@Param("fromUuid") String fromUuid,
+			@Param("toUuid") String toUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
+			MATCH (b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
+			RETURN EXISTS { (a)-[:PARENT_OF]->(b) OR (b)-[:PARENT_OF]->(a) }
+			""")
+	boolean hasParentChildBetween(
+			@Param("aUuid") String aUuid,
+			@Param("bUuid") String bUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
+			MATCH (b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
+			RETURN EXISTS { (a)-[:SIBLING_OF]->(b) OR (b)-[:SIBLING_OF]->(a) }
+			""")
+	boolean hasSiblingBetween(
+			@Param("aUuid") String aUuid,
+			@Param("bUuid") String bUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
+			MATCH (b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
+			RETURN EXISTS { (a)-[:MARRIED_TO]->(b) OR (b)-[:MARRIED_TO]->(a) }
+			""")
+	boolean hasMarriageBetween(
+			@Param("aUuid") String aUuid,
+			@Param("bUuid") String bUuid,
+			@Param("familyTreeId") Long familyTreeId);
 }

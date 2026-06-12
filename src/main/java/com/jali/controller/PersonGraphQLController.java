@@ -14,29 +14,26 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.jali.neo4j.EvidenceType;
-import com.jali.neo4j.MarriedToRelationship;
-import com.jali.neo4j.ParentOfRelationship;
 import com.jali.neo4j.Person;
-import com.jali.neo4j.SiblingOfRelationship;
-import com.jali.repository.neo4j.PersonRepository;
 import com.jali.security.UserPrincipal;
 import com.jali.service.ConfidenceScoreService;
 import com.jali.service.PersonGraphService;
+import com.jali.service.RelationshipService;
 
 @Controller
 public class PersonGraphQLController {
 
-	private final PersonRepository personRepository;
 	private final PersonGraphService personGraphService;
 	private final ConfidenceScoreService confidenceScoreService;
+	private final RelationshipService relationshipService;
 
 	public PersonGraphQLController(
-			PersonRepository personRepository,
 			PersonGraphService personGraphService,
-			ConfidenceScoreService confidenceScoreService) {
-		this.personRepository = personRepository;
+			ConfidenceScoreService confidenceScoreService,
+			RelationshipService relationshipService) {
 		this.personGraphService = personGraphService;
 		this.confidenceScoreService = confidenceScoreService;
+		this.relationshipService = relationshipService;
 	}
 
 	@QueryMapping
@@ -112,16 +109,7 @@ public class PersonGraphQLController {
 			@Argument String toUuid,
 			@Argument String relationshipType,
 			@AuthenticationPrincipal UserPrincipal principal) {
-		Person from = personGraphService.requireInTreeWithRelationships(fromUuid, principal.familyTreeId());
-		Person to = personGraphService.requireInTree(toUuid, principal.familyTreeId());
-
-		switch (relationshipType.toUpperCase()) {
-			case "PARENT_OF" -> from.getChildren().add(new ParentOfRelationship(to));
-			case "MARRIED_TO" -> from.getSpouses().add(new MarriedToRelationship(to));
-			case "SIBLING_OF" -> from.getSiblings().add(new SiblingOfRelationship(to));
-			default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown relationship type");
-		}
-		personRepository.save(from);
+		relationshipService.create(fromUuid, toUuid, relationshipType, principal.familyTreeId());
 		return true;
 	}
 
