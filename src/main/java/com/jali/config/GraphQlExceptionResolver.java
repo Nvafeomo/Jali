@@ -46,7 +46,7 @@ public class GraphQlExceptionResolver extends DataFetcherExceptionResolverAdapte
 		if (ex instanceof DataAccessException dae) {
 			String message = rootMessage(dae);
 			return GraphqlErrorBuilder.newError(env)
-					.errorType(ErrorType.INTERNAL)
+					.errorType(ErrorType.INTERNAL_ERROR)
 					.message(message != null ? message : "Database error while processing request")
 					.build();
 		}
@@ -54,7 +54,7 @@ public class GraphQlExceptionResolver extends DataFetcherExceptionResolverAdapte
 		String message = rootMessage(ex);
 		if (message != null && !message.isBlank() && !message.startsWith("INTERNAL_ERROR for")) {
 			return GraphqlErrorBuilder.newError(env)
-					.errorType(ErrorType.INTERNAL)
+					.errorType(ErrorType.INTERNAL_ERROR)
 					.message(message)
 					.build();
 		}
