@@ -14,6 +14,8 @@ interface Props {
   person: Person;
   allPeople: Person[];
   lookup: Map<string, Person>;
+  treeMemberIds: Set<string>;
+  isUnlinked: boolean;
   onPersonSelect: (person: Person) => void;
   onClose: () => void;
 }
@@ -77,7 +79,15 @@ const StoryItem = ({ story }: { story: StoryMemory }) => {
 };
 
 // ── Main drawer ─────────────────────────────────────────────────────────────
-const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Props) => {
+const PersonDrawer = ({
+  person,
+  allPeople,
+  lookup,
+  treeMemberIds,
+  isUnlinked,
+  onPersonSelect,
+  onClose,
+}: Props) => {
   const { label: scoreLabel, cls: scoreCls } = confidenceLabel(person.confidenceScore);
 
   // When a chip is clicked, look up the full enriched Person from the lookup map.
@@ -112,6 +122,9 @@ const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Pr
           <span className={[styles.scoreBadge, scoreCls].join(' ')}>{scoreLabel}</span>
           {person.isUnknownPlaceholder && (
             <span className={styles.placeholderBadge}>Placeholder node</span>
+          )}
+          {isUnlinked && (
+            <span className={styles.unlinkedBadge}>Not on tree — link below</span>
           )}
         </div>
       </div>
@@ -242,7 +255,12 @@ const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Pr
             <p className={styles.emptyState}>No relationships linked yet.</p>
           )}
 
-        <LinkRelationshipForm person={person} allPeople={allPeople} />
+        <LinkRelationshipForm
+          person={person}
+          allPeople={allPeople}
+          treeMemberIds={treeMemberIds}
+          isUnlinked={isUnlinked}
+        />
       </section>
 
       {/* ── Stories & memories ──────────────────────────── */}

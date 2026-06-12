@@ -43,6 +43,22 @@
   overflow-y: auto;
 }
 
+.unlinkedHint {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--jali-text-muted);
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: var(--jali-radius-sm);
+}
+
+.unlinkedHint strong {
+  color: var(--jali-accent);
+  font-weight: 600;
+}
+
 .label {
   display: flex;
   flex-direction: column;

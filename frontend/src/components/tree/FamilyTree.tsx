@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -15,6 +15,7 @@ import type { Person } from '../../types';
 import { buildLayout } from './treeLayout';
 import PersonNode from './PersonNode';
 import TreeLegend from './TreeLegend';
+import UnattachedPanel from './UnattachedPanel';
 import styles from './FamilyTree.module.css';
 
 // Register our custom node type.
@@ -24,10 +25,11 @@ const nodeTypes = { person: PersonNode };
 
 interface FamilyTreeProps {
   people: Person[];
+  unattached?: Person[];
   onPersonSelect: (person: Person) => void;
 }
 
-const FamilyTree = ({ people, onPersonSelect }: FamilyTreeProps) => {
+const FamilyTree = ({ people, unattached = [], onPersonSelect }: FamilyTreeProps) => {
 
   // Build the React Flow nodes and edges from our person data.
   // useMemo means this only recalculates when `people` changes, not on every render.
@@ -51,8 +53,13 @@ const FamilyTree = ({ people, onPersonSelect }: FamilyTreeProps) => {
 
   // useNodesState / useEdgesState are React Flow's own state hooks.
   // They store the node/edge arrays and handle internal updates like dragging.
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  useEffect(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   // When a node is clicked, find the matching Person and notify the parent.
   const onNodeClick: NodeMouseHandler = useCallback(
@@ -97,6 +104,7 @@ const FamilyTree = ({ people, onPersonSelect }: FamilyTreeProps) => {
           style={{ background: '#1e1e2e' }}
         />
       </ReactFlow>
+      <UnattachedPanel people={unattached} onSelect={onPersonSelect} />
       <TreeLegend />
     </div>
   );

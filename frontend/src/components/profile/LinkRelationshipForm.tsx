@@ -3,6 +3,7 @@ import { useMutation } from '@apollo/client/react';
 import { CREATE_RELATIONSHIP_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import type { Person } from '../../types';
+import { formatLifeYears } from '../../utils/vitalYears';
 import styles from './LinkRelationshipForm.module.css';
 
 type RelRole = 'parent' | 'child' | 'spouse' | 'sibling';
@@ -10,6 +11,9 @@ type RelRole = 'parent' | 'child' | 'spouse' | 'sibling';
 interface Props {
   person: Person;
   allPeople: Person[];
+  /** IDs of people already on the canvas — required link targets for unlinked people. */
+  treeMemberIds: Set<string>;
+  isUnlinked: boolean;
 }
 
 function toMutationVars(anchorId: string, otherId: string, role: RelRole) {
@@ -25,14 +29,22 @@ function toMutationVars(anchorId: string, otherId: string, role: RelRole) {
   }
 }
 
-const LinkRelationshipForm = ({ person, allPeople }: Props) => {
-  const [open, setOpen] = useState(false);
+function candidateLabel(person: Person, onTree: boolean): string {
+  const dates = formatLifeYears(person.birthDate, person.deathDate, person.birthDateApproximate);
+  const suffix = dates ? ` · ${dates}` : '';
+  const treeTag = onTree ? '' : ' · unlinked';
+  return `${person.fullName}${suffix}${treeTag}`;
+}
+
+const LinkRelationshipForm = ({ person, allPeople, treeMemberIds, isUnlinked }: Props) => {
+  const [open, setOpen] = useState(isUnlinked);
   const [role, setRole] = useState<RelRole>('parent');
   const [otherId, setOtherId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const candidates = allPeople
     .filter(p => p.id !== person.id)
+    .filter(p => !isUnlinked || treeMemberIds.has(p.id))
     .sort((a, b) => a.fullName.localeCompare(b.fullName));
 
   const [linkPeople, { loading }] = useMutation(CREATE_RELATIONSHIP_MUTATION, {
@@ -50,7 +62,7 @@ const LinkRelationshipForm = ({ person, allPeople }: Props) => {
     setError(null);
 
     if (!otherId) {
-      setError('Choose someone to link.');
+      setError('Choose someone on the tree to link to.');
       return;
     }
 
@@ -62,21 +74,36 @@ const LinkRelationshipForm = ({ person, allPeople }: Props) => {
   if (candidates.length === 0) {
     return (
       <p className={styles.hint}>
-        Add at least one more person before linking relationships.
+        {isUnlinked
+          ? 'Add someone to the tree first, then link this person to them.'
+          : 'Add at least one more person before linking relationships.'}
       </p>
     );
   }
 
   if (!open) {
     return (
-      <button type="button" className={styles.toggle} onClick={() => setOpen(true)}>
-        + Link to someone
-      </button>
+      <>
+        {isUnlinked && (
+          <p className={styles.unlinkedNotice}>
+            Not on the tree yet — link to someone already on the canvas.
+          </p>
+        )}
+        <button type="button" className={styles.toggle} onClick={() => setOpen(true)}>
+          + Link to someone{isUnlinked ? ' on the tree' : ''}
+        </button>
+      </>
     );
   }
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
+      {isUnlinked && (
+        <p className={styles.unlinkedNotice}>
+          Choose someone already on the tree. Dates help tell apart same names.
+        </p>
+      )}
+
       <label className={styles.label}>
         Relationship
         <select
@@ -92,7 +119,7 @@ const LinkRelationshipForm = ({ person, allPeople }: Props) => {
       </label>
 
       <label className={styles.label}>
-        Person
+        {isUnlinked ? 'Person on tree' : 'Person'}
         <select
           className={styles.input}
           value={otherId}
@@ -101,7 +128,7 @@ const LinkRelationshipForm = ({ person, allPeople }: Props) => {
           <option value="">— select —</option>
           {candidates.map(p => (
             <option key={p.id} value={p.id}>
-              {p.fullName}
+              {candidateLabel(p, treeMemberIds.has(p.id))}
             </option>
           ))}
         </select>

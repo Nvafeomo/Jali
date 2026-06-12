@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useFamilyTree } from '../hooks/useFamilyTree';
 import { useMyTree } from '../hooks/useMyTree';
 import { peopleById } from '../utils/enrichPeople';
+import { isOnTree, partitionTreeMembers } from '../utils/treeMembership';
 import type { Person } from '../types';
 import styles from './TreePage.module.css';
 
@@ -38,7 +39,16 @@ const TreePage = () => {
   const { people, loading, error } = useMyTree();
 
   const lookup = useMemo(() => peopleById(people), [people]);
+  const treePartition = useMemo(() => partitionTreeMembers(people), [people]);
+  const { connected, unattached } = treePartition;
+  const treeMemberIds = useMemo(
+    () => new Set(connected.map(p => p.id)),
+    [connected],
+  );
   const selectedPerson = selectedPersonId ? lookup.get(selectedPersonId) ?? null : null;
+  const selectedIsUnlinked = selectedPerson
+    ? !isOnTree(selectedPerson.id, treePartition)
+    : false;
 
   const handlePersonSelect = (person: Person) => {
     setSelectedPersonId(person.id);
@@ -51,7 +61,10 @@ const TreePage = () => {
   };
 
   const rightPanel = showAddPanel ? 'add' : selectedPerson ? 'drawer' : null;
-  const memberLabel = people.length === 1 ? '1 member' : `${people.length} members`;
+  const memberLabel =
+    people.length === 1
+      ? '1 member'
+      : `${people.length} members${unattached.length > 0 ? ` · ${unattached.length} unlinked` : ''}`;
 
   return (
     <div className={styles.page}>
@@ -120,13 +133,18 @@ const TreePage = () => {
           )}
 
           {!loading && !error && people.length > 0 && (
-            <FamilyTree people={people} onPersonSelect={handlePersonSelect} />
+            <FamilyTree
+              people={connected}
+              unattached={unattached}
+              onPersonSelect={handlePersonSelect}
+            />
           )}
         </div>
 
         {rightPanel === 'add' && (
           <aside className={styles.drawer}>
             <AddPersonPanel
+              treeHasMembers={people.length > 0}
               onClose={() => setShowAddPanel(false)}
               onCreated={() => setShowAddPanel(false)}
             />
@@ -139,6 +157,8 @@ const TreePage = () => {
               person={selectedPerson}
               allPeople={people}
               lookup={lookup}
+              treeMemberIds={treeMemberIds}
+              isUnlinked={selectedIsUnlinked}
               onPersonSelect={handlePersonSelect}
               onClose={() => setSelectedPersonId(null)}
             />

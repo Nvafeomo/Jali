@@ -81,3 +81,80 @@ Plan on two subdomains:
 - The Render Postgres free tier has a 90-day expiry — upgrade or migrate before then.
 - `JWT_SECRET` must be at least 32 characters. Generate with `openssl rand -hex 32`.
 - Never commit `.env.local` or `application-local.properties` — both are in `.gitignore`.
+
+---
+
+## Faster deploys via GitHub Actions (do this soon after initial deployment)
+
+Currently Render builds the Docker image from scratch on every push (~5-10 min). This approach pre-builds the image in GitHub Actions and pushes it to GitHub Container Registry (ghcr.io), so Render just pulls and runs (~1 min).
+
+### Step 1 — Create the GitHub Actions workflow
+
+Create `.github/workflows/deploy.yml` in the repo root:
+
+```yaml
+name: Build and deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - 'Dockerfile'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/jali-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+```
+
+### Step 2 — Set up Render to pull from ghcr.io
+
+1. Render dashboard → `jali-api` → Settings → **Docker Image** → switch from "Build from source" to "Pull from registry"
+2. Set image to `ghcr.io/YOUR_GITHUB_USERNAME/jali-api:latest`
+3. Since the image is public (ghcr.io packages are public by default for public repos), no registry credential needed
+
+### Step 3 — Add the Render deploy hook as a GitHub secret
+
+1. Render → `jali-api` → Settings → **Deploy Hook** → copy the URL
+2. GitHub → your repo → Settings → Secrets → Actions → **New secret**
+3. Name: `RENDER_DEPLOY_HOOK`, value: the URL from Render
+
+### Step 4 — Disable auto-deploy on Render
+
+Render → `jali-api` → Settings → **Auto-Deploy → Off**. GitHub Actions will trigger deploys instead.
+
+### Result
+- Pushes that only touch `frontend/` skip the backend build entirely (the `paths` filter handles this)
+- Backend deploys drop from ~8 min to ~1 min
+- Docker layer caching (`cache-from/cache-to: type=gha`) means Maven dependencies are cached between runs

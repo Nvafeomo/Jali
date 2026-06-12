@@ -15,9 +15,11 @@ import styles from './AddPersonPanel.module.css';
 interface Props {
   onClose: () => void;
   onCreated: () => void;
+  /** When the tree already has members, new people land in Unlinked until linked. */
+  treeHasMembers?: boolean;
 }
 
-const AddPersonPanel = ({ onClose, onCreated }: Props) => {
+const AddPersonPanel = ({ onClose, onCreated, treeHasMembers = false }: Props) => {
   const [fullName, setFullName] = useState('');
   const [birthMode, setBirthMode] = useState<BirthMode>('unknown');
   const [birthYear, setBirthYear] = useState('');
@@ -74,6 +76,13 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
+        {treeHasMembers && (
+          <p className={styles.unlinkedHint}>
+            New people appear in the <strong>Unlinked</strong> panel until you connect
+            them to someone on the tree.
+          </p>
+        )}
+
         <label className={styles.label}>
           Full name <span className={styles.required}>*</span>
           <input
