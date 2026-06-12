@@ -1,0 +1,57 @@
+.fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--jali-text);
+  margin-bottom: 0.15rem;
+}
+
+.optionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+}
+
+.radioLabel,
+.checkLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--jali-text-muted);
+  cursor: pointer;
+}
+
+.checkLabel {
+  font-size: 0.78rem;
+  color: var(--jali-text-subtle);
+}
+
+.input {
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid var(--jali-border);
+  border-radius: var(--jali-radius-sm);
+  font-size: 0.95rem;
+  color: var(--jali-text-heading, var(--jali-text));
+  background: var(--jali-bg);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--jali-accent);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--jali-text-subtle);
+  line-height: 1.4;
+}

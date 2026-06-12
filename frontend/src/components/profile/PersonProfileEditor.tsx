@@ -3,8 +3,19 @@ import { useMutation } from '@apollo/client/react';
 import { UPDATE_PERSON_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import type { Person } from '../../types';
-import { optionalField } from '../../utils/formatLifeYears';
+import {
+  birthModeFromStored,
+  birthYearFromStored,
+  deathStatusFromStored,
+  deathYearFromStored,
+  encodeBirthYear,
+  encodeDeathYear,
+  optionalField,
+  type BirthMode,
+  type DeathStatus,
+} from '../../utils/vitalYears';
 import { editDaysRemaining } from '../../utils/gracePeriod';
+import VitalYearFields from './VitalYearFields';
 import styles from './PersonProfileEditor.module.css';
 
 interface Props {
@@ -16,8 +27,10 @@ const PersonProfileEditor = ({ person }: Props) => {
 
   const [fullName, setFullName] = useState(person.fullName);
   const [bio, setBio] = useState(person.bio ?? '');
-  const [birthDate, setBirthDate] = useState(person.birthDate ?? '');
-  const [deathDate, setDeathDate] = useState(person.deathDate ?? '');
+  const [birthMode, setBirthMode] = useState<BirthMode>(() => birthModeFromStored(person.birthDate));
+  const [birthYear, setBirthYear] = useState(() => birthYearFromStored(person.birthDate));
+  const [deathStatus, setDeathStatus] = useState<DeathStatus>(() => deathStatusFromStored(person.deathDate));
+  const [deathYear, setDeathYear] = useState(() => deathYearFromStored(person.deathDate));
   const [birthplace, setBirthplace] = useState(person.birthplace ?? '');
   const [ethnicGroup, setEthnicGroup] = useState(person.ethnicGroup ?? '');
   const [biologicalSex, setBiologicalSex] = useState(person.biologicalSex ?? '');
@@ -27,8 +40,10 @@ const PersonProfileEditor = ({ person }: Props) => {
   useEffect(() => {
     setFullName(person.fullName);
     setBio(person.bio ?? '');
-    setBirthDate(person.birthDate ?? '');
-    setDeathDate(person.deathDate ?? '');
+    setBirthMode(birthModeFromStored(person.birthDate));
+    setBirthYear(birthYearFromStored(person.birthDate));
+    setDeathStatus(deathStatusFromStored(person.deathDate));
+    setDeathYear(deathYearFromStored(person.deathDate));
     setBirthplace(person.birthplace ?? '');
     setEthnicGroup(person.ethnicGroup ?? '');
     setBiologicalSex(person.biologicalSex ?? '');
@@ -46,12 +61,23 @@ const PersonProfileEditor = ({ person }: Props) => {
     onError: (err) => setError(err.message),
   });
 
+  const encodedBirth = encodeBirthYear(birthMode, birthYear);
+  const encodedDeath = encodeDeathYear(deathStatus, deathYear);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!fullName.trim()) {
       setError('Full name is required.');
+      return;
+    }
+    if (birthMode === 'year' && !birthYear.trim()) {
+      setError('Enter a birth year or choose Unknown.');
+      return;
+    }
+    if (deathStatus === 'year' && !deathYear.trim()) {
+      setError('Enter a death year or choose another status.');
       return;
     }
 
@@ -61,8 +87,8 @@ const PersonProfileEditor = ({ person }: Props) => {
         input: {
           fullName: fullName.trim(),
           bio: optionalField(bio),
-          birthDate: optionalField(birthDate),
-          deathDate: optionalField(deathDate),
+          birthDate: encodedBirth,
+          deathDate: encodedDeath,
           birthplace: optionalField(birthplace),
           ethnicGroup: optionalField(ethnicGroup),
           biologicalSex: optionalField(biologicalSex) || null,
@@ -74,8 +100,8 @@ const PersonProfileEditor = ({ person }: Props) => {
   const isDirty =
     fullName !== person.fullName ||
     bio !== (person.bio ?? '') ||
-    birthDate !== (person.birthDate ?? '') ||
-    deathDate !== (person.deathDate ?? '') ||
+    encodedBirth !== (person.birthDate ?? null) ||
+    encodedDeath !== (person.deathDate ?? null) ||
     birthplace !== (person.birthplace ?? '') ||
     ethnicGroup !== (person.ethnicGroup ?? '') ||
     biologicalSex !== (person.biologicalSex ?? '');
@@ -113,26 +139,16 @@ const PersonProfileEditor = ({ person }: Props) => {
         />
       </label>
 
-      <div className={styles.row}>
-        <label className={styles.label}>
-          Birth year <span className={styles.optional}>(optional)</span>
-          <input
-            className={styles.input}
-            value={birthDate}
-            onChange={e => setBirthDate(e.target.value)}
-            placeholder="Unknown — leave blank"
-          />
-        </label>
-        <label className={styles.label}>
-          Death year <span className={styles.optional}>(optional)</span>
-          <input
-            className={styles.input}
-            value={deathDate}
-            onChange={e => setDeathDate(e.target.value)}
-            placeholder="Unknown — leave blank"
-          />
-        </label>
-      </div>
+      <VitalYearFields
+        birthMode={birthMode}
+        birthYear={birthYear}
+        deathStatus={deathStatus}
+        deathYear={deathYear}
+        onBirthModeChange={setBirthMode}
+        onBirthYearChange={setBirthYear}
+        onDeathStatusChange={setDeathStatus}
+        onDeathYearChange={setDeathYear}
+      />
 
       <label className={styles.label}>
         Birthplace

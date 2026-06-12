@@ -2,33 +2,33 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { CREATE_PERSON_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
-import { optionalField } from '../../utils/formatLifeYears';
+import {
+  encodeBirthYear,
+  encodeDeathYear,
+  optionalField,
+  type BirthMode,
+  type DeathStatus,
+} from '../../utils/vitalYears';
+import VitalYearFields from '../profile/VitalYearFields';
 import styles from './AddPersonPanel.module.css';
 
 interface Props {
   onClose: () => void;
-  onCreated: () => void; // called after a person is successfully added
+  onCreated: () => void;
 }
 
-// AddPersonPanel is a slide-in form for creating a new Person node.
-// It only handles basic details — relationships are added separately
-// from the PersonDrawer once the person exists.
-//
-// After a successful mutation it tells Apollo to refetch myTree so
-// the new node appears on the canvas immediately.
 const AddPersonPanel = ({ onClose, onCreated }: Props) => {
   const [fullName, setFullName] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [deathDate, setDeathDate] = useState('');
+  const [birthMode, setBirthMode] = useState<BirthMode>('unknown');
+  const [birthYear, setBirthYear] = useState('');
+  const [deathStatus, setDeathStatus] = useState<DeathStatus>('living');
+  const [deathYear, setDeathYear] = useState('');
   const [birthplace, setBirthplace] = useState('');
   const [ethnicGroup, setEthnicGroup] = useState('');
   const [bio, setBio] = useState('');
   const [biologicalSex, setBiologicalSex] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // useMutation gives us a function to call plus loading/error state.
-  // refetchQueries tells Apollo: after this mutation succeeds, re-run
-  // MY_TREE_QUERY so the canvas updates without a manual page refresh.
   const [createPerson, { loading }] = useMutation(CREATE_PERSON_MUTATION, {
     refetchQueries: [{ query: MY_TREE_QUERY }],
     onError: (err) => setError(err.message),
@@ -46,13 +46,21 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
       setError('Full name is required.');
       return;
     }
+    if (birthMode === 'year' && !birthYear.trim()) {
+      setError('Enter a birth year or choose Unknown.');
+      return;
+    }
+    if (deathStatus === 'year' && !deathYear.trim()) {
+      setError('Enter a death year or choose another status.');
+      return;
+    }
 
     await createPerson({
       variables: {
         input: {
           fullName: fullName.trim(),
-          birthDate: optionalField(birthDate),
-          deathDate: optionalField(deathDate),
+          birthDate: encodeBirthYear(birthMode, birthYear),
+          deathDate: encodeDeathYear(deathStatus, deathYear),
           birthplace: optionalField(birthplace),
           ethnicGroup: optionalField(ethnicGroup),
           bio: optionalField(bio),
@@ -70,7 +78,6 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
-        {/* Full name is the only required field */}
         <label className={styles.label}>
           Full name <span className={styles.required}>*</span>
           <input
@@ -84,29 +91,16 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
           />
         </label>
 
-        <div className={styles.row}>
-          <label className={styles.label}>
-            Birth year <span className={styles.optional}>(optional)</span>
-            <input
-              type="text"
-              className={styles.input}
-              value={birthDate}
-              onChange={e => setBirthDate(e.target.value)}
-              placeholder="Unknown — leave blank"
-            />
-          </label>
-
-          <label className={styles.label}>
-            Death year <span className={styles.optional}>(optional)</span>
-            <input
-              type="text"
-              className={styles.input}
-              value={deathDate}
-              onChange={e => setDeathDate(e.target.value)}
-              placeholder="Unknown — leave blank"
-            />
-          </label>
-        </div>
+        <VitalYearFields
+          birthMode={birthMode}
+          birthYear={birthYear}
+          deathStatus={deathStatus}
+          deathYear={deathYear}
+          onBirthModeChange={setBirthMode}
+          onBirthYearChange={setBirthYear}
+          onDeathStatusChange={setDeathStatus}
+          onDeathYearChange={setDeathYear}
+        />
 
         <label className={styles.label}>
           Birthplace
@@ -141,7 +135,6 @@ const AddPersonPanel = ({ onClose, onCreated }: Props) => {
           />
         </label>
 
-        {/* Select is better than free text for a known set of options */}
         <label className={styles.label}>
           Sex
           <select

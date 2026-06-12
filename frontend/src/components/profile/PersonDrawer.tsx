@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import type { Person, StoryMemory } from '../../types';
+import {
+  formatBirthDisplay,
+  formatDeathDisplay,
+  isLiving,
+} from '../../utils/vitalYears';
 import LinkRelationshipForm from './LinkRelationshipForm';
 import PersonProfileEditor from './PersonProfileEditor';
 import lockedStyles from './PersonProfileEditor.module.css';
@@ -128,22 +133,24 @@ const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Pr
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Details</h3>
         <div className={styles.vitals}>
-          {(person.birthDate || person.birthplace) && (
-            <div className={styles.vitalRow}>
-              <span className={styles.vitalLabel}>Born</span>
-              <span className={styles.vitalValue}>
-                {person.birthDate ?? 'Unknown'}
-                {person.birthDateApproximate ? ' (approx.)' : ''}
-                {person.birthplace ? ` · ${person.birthplace}` : ''}
-              </span>
-            </div>
-          )}
-          {person.deathDate && (
-            <div className={styles.vitalRow}>
-              <span className={styles.vitalLabel}>Died</span>
-              <span className={styles.vitalValue}>{person.deathDate}</span>
-            </div>
-          )}
+          <div className={styles.vitalRow}>
+            <span className={styles.vitalLabel}>Born</span>
+            <span className={styles.vitalValue}>
+              {formatBirthDisplay(person.birthDate, person.birthDateApproximate)}
+              {person.birthplace ? ` · ${person.birthplace}` : ''}
+            </span>
+          </div>
+          <div className={styles.vitalRow}>
+            <span className={styles.vitalLabel}>Status</span>
+            <span
+              className={[
+                styles.vitalValue,
+                isLiving(person.deathDate) ? styles.living : '',
+              ].join(' ')}
+            >
+              {formatDeathDisplay(person.deathDate)}
+            </span>
+          </div>
           {person.ethnicGroup && (
             <div className={styles.vitalRow}>
               <span className={styles.vitalLabel}>Ethnic group</span>

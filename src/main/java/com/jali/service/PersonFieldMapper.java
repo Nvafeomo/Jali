@@ -17,12 +17,24 @@ public class PersonFieldMapper {
 		return trimmed.isEmpty() ? null : trimmed;
 	}
 
+	/** Birth/death year: blank = absent; "unknown" (any case) stored as lowercase marker. */
+	private static String vitalYearString(Object value) {
+		String trimmed = optionalString(value);
+		if (trimmed == null) {
+			return null;
+		}
+		if ("unknown".equalsIgnoreCase(trimmed)) {
+			return "unknown";
+		}
+		return trimmed;
+	}
+
 	public void applyCreateFields(Person person, Map<String, Object> input) {
-		String birthDate = optionalString(input.get("birthDate"));
+		String birthDate = vitalYearString(input.get("birthDate"));
 		if (birthDate != null) {
 			person.setBirthDate(birthDate);
 		}
-		String deathDate = optionalString(input.get("deathDate"));
+		String deathDate = vitalYearString(input.get("deathDate"));
 		if (deathDate != null) {
 			person.setDeathDate(deathDate);
 		}
@@ -56,10 +68,10 @@ public class PersonFieldMapper {
 			person.setFullName(fullName);
 		}
 		if (input.containsKey("birthDate")) {
-			person.setBirthDate(optionalString(input.get("birthDate")));
+			person.setBirthDate(vitalYearString(input.get("birthDate")));
 		}
 		if (input.containsKey("deathDate")) {
-			person.setDeathDate(optionalString(input.get("deathDate")));
+			person.setDeathDate(vitalYearString(input.get("deathDate")));
 		}
 		if (input.containsKey("birthplace")) {
 			person.setBirthplace(optionalString(input.get("birthplace")));

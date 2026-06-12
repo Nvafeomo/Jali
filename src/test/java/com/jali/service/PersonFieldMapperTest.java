@@ -25,7 +25,16 @@ class PersonFieldMapperTest {
 	}
 
 	@Test
-	void update_clearsBirthAndDeathWhenBlank() {
+	void create_normalizesUnknownDeathMarker() {
+		Person person = new Person("Ada Konneh", 1L);
+
+		mapper.applyCreateFields(person, Map.of("deathDate", " Unknown "));
+
+		assertThat(person.getDeathDate()).isEqualTo("unknown");
+	}
+
+	@Test
+	void update_livingClearsDeathYear() {
 		Person person = new Person("Ada Konneh", 1L);
 		person.setBirthDate("1952");
 		person.setDeathDate("2018");

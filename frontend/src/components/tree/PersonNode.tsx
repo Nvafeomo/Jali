@@ -1,6 +1,6 @@
 import { Handle, Position } from '@xyflow/react';
 import type { Person } from '../../types';
-import { formatLifeYears } from '../../utils/formatLifeYears';
+import { formatLifeDisplay } from '../../utils/vitalYears';
 import styles from './PersonNode.module.css';
 
 interface PersonNodeProps {
@@ -8,15 +8,12 @@ interface PersonNodeProps {
   selected: boolean;
 }
 
-// Maps a 0-1 confidence score to a CSS color class.
-// This drives the colored ring around the node.
 function confidenceColor(score: number): string {
   if (score >= 0.7) return styles.high;
   if (score >= 0.4) return styles.medium;
   return styles.low;
 }
 
-// Generates initials from a full name. "Ibrahim Kouyaté" → "IK"
 function initials(name: string): string {
   return name
     .split(' ')
@@ -28,15 +25,13 @@ function initials(name: string): string {
 
 const PersonNode = ({ data, selected }: PersonNodeProps) => {
   const person = data;
-  const lifeYears = formatLifeYears(
+  const life = formatLifeDisplay(
     person.birthDate,
     person.deathDate,
     person.birthDateApproximate,
   );
 
   return (
-    // The outer wrapper applies the confidence ring color and
-    // a dashed border for unknown placeholder nodes.
     <div
       className={[
         styles.node,
@@ -45,9 +40,6 @@ const PersonNode = ({ data, selected }: PersonNodeProps) => {
         selected ? styles.selected : '',
       ].join(' ')}
     >
-      {/* Handle = the connection point React Flow uses to draw edges.
-          'target' handle is on top (parents connect down into it).
-          'source' handle is on bottom (children connect up from it). */}
       <Handle type="target" position={Position.Top} className={styles.handle} />
       <Handle
         id="spouse-in"
@@ -56,7 +48,6 @@ const PersonNode = ({ data, selected }: PersonNodeProps) => {
         className={styles.handle}
       />
 
-      {/* Avatar: photo if available, initials otherwise */}
       <div className={styles.avatar}>
         {person.isUnknownPlaceholder ? (
           <span className={styles.unknown}>?</span>
@@ -67,14 +58,16 @@ const PersonNode = ({ data, selected }: PersonNodeProps) => {
         )}
       </div>
 
-      {/* Name below the circle */}
       <div className={styles.name}>
         {person.isUnknownPlaceholder ? 'Unknown' : person.fullName}
       </div>
 
-      {/* Birth/death years in small text */}
-      {lifeYears && (
-        <div className={styles.dates}>{lifeYears}</div>
+      {life.primary && (
+        <div className={styles.dates}>{life.primary}</div>
+      )}
+
+      {life.showLivingBadge && (
+        <div className={styles.livingBadge}>Living</div>
       )}
 
       <Handle type="source" position={Position.Bottom} className={styles.handle} />

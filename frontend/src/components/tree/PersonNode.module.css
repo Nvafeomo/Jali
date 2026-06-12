@@ -75,6 +75,16 @@
   color: var(--jali-text-muted);
   margin-top: 3px;
   text-align: center;
+  line-height: 1.25;
+}
+
+.livingBadge {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--jali-confidence-high);
+  margin-top: 2px;
 }
 
 .handle {
