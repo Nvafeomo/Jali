@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { CREATE_PERSON_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import styles from './AddPersonPanel.module.css';

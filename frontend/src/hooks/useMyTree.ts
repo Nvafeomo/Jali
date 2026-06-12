@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { MY_TREE_QUERY } from '../graphql/queries';
 import { MOCK_PEOPLE } from '../graphql/mockData';
 import type { Person, RelationshipEdge } from '../types';
