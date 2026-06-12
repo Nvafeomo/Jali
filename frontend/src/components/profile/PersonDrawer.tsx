@@ -132,7 +132,7 @@ const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Pr
             <div className={styles.vitalRow}>
               <span className={styles.vitalLabel}>Born</span>
               <span className={styles.vitalValue}>
-                {person.birthDate ?? '?'}
+                {person.birthDate ?? 'Unknown'}
                 {person.birthDateApproximate ? ' (approx.)' : ''}
                 {person.birthplace ? ` · ${person.birthplace}` : ''}
               </span>
@@ -142,12 +142,6 @@ const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Pr
             <div className={styles.vitalRow}>
               <span className={styles.vitalLabel}>Died</span>
               <span className={styles.vitalValue}>{person.deathDate}</span>
-            </div>
-          )}
-          {!person.deathDate && !person.isUnknownPlaceholder && (
-            <div className={styles.vitalRow}>
-              <span className={styles.vitalLabel}>Status</span>
-              <span className={[styles.vitalValue, styles.living].join(' ')}>Living</span>
             </div>
           )}
           {person.ethnicGroup && (

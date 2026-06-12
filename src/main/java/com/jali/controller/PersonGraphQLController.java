@@ -74,9 +74,10 @@ public class PersonGraphQLController {
 
 	@MutationMapping
 	public Person createPerson(@Argument Map<String, Object> input, @AuthenticationPrincipal UserPrincipal principal) {
-		Person person = new Person((String) input.get("fullName"), principal.familyTreeId());
-		personFieldMapper.applyCreateFields(person, input);
-		return personGraphService.saveInTree(person, principal.familyTreeId());
+		return personGraphService.createPerson(
+				(String) input.get("fullName"),
+				principal.familyTreeId(),
+				input);
 	}
 
 	@MutationMapping

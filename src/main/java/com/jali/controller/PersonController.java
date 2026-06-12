@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jali.dto.CreatePersonRequest;
 import com.jali.dto.PersonResponse;
-import com.jali.neo4j.Person;
 import com.jali.repository.neo4j.PersonRepository;
 import com.jali.security.UserPrincipal;
 import com.jali.service.PersonGraphService;
@@ -39,40 +38,14 @@ public class PersonController {
 	public PersonResponse createPerson(
 			@Valid @RequestBody CreatePersonRequest request,
 			@AuthenticationPrincipal UserPrincipal principal) {
-
-		Person person = new Person(request.fullName(), principal.familyTreeId());
-		if (request.birthDate() != null) {
-			person.setBirthDate(request.birthDate());
-		}
-		if (request.deathDate() != null) {
-			person.setDeathDate(request.deathDate());
-		}
-		if (request.birthplace() != null) {
-			person.setBirthplace(request.birthplace());
-		}
-		if (request.ethnicGroup() != null) {
-			person.setEthnicGroup(request.ethnicGroup());
-		}
-		if (request.bio() != null) {
-			person.setBio(request.bio());
-		}
-		if (request.biologicalSex() != null) {
-			person.setBiologicalSex(request.biologicalSex());
-		}
-		if (request.isUnknownPlaceholder() != null) {
-			person.setIsUnknownPlaceholder(request.isUnknownPlaceholder());
-		}
-
-		return PersonResponse.from(personGraphService.saveInTree(person, principal.familyTreeId()));
+		return PersonResponse.from(personGraphService.createPerson(request, principal.familyTreeId()));
 	}
 
 	@GetMapping("/{uuid}")
 	public PersonResponse getPerson(
 			@PathVariable String uuid,
 			@AuthenticationPrincipal UserPrincipal principal) {
-
-		return PersonResponse.from(
-				personGraphService.requireInTree(uuid, principal.familyTreeId()));
+		return PersonResponse.from(personGraphService.requireInTree(uuid, principal.familyTreeId()));
 	}
 
 	@GetMapping
@@ -88,7 +61,6 @@ public class PersonController {
 			@PathVariable String uuid,
 			@RequestParam(defaultValue = "4") int depth,
 			@AuthenticationPrincipal UserPrincipal principal) {
-
 		return personGraphService.findAncestors(uuid, principal.familyTreeId(), depth)
 				.stream()
 				.map(PersonResponse::from)
@@ -100,7 +72,6 @@ public class PersonController {
 			@PathVariable String uuid,
 			@RequestParam(defaultValue = "4") int depth,
 			@AuthenticationPrincipal UserPrincipal principal) {
-
 		return personGraphService.findDescendants(uuid, principal.familyTreeId(), depth)
 				.stream()
 				.map(PersonResponse::from)

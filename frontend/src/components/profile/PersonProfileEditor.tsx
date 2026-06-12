@@ -3,6 +3,7 @@ import { useMutation } from '@apollo/client/react';
 import { UPDATE_PERSON_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import type { Person } from '../../types';
+import { optionalField } from '../../utils/formatLifeYears';
 import { editDaysRemaining } from '../../utils/gracePeriod';
 import styles from './PersonProfileEditor.module.css';
 
@@ -59,12 +60,12 @@ const PersonProfileEditor = ({ person }: Props) => {
         uuid: person.id,
         input: {
           fullName: fullName.trim(),
-          bio: bio.trim() || null,
-          birthDate: birthDate || null,
-          deathDate: deathDate || null,
-          birthplace: birthplace || null,
-          ethnicGroup: ethnicGroup || null,
-          biologicalSex: biologicalSex || null,
+          bio: optionalField(bio),
+          birthDate: optionalField(birthDate),
+          deathDate: optionalField(deathDate),
+          birthplace: optionalField(birthplace),
+          ethnicGroup: optionalField(ethnicGroup),
+          biologicalSex: optionalField(biologicalSex) || null,
         },
       },
     });
@@ -114,21 +115,21 @@ const PersonProfileEditor = ({ person }: Props) => {
 
       <div className={styles.row}>
         <label className={styles.label}>
-          Birth year
+          Birth year <span className={styles.optional}>(optional)</span>
           <input
             className={styles.input}
             value={birthDate}
             onChange={e => setBirthDate(e.target.value)}
-            placeholder="e.g. 1952"
+            placeholder="Unknown — leave blank"
           />
         </label>
         <label className={styles.label}>
-          Death year
+          Death year <span className={styles.optional}>(optional)</span>
           <input
             className={styles.input}
             value={deathDate}
             onChange={e => setDeathDate(e.target.value)}
-            placeholder="e.g. 2018"
+            placeholder="Unknown — leave blank"
           />
         </label>
       </div>

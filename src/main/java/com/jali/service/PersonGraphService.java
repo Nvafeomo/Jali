@@ -1,13 +1,16 @@
 package com.jali.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.jali.dto.CreatePersonRequest;
 import com.jali.neo4j.Person;
 import com.jali.repository.neo4j.PersonRepository;
 
@@ -19,10 +22,15 @@ public class PersonGraphService {
 
 	private final PersonRepository personRepository;
 	private final Neo4jClient neo4jClient;
+	private final PersonFieldMapper personFieldMapper;
 
-	public PersonGraphService(PersonRepository personRepository, Neo4jClient neo4jClient) {
+	public PersonGraphService(
+			PersonRepository personRepository,
+			Neo4jClient neo4jClient,
+			PersonFieldMapper personFieldMapper) {
 		this.personRepository = personRepository;
 		this.neo4jClient = neo4jClient;
+		this.personFieldMapper = personFieldMapper;
 	}
 
 	public Person requireInTree(String uuid, Long familyTreeId) {
@@ -41,6 +49,24 @@ public class PersonGraphService {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Person familyTreeId does not match authenticated tree");
 		}
 		return personRepository.save(person);
+	}
+
+	public Person createPerson(String fullName, Long familyTreeId, Map<String, Object> input) {
+		Person person = new Person(fullName, familyTreeId);
+		personFieldMapper.applyCreateFields(person, input);
+		return saveInTree(person, familyTreeId);
+	}
+
+	public Person createPerson(CreatePersonRequest request, Long familyTreeId) {
+		Map<String, Object> fields = new HashMap<>();
+		fields.put("birthDate", request.birthDate());
+		fields.put("deathDate", request.deathDate());
+		fields.put("birthplace", request.birthplace());
+		fields.put("ethnicGroup", request.ethnicGroup());
+		fields.put("bio", request.bio());
+		fields.put("biologicalSex", request.biologicalSex());
+		fields.put("isUnknownPlaceholder", request.isUnknownPlaceholder());
+		return createPerson(request.fullName(), familyTreeId, fields);
 	}
 
 	public List<Person> findAllInTreeWithRelationships(Long familyTreeId) {

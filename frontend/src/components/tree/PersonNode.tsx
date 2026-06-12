@@ -1,5 +1,6 @@
 import { Handle, Position } from '@xyflow/react';
 import type { Person } from '../../types';
+import { formatLifeYears } from '../../utils/formatLifeYears';
 import styles from './PersonNode.module.css';
 
 interface PersonNodeProps {
@@ -27,6 +28,11 @@ function initials(name: string): string {
 
 const PersonNode = ({ data, selected }: PersonNodeProps) => {
   const person = data;
+  const lifeYears = formatLifeYears(
+    person.birthDate,
+    person.deathDate,
+    person.birthDateApproximate,
+  );
 
   return (
     // The outer wrapper applies the confidence ring color and
@@ -67,12 +73,8 @@ const PersonNode = ({ data, selected }: PersonNodeProps) => {
       </div>
 
       {/* Birth/death years in small text */}
-      {(person.birthDate || person.deathDate) && (
-        <div className={styles.dates}>
-          {person.birthDate ?? '?'}
-          {person.deathDate ? ` – ${person.deathDate}` : ''}
-          {person.birthDateApproximate ? ' (approx.)' : ''}
-        </div>
+      {lifeYears && (
+        <div className={styles.dates}>{lifeYears}</div>
       )}
 
       <Handle type="source" position={Position.Bottom} className={styles.handle} />

@@ -46,6 +46,13 @@
   color: var(--jali-accent);
 }
 
+.optional {
+  font-weight: 400;
+  color: var(--jali-text-subtle);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .input,
 .textarea {
   font-size: 13px;

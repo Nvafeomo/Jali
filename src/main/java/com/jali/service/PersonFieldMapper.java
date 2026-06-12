@@ -9,24 +9,38 @@ import com.jali.neo4j.Person;
 @Service
 public class PersonFieldMapper {
 
+	private static String optionalString(Object value) {
+		if (value == null) {
+			return null;
+		}
+		String trimmed = ((String) value).trim();
+		return trimmed.isEmpty() ? null : trimmed;
+	}
+
 	public void applyCreateFields(Person person, Map<String, Object> input) {
-		if (input.get("birthDate") != null) {
-			person.setBirthDate((String) input.get("birthDate"));
+		String birthDate = optionalString(input.get("birthDate"));
+		if (birthDate != null) {
+			person.setBirthDate(birthDate);
 		}
-		if (input.get("deathDate") != null) {
-			person.setDeathDate((String) input.get("deathDate"));
+		String deathDate = optionalString(input.get("deathDate"));
+		if (deathDate != null) {
+			person.setDeathDate(deathDate);
 		}
-		if (input.get("birthplace") != null) {
-			person.setBirthplace((String) input.get("birthplace"));
+		String birthplace = optionalString(input.get("birthplace"));
+		if (birthplace != null) {
+			person.setBirthplace(birthplace);
 		}
-		if (input.get("ethnicGroup") != null) {
-			person.setEthnicGroup((String) input.get("ethnicGroup"));
+		String ethnicGroup = optionalString(input.get("ethnicGroup"));
+		if (ethnicGroup != null) {
+			person.setEthnicGroup(ethnicGroup);
 		}
-		if (input.get("bio") != null) {
-			person.setBio((String) input.get("bio"));
+		String bio = optionalString(input.get("bio"));
+		if (bio != null) {
+			person.setBio(bio);
 		}
-		if (input.get("biologicalSex") != null) {
-			person.setBiologicalSex((String) input.get("biologicalSex"));
+		String biologicalSex = optionalString(input.get("biologicalSex"));
+		if (biologicalSex != null) {
+			person.setBiologicalSex(biologicalSex);
 		}
 		if (input.get("isUnknownPlaceholder") != null) {
 			person.setIsUnknownPlaceholder((Boolean) input.get("isUnknownPlaceholder"));
@@ -42,22 +56,22 @@ public class PersonFieldMapper {
 			person.setFullName(fullName);
 		}
 		if (input.containsKey("birthDate")) {
-			person.setBirthDate((String) input.get("birthDate"));
+			person.setBirthDate(optionalString(input.get("birthDate")));
 		}
 		if (input.containsKey("deathDate")) {
-			person.setDeathDate((String) input.get("deathDate"));
+			person.setDeathDate(optionalString(input.get("deathDate")));
 		}
 		if (input.containsKey("birthplace")) {
-			person.setBirthplace((String) input.get("birthplace"));
+			person.setBirthplace(optionalString(input.get("birthplace")));
 		}
 		if (input.containsKey("ethnicGroup")) {
-			person.setEthnicGroup((String) input.get("ethnicGroup"));
+			person.setEthnicGroup(optionalString(input.get("ethnicGroup")));
 		}
 		if (input.containsKey("bio")) {
-			person.setBio((String) input.get("bio"));
+			person.setBio(optionalString(input.get("bio")));
 		}
 		if (input.containsKey("biologicalSex")) {
-			person.setBiologicalSex((String) input.get("biologicalSex"));
+			person.setBiologicalSex(optionalString(input.get("biologicalSex")));
 		}
 	}
 }
