@@ -1,0 +1,136 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--jali-surface);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--jali-border);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--jali-text-heading, var(--jali-text));
+  margin: 0;
+}
+
+.close {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--jali-text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.close:hover {
+  color: var(--jali-text);
+}
+
+.form {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--jali-text);
+}
+
+.required {
+  color: var(--jali-accent);
+}
+
+.input {
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid var(--jali-border);
+  border-radius: var(--jali-radius-sm);
+  font-size: 0.95rem;
+  color: var(--jali-text-heading, var(--jali-text));
+  background: var(--jali-bg);
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--jali-accent);
+}
+
+/* Two fields side by side (birth/death year) */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.error {
+  color: #fca5a5;
+  font-size: 0.85rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: #450a0a;
+  border-radius: 6px;
+  border-left: 3px solid #f87171;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.cancel {
+  flex: 1;
+  padding: 0.65rem;
+  background: none;
+  border: 1.5px solid var(--jali-border);
+  border-radius: var(--jali-radius-sm);
+  color: var(--jali-text-muted);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.cancel:hover {
+  border-color: var(--jali-text-muted);
+}
+
+.submit {
+  flex: 2;
+  padding: 0.65rem;
+  background: var(--jali-accent);
+  color: #0f172a;
+  border: none;
+  border-radius: var(--jali-radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--jali-accent-hover);
+  color: #fff;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

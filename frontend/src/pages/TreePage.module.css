@@ -28,6 +28,42 @@
 .treeName {
   font-size: 14px;
   color: var(--jali-text-muted);
+  flex: 1; /* pushes add button to the right */
+}
+
+.addButton {
+  padding: 0.4rem 1rem;
+  background: var(--jali-accent);
+  color: #0f172a;
+  border: none;
+  border-radius: var(--jali-radius-sm, 6px);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.addButton:hover {
+  background: var(--jali-accent-hover, #a87c52);
+  color: #fff;
+}
+
+.emptyAddButton {
+  margin-top: 0.5rem;
+  padding: 0.65rem 1.5rem;
+  background: var(--jali-accent);
+  color: #0f172a;
+  border: none;
+  border-radius: var(--jali-radius-sm, 6px);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.emptyAddButton:hover {
+  background: var(--jali-accent-hover, #a87c52);
+  color: #fff;
 }
 
 .main {
