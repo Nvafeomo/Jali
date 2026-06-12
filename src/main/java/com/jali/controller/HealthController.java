@@ -23,6 +23,11 @@ public class HealthController {
 		this.neo4jDriver = neo4jDriver;
 	}
 
+	@GetMapping("/health/live")
+	public ResponseEntity<Map<String, String>> live() {
+		return ResponseEntity.ok(Map.of("status", "UP"));
+	}
+
 	@GetMapping("/health")
 	public ResponseEntity<Map<String, Object>> health() {
 		Map<String, Object> body = new LinkedHashMap<>();

@@ -1,0 +1,12 @@
+# Render / Docker deploy — health check path: /health/live
+services:
+  - type: web
+    name: jali-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health/live
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: GRAPHIQL_ENABLED
+        value: "false"

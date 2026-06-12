@@ -26,19 +26,27 @@ Plan on two subdomains:
 
 | Variable | Value |
 |---|---|
-| `PORT` | `8080` (Render sets this automatically — leave it) |
+| `SPRING_PROFILES_ACTIVE` | `production` (faster startup via lazy init) |
 | `DB_URL` | `jdbc:postgresql://<host>:<port>/<dbname>` (from Render Postgres) |
 | `DB_USERNAME` | from Render Postgres |
 | `DB_PASSWORD` | from Render Postgres |
 | `NEO4J_URI` | your Neo4j Aura URI (e.g. `neo4j+s://xxxx.databases.neo4j.io`) |
 | `NEO4J_USERNAME` | `neo4j` |
 | `NEO4J_PASSWORD` | your Aura password |
-| `JWT_SECRET` | a random 64-char string (use: `openssl rand -hex 32`) |
+| `JWT_SECRET` | a random 64-char string (PowerShell: `-join ((1..32 \| ForEach-Object { '{0:x2}' -f (Get-Random -Maximum 256) }))`) |
 | `CORS_ALLOWED_ORIGINS` | `https://yourdomain.com,https://www.yourdomain.com` |
 | `GRAPHIQL_ENABLED` | `false` |
 
-6. Add a custom domain `api.yourdomain.com` in Render → Settings → Custom Domains
-7. Point a CNAME record at your domain registrar: `api` → `<your-service>.onrender.com`
+**Do not set `PORT` manually** — Render assigns it automatically (often `10000`). The app reads `${PORT}` from `application.properties`.
+
+6. In Render → your Web Service → **Settings → Health Checks**, set:
+   - **Health Check Path:** `/health/live`
+   - This endpoint returns immediately once Tomcat is up (no DB round-trips).
+
+7. Optional: use the included `render.yaml` blueprint so health checks and `SPRING_PROFILES_ACTIVE=production` are applied automatically.
+
+8. Add a custom domain `api.yourdomain.com` in Render → Settings → Custom Domains
+9. Point a CNAME record at your domain registrar: `api` → `<your-service>.onrender.com`
 
 ---
 
@@ -68,7 +76,8 @@ Plan on two subdomains:
 ---
 
 ## Notes
-- Render free tier spins down after 15 min of inactivity (cold start ~30s). Upgrade to the $7/mo plan to avoid this.
+- **First deploy can take 2–3 minutes** while Spring Boot connects to Postgres and Neo4j. If deploy times out, confirm **Health Check Path** is `/health/live` and redeploy. The `$7/mo` plan also reduces cold-start pain.
+- Render free tier spins down after 15 min of inactivity (cold start ~30s–2min). Upgrade to the $7/mo plan to avoid this.
 - The Render Postgres free tier has a 90-day expiry — upgrade or migrate before then.
 - `JWT_SECRET` must be at least 32 characters. Generate with `openssl rand -hex 32`.
 - Never commit `.env.local` or `application-local.properties` — both are in `.gitignore`.
