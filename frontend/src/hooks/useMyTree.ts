@@ -21,6 +21,8 @@ interface RawPerson {
   biologicalSex?: string;
   confidenceScore: number;
   isUnknownPlaceholder: boolean;
+  createdAt?: string;
+  canEditDetails?: boolean;
   children: RawEdge[];
   spouses: RawEdge[];
   siblings: RawEdge[];
@@ -48,6 +50,8 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
       biologicalSex: raw.biologicalSex ?? undefined,
       confidenceScore: raw.confidenceScore ?? 1.0,
       isUnknownPlaceholder: raw.isUnknownPlaceholder ?? false,
+      createdAt: raw.createdAt ?? undefined,
+      canEditDetails: raw.canEditDetails ?? false,
       children: [],
       parents: [],
       spouses: [],

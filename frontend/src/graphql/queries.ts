@@ -21,6 +21,8 @@ export const MY_TREE_QUERY = gql`
       biologicalSex
       confidenceScore
       isUnknownPlaceholder
+      createdAt
+      canEditDetails
       children {
         person {
           uuid

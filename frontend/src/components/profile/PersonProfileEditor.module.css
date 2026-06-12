@@ -1,0 +1,126 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--jali-bg);
+}
+
+.graceBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: var(--jali-radius-sm);
+  font-size: 12px;
+  color: var(--jali-text-muted);
+  line-height: 1.4;
+}
+
+.graceIcon {
+  color: var(--jali-accent);
+  flex-shrink: 0;
+}
+
+.saved {
+  margin-left: auto;
+  color: var(--jali-confidence-high);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--jali-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.required {
+  color: var(--jali-accent);
+}
+
+.input,
+.textarea {
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--jali-border);
+  background: var(--jali-bg);
+  color: var(--jali-text);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.textarea {
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 72px;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--jali-accent);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.error {
+  font-size: 12px;
+  color: #f87171;
+  margin: 0;
+}
+
+.saveBtn {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background: var(--jali-accent);
+  border: none;
+  border-radius: 6px;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lockedNotice {
+  padding: 12px 0 16px;
+  border-bottom: 1px solid var(--jali-bg);
+  font-size: 12px;
+  color: var(--jali-text-subtle);
+  line-height: 1.5;
+}
+
+.lockedNotice strong {
+  color: var(--jali-text-muted);
+  font-weight: 600;
+}
+
+.readOnlyBio {
+  font-size: 13px;
+  color: var(--jali-text-muted);
+  line-height: 1.6;
+  margin: 0 0 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--jali-bg);
+}

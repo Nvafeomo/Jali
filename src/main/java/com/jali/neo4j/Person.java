@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class Person {
     private Double confidenceScore = 1.0;
     private Long familyTreeId;
     private Boolean isUnknownPlaceholder = false;
+    private Instant createdAt;
 
     @Relationship(type = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
     private List<ParentOfRelationship> children = new ArrayList<>();
@@ -44,5 +46,6 @@ public class Person {
         this.fullName = fullName;
         this.familyTreeId = familyTreeId;
         this.confidenceScore = 1.0;
+        this.createdAt = Instant.now();
     }
 }

@@ -23,6 +23,8 @@ type Person {
 	biologicalSex: String
 	confidenceScore: Float
 	isUnknownPlaceholder: Boolean
+	createdAt: String
+	canEditDetails: Boolean
 	children: [PersonEdge]
 	spouses: [PersonEdge]
 	siblings: [PersonEdge]
@@ -46,5 +48,11 @@ input CreatePersonInput {
 }
 
 input UpdatePersonInput {
+	fullName: String
 	bio: String
+	birthDate: String
+	deathDate: String
+	birthplace: String
+	ethnicGroup: String
+	biologicalSex: String
 }

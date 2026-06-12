@@ -18,7 +18,15 @@ export const UPDATE_PERSON_MUTATION = gql`
   mutation UpdatePerson($uuid: String!, $input: UpdatePersonInput!) {
     updatePerson(uuid: $uuid, input: $input) {
       uuid
+      fullName
       bio
+      birthDate
+      deathDate
+      birthplace
+      ethnicGroup
+      biologicalSex
+      createdAt
+      canEditDetails
     }
   }
 `;

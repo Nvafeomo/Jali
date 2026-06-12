@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { Person, StoryMemory } from '../../types';
 import LinkRelationshipForm from './LinkRelationshipForm';
-import PersonBioEditor from './PersonBioEditor';
+import PersonProfileEditor from './PersonProfileEditor';
+import lockedStyles from './PersonProfileEditor.module.css';
 import styles from './PersonDrawer.module.css';
 
 interface Props {
@@ -110,10 +111,20 @@ const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Pr
         </div>
       </div>
 
-      {/* ── Bio ─────────────────────────────────────────── */}
-      <PersonBioEditor personId={person.id} bio={person.bio} />
+      {person.canEditDetails ? (
+        <PersonProfileEditor person={person} />
+      ) : (
+        <>
+          <p className={lockedStyles.lockedNotice}>
+            <strong>Details locked.</strong> Names and vitals can only be changed within
+            the first 7 days after adding someone. Relationship links can still be updated.
+          </p>
+          {person.bio && <p className={lockedStyles.readOnlyBio}>{person.bio}</p>}
+        </>
+      )}
 
-      {/* ── Vitals ──────────────────────────────────────── */}
+      {/* ── Vitals (read-only summary when editable form is shown above) ── */}
+      {!person.canEditDetails && (
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Details</h3>
         <div className={styles.vitals}>
@@ -159,6 +170,7 @@ const PersonDrawer = ({ person, allPeople, lookup, onPersonSelect, onClose }: Pr
           )}
         </div>
       </section>
+      )}
 
       {/* ── Relationships ───────────────────────────────── */}
       <section className={styles.section}>

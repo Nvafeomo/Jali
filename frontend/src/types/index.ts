@@ -13,6 +13,8 @@ export interface Person {
   confidenceScore: number;
   isUnknownPlaceholder: boolean;
   photoUrl?: string;
+  createdAt?: string;
+  canEditDetails?: boolean;
   parents?: RelationshipEdge[];
   children?: RelationshipEdge[];
   spouses?: RelationshipEdge[];

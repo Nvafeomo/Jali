@@ -17,6 +17,8 @@ import com.jali.neo4j.EvidenceType;
 import com.jali.neo4j.Person;
 import com.jali.security.UserPrincipal;
 import com.jali.service.ConfidenceScoreService;
+import com.jali.service.PersonFieldMapper;
+import com.jali.service.PersonGracePeriodService;
 import com.jali.service.PersonGraphService;
 import com.jali.service.RelationshipService;
 
@@ -26,14 +28,20 @@ public class PersonGraphQLController {
 	private final PersonGraphService personGraphService;
 	private final ConfidenceScoreService confidenceScoreService;
 	private final RelationshipService relationshipService;
+	private final PersonGracePeriodService personGracePeriodService;
+	private final PersonFieldMapper personFieldMapper;
 
 	public PersonGraphQLController(
 			PersonGraphService personGraphService,
 			ConfidenceScoreService confidenceScoreService,
-			RelationshipService relationshipService) {
+			RelationshipService relationshipService,
+			PersonGracePeriodService personGracePeriodService,
+			PersonFieldMapper personFieldMapper) {
 		this.personGraphService = personGraphService;
 		this.confidenceScoreService = confidenceScoreService;
 		this.relationshipService = relationshipService;
+		this.personGracePeriodService = personGracePeriodService;
+		this.personFieldMapper = personFieldMapper;
 	}
 
 	@QueryMapping
@@ -67,27 +75,7 @@ public class PersonGraphQLController {
 	@MutationMapping
 	public Person createPerson(@Argument Map<String, Object> input, @AuthenticationPrincipal UserPrincipal principal) {
 		Person person = new Person((String) input.get("fullName"), principal.familyTreeId());
-		if (input.get("birthDate") != null) {
-			person.setBirthDate((String) input.get("birthDate"));
-		}
-		if (input.get("deathDate") != null) {
-			person.setDeathDate((String) input.get("deathDate"));
-		}
-		if (input.get("birthplace") != null) {
-			person.setBirthplace((String) input.get("birthplace"));
-		}
-		if (input.get("ethnicGroup") != null) {
-			person.setEthnicGroup((String) input.get("ethnicGroup"));
-		}
-		if (input.get("bio") != null) {
-			person.setBio((String) input.get("bio"));
-		}
-		if (input.get("biologicalSex") != null) {
-			person.setBiologicalSex((String) input.get("biologicalSex"));
-		}
-		if (input.get("isUnknownPlaceholder") != null) {
-			person.setIsUnknownPlaceholder((Boolean) input.get("isUnknownPlaceholder"));
-		}
+		personFieldMapper.applyCreateFields(person, input);
 		return personGraphService.saveInTree(person, principal.familyTreeId());
 	}
 
@@ -97,8 +85,12 @@ public class PersonGraphQLController {
 			@Argument Map<String, Object> input,
 			@AuthenticationPrincipal UserPrincipal principal) {
 		Person person = personGraphService.requireInTree(uuid, principal.familyTreeId());
-		if (input.containsKey("bio")) {
-			person.setBio((String) input.get("bio"));
+		personGracePeriodService.requireWithinGracePeriod(person);
+		try {
+			personFieldMapper.applyUpdateFields(person, input);
+		}
+		catch (IllegalArgumentException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 		}
 		return personGraphService.saveInTree(person, principal.familyTreeId());
 	}
@@ -130,6 +122,11 @@ public class PersonGraphQLController {
 		}
 		return confidenceScoreService.addEvidenceToRelationship(
 				fromUuid, toUuid, relationshipType, type, source, principal.familyTreeId());
+	}
+
+	@SchemaMapping(typeName = "Person", field = "canEditDetails")
+	public boolean canEditDetails(Person person) {
+		return personGracePeriodService.isWithinGracePeriod(person);
 	}
 
 	@SchemaMapping(typeName = "Person", field = "children")
