@@ -101,8 +101,10 @@ public class PersonGraphQLController {
 			@Argument String fromUuid,
 			@Argument String toUuid,
 			@Argument String relationshipType,
+			@Argument String parentRole,
 			@AuthenticationPrincipal UserPrincipal principal) {
-		relationshipService.create(fromUuid, toUuid, relationshipType, principal.familyTreeId());
+		relationshipService.create(
+				fromUuid, toUuid, relationshipType, principal.familyTreeId(), parentRole);
 		return true;
 	}
 

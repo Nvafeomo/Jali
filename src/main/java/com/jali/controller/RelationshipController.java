@@ -45,7 +45,8 @@ public class RelationshipController {
 				request.fromUuid(),
 				request.toUuid(),
 				request.relationshipType(),
-				principal.familyTreeId());
+				principal.familyTreeId(),
+				null);
 	}
 
 	@PostMapping("/evidence")

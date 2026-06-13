@@ -31,7 +31,8 @@ public class RelationshipService {
 			String fromUuid,
 			String toUuid,
 			String relationshipType,
-			Long familyTreeId) {
+			Long familyTreeId,
+			String parentRole) {
 		relationshipValidationService.validateCreate(fromUuid, toUuid, relationshipType, familyTreeId);
 
 		// Ensure both endpoints exist before creating the edge.
@@ -39,7 +40,18 @@ public class RelationshipService {
 		personGraphService.requireInTree(toUuid, familyTreeId);
 
 		switch (relationshipType.toUpperCase()) {
-			case "PARENT_OF" -> personRepository.createParentOfEdge(fromUuid, toUuid, familyTreeId);
+			case "PARENT_OF" -> {
+				personRepository.createParentOfEdge(fromUuid, toUuid, familyTreeId);
+				if (parentRole != null) {
+					String normalised = parentRole.toUpperCase();
+					if (!normalised.equals("MOTHER") && !normalised.equals("FATHER")) {
+						throw new ResponseStatusException(
+								HttpStatus.BAD_REQUEST,
+								"parentRole must be MOTHER, FATHER, or null");
+					}
+					personRepository.setParentRole(fromUuid, toUuid, familyTreeId, normalised);
+				}
+			}
 			case "MARRIED_TO" -> personRepository.createMarriedToEdge(fromUuid, toUuid, familyTreeId);
 			case "SIBLING_OF" -> personRepository.createSiblingOfEdge(fromUuid, toUuid, familyTreeId);
 			default -> throw new ResponseStatusException(

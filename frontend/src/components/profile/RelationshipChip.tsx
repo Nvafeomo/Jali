@@ -89,10 +89,13 @@ const RelationshipChip = ({
     setShowRolePicker(false);
     setError(null);
 
-    // fromUuid = the parent (related), toUuid = the child (anchor)
+    // fromUuid = the parent, toUuid = the child
+    const fromUuid = role === 'parent' ? related.id : anchorId;
+    const toUuid = role === 'parent' ? anchorId : related.id;
+
     try {
       const result = await updateRole({
-        variables: { fromUuid: related.id, toUuid: anchorId, parentRole: newRole },
+        variables: { fromUuid, toUuid, parentRole: newRole },
       });
 
       if (result.error) {
@@ -126,8 +129,8 @@ const RelationshipChip = ({
           {disputed && <span className={styles.disputedDot}>⚠</span>}
         </button>
 
-        {/* Mother / Father label + picker — only for parent chips */}
-        {role === 'parent' && (
+        {/* Mother / Father label + picker — parent-of edges only */}
+        {(role === 'parent' || role === 'child') && (
           <span className={styles.parentRoleWrap}>
             <button
               type="button"

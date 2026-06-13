@@ -255,3 +255,38 @@
 .listFallback .input {
   margin-top: 6px;
 }
+
+.parentRoleField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.roleToggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.roleOption {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--jali-border);
+  background: var(--jali-surface);
+  color: var(--jali-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.roleOption:hover {
+  border-color: var(--jali-text-muted);
+  color: var(--jali-text);
+}
+
+.roleOptionActive {
+  border-color: var(--jali-accent);
+  background: rgba(167, 139, 250, 0.12);
+  color: var(--jali-accent);
+  font-weight: 600;
+}

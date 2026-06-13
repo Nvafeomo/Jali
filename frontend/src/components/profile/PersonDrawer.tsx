@@ -245,6 +245,7 @@ const PersonDrawer = ({
                   related={rel.person}
                   role="child"
                   canDetach={!!person.canEditDetails}
+                  parentRole={rel.parentRole}
                   onViewPerson={handleChipClick}
                 />
               ))}

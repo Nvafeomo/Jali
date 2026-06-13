@@ -4,7 +4,12 @@ import { CREATE_RELATIONSHIP_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import type { Person } from '../../types';
 import { formatLifeYears } from '../../utils/vitalYears';
-import { toRelationshipMutationVars, type RelRole } from '../../utils/relationshipMutation';
+import {
+  defaultParentRoleFromSex,
+  toLinkMutationVars,
+  type LinkKind,
+  type ParentRoleKind,
+} from '../../utils/relationshipMutation';
 import styles from './LinkRelationshipForm.module.css';
 
 function graphQLErrorMessage(error: unknown): string {
@@ -62,7 +67,10 @@ const LinkRelationshipForm = ({
   onLinked,
 }: Props) => {
   const [open, setOpen] = useState(isUnlinked);
-  const [role, setRole] = useState<RelRole>('parent');
+  const [linkKind, setLinkKind] = useState<LinkKind>('mother');
+  const [childParentRole, setChildParentRole] = useState<ParentRoleKind | ''>(() =>
+    defaultParentRoleFromSex(person.biologicalSex),
+  );
   const [error, setError] = useState<string | null>(null);
 
   const candidates = allPeople
@@ -89,8 +97,10 @@ const LinkRelationshipForm = ({
     }
 
     try {
+      const parentRole =
+        linkKind === 'child' && childParentRole ? childParentRole : undefined;
       const result = await linkPeople({
-        variables: toRelationshipMutationVars(person.id, linkTargetId, role),
+        variables: toLinkMutationVars(person.id, linkTargetId, linkKind, parentRole ?? null),
       });
 
       if (result.error) {
@@ -150,15 +160,51 @@ const LinkRelationshipForm = ({
         Relationship
         <select
           className={styles.input}
-          value={role}
-          onChange={e => setRole(e.target.value as RelRole)}
+          value={linkKind}
+          onChange={e => {
+            const next = e.target.value as LinkKind;
+            setLinkKind(next);
+            if (next === 'child' && !childParentRole) {
+              setChildParentRole(defaultParentRoleFromSex(person.biologicalSex));
+            }
+          }}
         >
-          <option value="parent">Parent of {person.fullName}</option>
+          <option value="mother">Mother of {person.fullName}</option>
+          <option value="father">Father of {person.fullName}</option>
           <option value="child">Child of {person.fullName}</option>
           <option value="spouse">Spouse of {person.fullName}</option>
           <option value="sibling">Sibling of {person.fullName}</option>
         </select>
       </label>
+
+      {linkKind === 'child' && (
+        <div className={styles.parentRoleField}>
+          <span className={styles.label}>Your role as their parent</span>
+          <div className={styles.roleToggle} role="group" aria-label="Parent role">
+            <button
+              type="button"
+              className={[styles.roleOption, childParentRole === 'MOTHER' ? styles.roleOptionActive : ''].join(' ')}
+              onClick={() => setChildParentRole('MOTHER')}
+            >
+              Mother
+            </button>
+            <button
+              type="button"
+              className={[styles.roleOption, childParentRole === 'FATHER' ? styles.roleOptionActive : ''].join(' ')}
+              onClick={() => setChildParentRole('FATHER')}
+            >
+              Father
+            </button>
+            <button
+              type="button"
+              className={[styles.roleOption, childParentRole === '' ? styles.roleOptionActive : ''].join(' ')}
+              onClick={() => setChildParentRole('')}
+            >
+              Not set
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className={styles.targetSection}>
         <span className={styles.label}>{isUnlinked ? 'Person on tree' : 'Person'}</span>
