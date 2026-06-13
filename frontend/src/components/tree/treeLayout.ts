@@ -1,5 +1,7 @@
 import type { Person, RelationshipEdge } from '../../types';
 import { edgeStyle } from './relationshipStyles';
+import { groupPedigreeFamilies, LAYOUT_NODE_WIDTH } from './pedigreeGeometry';
+import type { PedigreeEdgeData } from './pedigreeGeometry';
 
 export interface LayoutNode {
   id: string;
@@ -13,14 +15,16 @@ export interface LayoutEdge {
   target: string;
   sourceHandle?: string;
   targetHandle?: string;
-  type: 'step';
+  type: 'step' | 'pedigree';
   animated: boolean;
+  selectable?: boolean;
+  focusable?: boolean;
   data: {
     relationshipType: 'PARENT_OF' | 'MARRIED_TO';
     confidenceScore: number;
     disputed: boolean;
-  };
-  style: { stroke: string; strokeWidth: number; strokeDasharray?: string };
+  } | PedigreeEdgeData;
+  style?: { stroke: string; strokeWidth: number; strokeDasharray?: string };
   markerEnd?: {
     type: 'arrowclosed';
     color: string;
@@ -29,7 +33,7 @@ export interface LayoutEdge {
   };
 }
 
-const NODE_WIDTH = 120;
+const NODE_WIDTH = LAYOUT_NODE_WIDTH;
 const NODE_HEIGHT = 140;
 const H_GAP = 60;
 const V_GAP = 100;
@@ -137,6 +141,25 @@ function addRelationshipEdge(
   });
 }
 
+function addPedigreeEdges(edges: LayoutEdge[], people: Person[]) {
+  for (const group of groupPedigreeFamilies(people)) {
+    edges.push({
+      id: `pedigree:${group.key}`,
+      source: group.parentIds[0]!,
+      target: group.childIds[0]!,
+      type: 'pedigree',
+      animated: false,
+      selectable: false,
+      focusable: false,
+      data: {
+        parentIds: group.parentIds,
+        childIds: group.childIds,
+        style: group.style,
+      },
+    });
+  }
+}
+
 export function buildLayout(people: Person[]): {
   nodes: LayoutNode[];
   edges: LayoutEdge[];
@@ -170,10 +193,6 @@ export function buildLayout(people: Person[]): {
   const edgeSeen = new Set<string>();
 
   people.forEach(person => {
-    person.parents?.forEach(rel => {
-      addRelationshipEdge(edges, edgeSeen, rel.person.id, person.id, rel);
-    });
-
     person.spouses?.forEach(rel => {
       addRelationshipEdge(edges, edgeSeen, person.id, rel.person.id, rel, {
         sourceHandle: 'spouse-out',
@@ -181,6 +200,8 @@ export function buildLayout(people: Person[]): {
       });
     });
   });
+
+  addPedigreeEdges(edges, people);
 
   return { nodes, edges };
 }

@@ -15,11 +15,13 @@ import type { Person } from '../../types';
 import type { LinkPickState } from '../../types/linkPick';
 import { buildLayout } from './treeLayout';
 import PersonNode from './PersonNode';
+import PedigreeEdge from './PedigreeEdge';
 import TreeLegend from './TreeLegend';
 import UnattachedPanel from './UnattachedPanel';
 import styles from './FamilyTree.module.css';
 
 const nodeTypes = { person: PersonNode };
+const edgeTypes = { pedigree: PedigreeEdge };
 
 interface FamilyTreeProps {
   people: Person[];
@@ -108,6 +110,7 @@ const FamilyTree = ({
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         nodesDraggable={false}
         nodesConnectable={false}
         edgesReconnectable={false}
