@@ -158,6 +158,21 @@ function assignGenerations(people: Person[]): Map<string, number> {
         }
       }
     }
+
+    // Co-parents of the same child share a row (e.g. parent who is not a spouse).
+    for (const child of people) {
+      const parentIds = (child.parents ?? []).map(rel => rel.person.id);
+      if (parentIds.length < 2) continue;
+
+      const maxParentGen = Math.max(...parentIds.map(id => genMap.get(id) ?? 0));
+      for (const pid of parentIds) {
+        const current = genMap.get(pid) ?? 0;
+        if (maxParentGen > current) {
+          genMap.set(pid, maxParentGen);
+          changed = true;
+        }
+      }
+    }
   }
 
   return genMap;

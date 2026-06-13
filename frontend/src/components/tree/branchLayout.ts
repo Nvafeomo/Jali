@@ -155,23 +155,20 @@ export function layoutChildGenerationByBranch(
   let previousBranchRight = -Infinity;
 
   for (const anchor of branchAnchors) {
-    const branchGroups = (byBranch.get(anchor.id) ?? []).sort((a, b) =>
-      a.key.localeCompare(b.key),
-    );
-    const branchNodes: PositionedNode[] = [];
-    let branchCursor = previousBranchRight === -Infinity ? 0 : previousBranchRight + H_GAP;
+    const branchGroups = byBranch.get(anchor.id) ?? [];
 
+    const childIdSet = new Set<string>();
     for (const group of branchGroups) {
-      const children = sortPeopleByBirthOldestFirst(
-        group.childIds.map(id => byId.get(id)).filter((p): p is Person => p != null),
-      );
-      const bandNodes = layoutClustersInRow(children, branchCursor, genY, genIds, byId);
-      branchNodes.push(...bandNodes);
-      if (bandNodes.length > 0) {
-        branchCursor =
-          Math.max(...bandNodes.map(n => n.position.x)) + LAYOUT_NODE_WIDTH + H_GAP;
-      }
+      group.childIds.forEach(id => childIdSet.add(id));
     }
+
+    const children = sortPeopleByBirthOldestFirst(
+      [...childIdSet].map(id => byId.get(id)).filter((p): p is Person => p != null),
+    );
+
+    const branchCursor =
+      previousBranchRight === -Infinity ? 0 : previousBranchRight + H_GAP;
+    const branchNodes = layoutClustersInRow(children, branchCursor, genY, genIds, byId);
 
     if (branchNodes.length === 0) continue;
 
@@ -265,6 +262,45 @@ export function layoutParentGenerationByBranch(
         });
       }
     }
+  }
+
+  const placedIds = new Set(allNodes.map(n => n.id));
+  const coParentCandidates: { person: Person; childNodes: PositionedNode[] }[] = [];
+
+  for (const group of groupsForChildGen(pedigreeGroups, childGen, parentGen, genMap)) {
+    const childNodes = group.childIds
+      .map(id => existingNodes.get(id))
+      .filter((n): n is PositionedNode => n != null);
+    if (childNodes.length === 0) continue;
+
+    for (const parentId of group.parentIds) {
+      if (placedIds.has(parentId)) continue;
+      if ((genMap.get(parentId) ?? -1) !== parentGen) continue;
+
+      const person = byId.get(parentId);
+      if (!person) continue;
+
+      coParentCandidates.push({ person, childNodes });
+      placedIds.add(parentId);
+    }
+  }
+
+  coParentCandidates.sort((a, b) => {
+    const ax = Math.min(...a.childNodes.map(n => n.position.x));
+    const bx = Math.min(...b.childNodes.map(n => n.position.x));
+    return ax - bx;
+  });
+
+  for (const { person, childNodes } of coParentCandidates) {
+    const childMin = Math.min(...childNodes.map(n => n.position.x));
+    const childMax = Math.max(...childNodes.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
+    const centerX = (childMin + childMax) / 2;
+
+    allNodes.push({
+      id: person.id,
+      position: { x: centerX - LAYOUT_NODE_WIDTH / 2, y: genY },
+      data: person,
+    });
   }
 
   centerRow(allNodes);
