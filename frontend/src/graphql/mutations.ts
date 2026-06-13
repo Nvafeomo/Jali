@@ -39,13 +39,11 @@ export const CREATE_RELATIONSHIP_MUTATION = gql`
     $fromUuid: String!
     $toUuid: String!
     $relationshipType: String!
-    $parentRole: String
   ) {
     createRelationship(
       fromUuid: $fromUuid
       toUuid: $toUuid
       relationshipType: $relationshipType
-      parentRole: $parentRole
     )
   }
 `;

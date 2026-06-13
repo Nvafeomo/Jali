@@ -72,3 +72,11 @@ export function toDeleteRelationshipVars(anchorId: string, otherId: string, role
   const { fromUuid, toUuid, relationshipType } = toRelationshipMutationVars(anchorId, otherId, role);
   return { anchorUuid: anchorId, fromUuid, toUuid, relationshipType };
 }
+
+export function splitLinkMutationVars(vars: ReturnType<typeof toLinkMutationVars>) {
+  const { parentRole, ...create } = vars;
+  return {
+    create,
+    parentRole: parentRole ?? undefined,
+  };
+}

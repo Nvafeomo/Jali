@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { CREATE_RELATIONSHIP_MUTATION } from '../../graphql/mutations';
+import { CREATE_RELATIONSHIP_MUTATION, UPDATE_PARENT_ROLE_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import type { Person } from '../../types';
 import { formatLifeYears } from '../../utils/vitalYears';
 import {
   defaultParentRoleFromSex,
+  splitLinkMutationVars,
   toLinkMutationVars,
   type LinkKind,
   type ParentRoleKind,
@@ -82,10 +83,16 @@ const LinkRelationshipForm = ({
 
   const client = useApolloClient();
 
-  const [linkPeople, { loading }] = useMutation(CREATE_RELATIONSHIP_MUTATION, {
+  const [linkPeople, { loading: linkLoading }] = useMutation(CREATE_RELATIONSHIP_MUTATION, {
     errorPolicy: 'all',
     onError: (err) => setError(graphQLErrorMessage(err)),
   });
+
+  const [setParentRole, { loading: roleLoading }] = useMutation(UPDATE_PARENT_ROLE_MUTATION, {
+    errorPolicy: 'all',
+  });
+
+  const loading = linkLoading || roleLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,13 +106,32 @@ const LinkRelationshipForm = ({
     try {
       const parentRole =
         linkKind === 'child' && childParentRole ? childParentRole : undefined;
-      const result = await linkPeople({
-        variables: toLinkMutationVars(person.id, linkTargetId, linkKind, parentRole ?? null),
-      });
+      const { create, parentRole: roleToSet } = splitLinkMutationVars(
+        toLinkMutationVars(person.id, linkTargetId, linkKind, parentRole ?? null),
+      );
+
+      const result = await linkPeople({ variables: create });
 
       if (result.error) {
         setError(graphQLErrorMessage(result.error));
         return;
+      }
+
+      if (roleToSet && create.relationshipType === 'PARENT_OF') {
+        const roleResult = await setParentRole({
+          variables: {
+            fromUuid: create.fromUuid,
+            toUuid: create.toUuid,
+            parentRole: roleToSet,
+          },
+        });
+
+        if (roleResult.error) {
+          setError(
+            'Linked, but could not set mother/father role. Use the role button on the relationship chip to fix it.',
+          );
+          return;
+        }
       }
 
       client.cache.evict({ fieldName: 'myTree' });
