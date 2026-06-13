@@ -269,6 +269,8 @@ export function layoutParentGenerationByBranch(
         genIds,
         byId,
         genY,
+        parentGen,
+        genMap,
       ),
     );
   }

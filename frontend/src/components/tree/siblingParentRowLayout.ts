@@ -26,6 +26,13 @@ interface SiblingRowItem {
   clusterWidth: number;
 }
 
+function shiftNodes(nodes: PositionedNode[], deltaX: number): void {
+  if (deltaX === 0) return;
+  for (const node of nodes) {
+    node.position.x += deltaX;
+  }
+}
+
 function childFootprint(nodes: PositionedNode[]): { min: number; max: number } | null {
   if (nodes.length === 0) return null;
   return {
@@ -54,12 +61,110 @@ function placeSpouseClusterAt(
   return nodes;
 }
 
+/** Every co-parent on this branch's pedigree groups (e.g. Fatumata + Kalifala + Kadijah). */
+function collectBranchParentPeople(
+  anchorId: string,
+  byBranch: Map<string, PedigreeGroup[]>,
+  parentGen: number,
+  genMap: Map<string, number>,
+  byId: Map<string, Person>,
+): Person[] {
+  const ids = new Set<string>();
+  for (const group of byBranch.get(anchorId) ?? []) {
+    for (const pid of group.parentIds) {
+      if ((genMap.get(pid) ?? -1) === parentGen) ids.add(pid);
+    }
+  }
+  return sortPeopleByBirthOldestFirst(
+    [...ids].map(id => byId.get(id)).filter((p): p is Person => p != null),
+  );
+}
+
+function layoutParentUnitRow(
+  people: Person[],
+  startX: number,
+  genY: number,
+  genIds: Set<string>,
+  byId: Map<string, Person>,
+): PositionedNode[] {
+  const clusterPlaced = new Set<string>();
+  const nodes: PositionedNode[] = [];
+  let cursor = startX;
+
+  for (const person of people) {
+    if (clusterPlaced.has(person.id)) continue;
+
+    const cluster = collectSpouseComponent(person, genIds, byId);
+    cluster.forEach(p => clusterPlaced.add(p.id));
+
+    const clusterPositions = layoutSpouseCluster(cluster);
+    const clusterWidth = clusterPixelWidth(clusterPositions);
+
+    for (const { id, x } of clusterPositions) {
+      const p = byId.get(id);
+      if (!p) continue;
+      nodes.push({
+        id,
+        position: { x: cursor + x, y: genY },
+        data: p,
+      });
+    }
+
+    cursor += clusterWidth + H_GAP;
+  }
+
+  return nodes;
+}
+
+function parentUnitWidth(
+  anchorId: string,
+  byBranch: Map<string, PedigreeGroup[]>,
+  parentGen: number,
+  genMap: Map<string, number>,
+  genIds: Set<string>,
+  byId: Map<string, Person>,
+): number {
+  const parents = collectBranchParentPeople(anchorId, byBranch, parentGen, genMap, byId);
+  if (parents.length === 0) return 0;
+  const row = layoutParentUnitRow(parents, 0, 0, genIds, byId);
+  if (row.length === 0) return 0;
+  const minX = Math.min(...row.map(n => n.position.x));
+  const maxX = Math.max(...row.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
+  return maxX - minX;
+}
+
+/** All branch co-parents in one row, centered above the branch child footprint. */
+function layoutBranchParentUnit(
+  anchorId: string,
+  byBranch: Map<string, PedigreeGroup[]>,
+  childNodes: PositionedNode[],
+  parentGen: number,
+  genMap: Map<string, number>,
+  genY: number,
+  genIds: Set<string>,
+  byId: Map<string, Person>,
+): PositionedNode[] {
+  const parents = collectBranchParentPeople(anchorId, byBranch, parentGen, genMap, byId);
+  const foot = childFootprint(childNodes);
+  if (parents.length === 0 || !foot) return [];
+
+  const row = layoutParentUnitRow(parents, 0, genY, genIds, byId);
+  if (row.length === 0) return [];
+
+  const rowMin = Math.min(...row.map(n => n.position.x));
+  const rowMax = Math.max(...row.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
+  shiftNodes(row, (foot.min + foot.max) / 2 - (rowMin + rowMax) / 2);
+  return row;
+}
+
 function buildSiblingRowItems(
   band: Person[],
   byBranch: Map<string, PedigreeGroup[]>,
   existingNodes: Map<string, PositionedNode>,
   genIds: Set<string>,
   byId: Map<string, Person>,
+  parentGen: number,
+  genMap: Map<string, number>,
 ): SiblingRowItem[] {
   const bandIds = new Set(band.map(p => p.id));
   const clusterPlaced = new Set<string>();
@@ -89,14 +194,24 @@ function buildSiblingRowItems(
       rep,
       cluster,
       childNodes,
-      clusterWidth: clusterPixelWidth(layoutSpouseCluster(cluster)),
+      clusterWidth:
+        parentUnitWidth(rep.id, byBranch, parentGen, genMap, genIds, byId) ||
+        clusterPixelWidth(layoutSpouseCluster(cluster)),
     });
   }
 
   return items;
 }
 
-function placeByBirthOrder(items: SiblingRowItem[], genY: number, byId: Map<string, Person>): PositionedNode[] {
+function placeByBirthOrder(
+  items: SiblingRowItem[],
+  byBranch: Map<string, PedigreeGroup[]>,
+  parentGen: number,
+  genMap: Map<string, number>,
+  genY: number,
+  genIds: Set<string>,
+  byId: Map<string, Person>,
+): PositionedNode[] {
   const sorted = [...items].sort((a, b) => comparePeopleByBirthOldestFirst(a.rep, b.rep));
   const placedClusters: { min: number; max: number }[] = [];
   const nodes: PositionedNode[] = [];
@@ -105,26 +220,42 @@ function placeByBirthOrder(items: SiblingRowItem[], genY: number, byId: Map<stri
     const item = sorted[i]!;
     const foot = childFootprint(item.childNodes);
 
-    let clusterLeft: number;
-    if (foot) {
-      const centerX = (foot.min + foot.max) / 2;
-      clusterLeft = centerX - item.clusterWidth / 2;
-    } else {
-      const prevFoot = [...placedClusters].reverse().find(Boolean);
-      const nextItem = sorted.slice(i + 1).find(it => childFootprint(it.childNodes));
-      const nextFoot = nextItem ? childFootprint(nextItem.childNodes) : null;
-
-      if (prevFoot && nextFoot) {
-        const slotLeft = prevFoot.max + H_GAP;
-        const slotRight = nextFoot.min - H_GAP;
-        clusterLeft = (slotLeft + slotRight - item.clusterWidth) / 2;
-      } else if (prevFoot) {
-        clusterLeft = prevFoot.max + H_GAP;
-      } else if (nextFoot) {
-        clusterLeft = nextFoot.min - H_GAP - item.clusterWidth;
-      } else {
-        clusterLeft = -item.clusterWidth / 2;
+    if (foot && item.childNodes.length > 0) {
+      const unitNodes = layoutBranchParentUnit(
+        item.rep.id,
+        byBranch,
+        item.childNodes,
+        parentGen,
+        genMap,
+        genY,
+        genIds,
+        byId,
+      );
+      nodes.push(...unitNodes);
+      if (unitNodes.length > 0) {
+        placedClusters.push({
+          min: Math.min(...unitNodes.map(n => n.position.x)),
+          max: Math.max(...unitNodes.map(n => n.position.x)) + LAYOUT_NODE_WIDTH,
+        });
       }
+      continue;
+    }
+
+    let clusterLeft: number;
+    const prevFoot = [...placedClusters].reverse()[0];
+    const nextItem = sorted.slice(i + 1).find(it => childFootprint(it.childNodes));
+    const nextFoot = nextItem ? childFootprint(nextItem.childNodes) : null;
+
+    if (prevFoot && nextFoot) {
+      const slotLeft = prevFoot.max + H_GAP;
+      const slotRight = nextFoot.min - H_GAP;
+      clusterLeft = (slotLeft + slotRight - item.clusterWidth) / 2;
+    } else if (prevFoot) {
+      clusterLeft = prevFoot.max + H_GAP;
+    } else if (nextFoot) {
+      clusterLeft = nextFoot.min - H_GAP - item.clusterWidth;
+    } else {
+      clusterLeft = -item.clusterWidth / 2;
     }
 
     const bandNodes = placeSpouseClusterAt(item.cluster, clusterLeft, genY, byId);
@@ -140,7 +271,11 @@ function placeByBirthOrder(items: SiblingRowItem[], genY: number, byId: Map<stri
 
 function placeBySpacePacking(
   items: SiblingRowItem[],
+  byBranch: Map<string, PedigreeGroup[]>,
+  parentGen: number,
+  genMap: Map<string, number>,
   genY: number,
+  genIds: Set<string>,
   byId: Map<string, Person>,
 ): PositionedNode[] {
   const nodes: PositionedNode[] = [];
@@ -164,10 +299,14 @@ function placeBySpacePacking(
   const hubFoot = childFootprint(hub.childNodes)!;
 
   nodes.push(
-    ...placeSpouseClusterAt(
-      hub.cluster,
-      (hubFoot.min + hubFoot.max) / 2 - hub.clusterWidth / 2,
+    ...layoutBranchParentUnit(
+      hub.rep.id,
+      byBranch,
+      hub.childNodes,
+      parentGen,
+      genMap,
       genY,
+      genIds,
       byId,
     ),
   );
@@ -189,11 +328,17 @@ function placeBySpacePacking(
   });
 
   for (const item of others) {
-    const foot = childFootprint(item.childNodes)!;
-    const centerX = (foot.min + foot.max) / 2;
-
     nodes.push(
-      ...placeSpouseClusterAt(item.cluster, centerX - item.clusterWidth / 2, genY, byId),
+      ...layoutBranchParentUnit(
+        item.rep.id,
+        byBranch,
+        item.childNodes,
+        parentGen,
+        genMap,
+        genY,
+        genIds,
+        byId,
+      ),
     );
   }
 
@@ -207,13 +352,23 @@ export function layoutSiblingBandOnParentRow(
   genIds: Set<string>,
   byId: Map<string, Person>,
   genY: number,
+  parentGen: number,
+  genMap: Map<string, number>,
 ): PositionedNode[] {
-  const items = buildSiblingRowItems(band, byBranch, existingNodes, genIds, byId);
+  const items = buildSiblingRowItems(
+    band,
+    byBranch,
+    existingNodes,
+    genIds,
+    byId,
+    parentGen,
+    genMap,
+  );
   if (items.length === 0) return [];
 
   const bandHasUnknownBirth = items.some(i => !hasKnownBirthYear(i.rep));
   if (!bandHasUnknownBirth) {
-    return placeByBirthOrder(items, genY, byId);
+    return placeByBirthOrder(items, byBranch, parentGen, genMap, genY, genIds, byId);
   }
-  return placeBySpacePacking(items, genY, byId);
+  return placeBySpacePacking(items, byBranch, parentGen, genMap, genY, genIds, byId);
 }
