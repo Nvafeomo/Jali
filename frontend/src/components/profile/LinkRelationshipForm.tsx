@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client/react';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { CREATE_RELATIONSHIP_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import type { Person } from '../../types';
@@ -86,16 +86,10 @@ const LinkRelationshipForm = ({
 
   const selectedTarget = linkTargetId ? lookup.get(linkTargetId) ?? null : null;
 
+  const client = useApolloClient();
+
   const [linkPeople, { loading }] = useMutation(CREATE_RELATIONSHIP_MUTATION, {
-    refetchQueries: [{ query: MY_TREE_QUERY }],
-    awaitRefetchQueries: true,
     errorPolicy: 'all',
-    onCompleted: () => {
-      setOpen(false);
-      onLinkTargetChange(null);
-      setError(null);
-      onLinked();
-    },
     onError: (err) => setError(graphQLErrorMessage(err)),
   });
 
@@ -112,9 +106,22 @@ const LinkRelationshipForm = ({
       const result = await linkPeople({
         variables: toMutationVars(person.id, linkTargetId, role),
       });
+
       if (result.error) {
         setError(graphQLErrorMessage(result.error));
+        return;
       }
+
+      client.cache.evict({ fieldName: 'myTree' });
+      client.cache.gc();
+      await client.refetchQueries({
+        include: [MY_TREE_QUERY],
+      });
+
+      setOpen(false);
+      onLinkTargetChange(null);
+      setError(null);
+      onLinked();
     } catch (err) {
       setError(graphQLErrorMessage(err));
     }

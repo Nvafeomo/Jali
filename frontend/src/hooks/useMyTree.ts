@@ -86,28 +86,56 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
       child.parents!.push(parentEdge);
     }
 
-    // Spouses
+    // Spouses — wire both directions so graph walks work from any node
     for (const edge of raw.spouses ?? []) {
       const spouse = byId.get(edge.person.uuid);
       if (!spouse) continue;
-      person.spouses!.push({
+
+      const forward: RelationshipEdge = {
         person: spouse,
         type: 'MARRIED_TO',
         confidenceScore: edge.confidenceScore,
         disputed: edge.disputed,
-      });
+      };
+      if (!person.spouses!.some(s => s.person.id === spouse.id)) {
+        person.spouses!.push(forward);
+      }
+
+      const reverse: RelationshipEdge = {
+        person,
+        type: 'MARRIED_TO',
+        confidenceScore: edge.confidenceScore,
+        disputed: edge.disputed,
+      };
+      if (!spouse.spouses!.some(s => s.person.id === person.id)) {
+        spouse.spouses!.push(reverse);
+      }
     }
 
-    // Siblings
+    // Siblings — wire both directions
     for (const edge of raw.siblings ?? []) {
       const sibling = byId.get(edge.person.uuid);
       if (!sibling) continue;
-      person.siblings!.push({
+
+      const forward: RelationshipEdge = {
         person: sibling,
         type: 'SIBLING_OF',
         confidenceScore: edge.confidenceScore,
         disputed: edge.disputed,
-      });
+      };
+      if (!person.siblings!.some(s => s.person.id === sibling.id)) {
+        person.siblings!.push(forward);
+      }
+
+      const reverse: RelationshipEdge = {
+        person,
+        type: 'SIBLING_OF',
+        confidenceScore: edge.confidenceScore,
+        disputed: edge.disputed,
+      };
+      if (!sibling.siblings!.some(s => s.person.id === person.id)) {
+        sibling.siblings!.push(reverse);
+      }
     }
   }
 
@@ -117,11 +145,12 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
 // --- Hook ---
 
 export function useMyTree() {
-  const { data, loading, error } = useQuery<{ myTree: RawPerson[] }>(MY_TREE_QUERY, {
+  const { data, loading, error, refetch } = useQuery<{ myTree: RawPerson[] }>(MY_TREE_QUERY, {
     errorPolicy: 'all',
+    fetchPolicy: 'cache-and-network',
   });
 
   const people: Person[] = data?.myTree ? mapToPersons(data.myTree) : [];
 
-  return { people, loading, error };
+  return { people, loading, error, refetch };
 }
