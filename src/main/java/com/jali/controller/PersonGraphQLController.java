@@ -107,6 +107,16 @@ public class PersonGraphQLController {
 	}
 
 	@MutationMapping
+	public Boolean updateParentRole(
+			@Argument String fromUuid,
+			@Argument String toUuid,
+			@Argument String parentRole,
+			@AuthenticationPrincipal UserPrincipal principal) {
+		relationshipService.updateParentRole(fromUuid, toUuid, parentRole, principal.familyTreeId());
+		return true;
+	}
+
+	@MutationMapping
 	public Boolean deleteRelationship(
 			@Argument String anchorUuid,
 			@Argument String fromUuid,
@@ -159,6 +169,7 @@ public class PersonGraphQLController {
 			edge.put("person", r.getChild());
 			edge.put("confidenceScore", r.getConfidenceScore() != null ? r.getConfidenceScore() : 1.0);
 			edge.put("disputed", Boolean.TRUE.equals(r.getDisputed()));
+			edge.put("parentRole", r.getParentRole());
 			return edge;
 		}).toList();
 	}

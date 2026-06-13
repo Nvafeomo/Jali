@@ -48,6 +48,35 @@ public class RelationshipService {
 		}
 	}
 
+	/**
+	 * Sets or clears the parentRole ("MOTHER", "FATHER", or null to unset) on an
+	 * existing PARENT_OF edge. The edge must already exist.
+	 */
+	@Transactional("neo4jTransactionManager")
+	public void updateParentRole(
+			String fromUuid,
+			String toUuid,
+			String parentRole,
+			Long familyTreeId) {
+		personGraphService.requireInTree(fromUuid, familyTreeId);
+		personGraphService.requireInTree(toUuid, familyTreeId);
+
+		if (!personRepository.hasDirectParentOf(fromUuid, toUuid, familyTreeId)) {
+			throw new ResponseStatusException(
+					HttpStatus.NOT_FOUND,
+					"No PARENT_OF relationship exists from " + fromUuid + " to " + toUuid);
+		}
+
+		String normalised = parentRole == null ? null : parentRole.toUpperCase();
+		if (normalised != null && !normalised.equals("MOTHER") && !normalised.equals("FATHER")) {
+			throw new ResponseStatusException(
+					HttpStatus.BAD_REQUEST,
+					"parentRole must be MOTHER, FATHER, or null");
+		}
+
+		personRepository.setParentRole(fromUuid, toUuid, familyTreeId, normalised);
+	}
+
 	@Transactional("neo4jTransactionManager")
 	public void delete(
 			String anchorUuid,

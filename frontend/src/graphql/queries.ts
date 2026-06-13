@@ -32,6 +32,7 @@ export const MY_TREE_QUERY = gql`
         }
         confidenceScore
         disputed
+        parentRole
       }
       spouses {
         person {

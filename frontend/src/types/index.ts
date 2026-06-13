@@ -28,6 +28,8 @@ export interface RelationshipEdge {
   confidenceScore: number;
   disputed: boolean;
   evidenceList?: Evidence[];
+  /** Only on PARENT_OF edges. "MOTHER" | "FATHER" | undefined. */
+  parentRole?: 'MOTHER' | 'FATHER';
 }
 
 // A story can be a voice memo (has audio) or a written memory (text only).

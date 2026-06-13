@@ -226,6 +226,7 @@ const PersonDrawer = ({
                   canDetach={!!person.canEditDetails}
                   disputed={rel.disputed}
                   confidenceScore={rel.confidenceScore}
+                  parentRole={rel.parentRole}
                   onViewPerson={handleChipClick}
                 />
               ))}

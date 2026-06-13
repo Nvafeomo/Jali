@@ -48,6 +48,15 @@ export const CREATE_RELATIONSHIP_MUTATION = gql`
   }
 `;
 
+// Sets or clears the parentRole on a PARENT_OF edge.
+// parentRole: "MOTHER" | "FATHER" | null (null clears it back to unspecified)
+// fromUuid is the parent, toUuid is the child — same direction as the PARENT_OF edge.
+export const UPDATE_PARENT_ROLE_MUTATION = gql`
+  mutation UpdateParentRole($fromUuid: String!, $toUuid: String!, $parentRole: String) {
+    updateParentRole(fromUuid: $fromUuid, toUuid: $toUuid, parentRole: $parentRole)
+  }
+`;
+
 export const DELETE_RELATIONSHIP_MUTATION = gql`
   mutation DeleteRelationship(
     $anchorUuid: String!

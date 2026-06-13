@@ -8,6 +8,7 @@ interface RawEdge {
   person: { uuid: string; fullName: string; confidenceScore: number; isUnknownPlaceholder: boolean };
   confidenceScore: number;
   disputed: boolean;
+  parentRole?: 'MOTHER' | 'FATHER';
 }
 
 interface RawPerson {
@@ -73,6 +74,7 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
         type: 'PARENT_OF',
         confidenceScore: edge.confidenceScore,
         disputed: edge.disputed,
+        parentRole: edge.parentRole,
       };
       person.children!.push(childEdge);
 
@@ -82,6 +84,7 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
         type: 'PARENT_OF',
         confidenceScore: edge.confidenceScore,
         disputed: edge.disputed,
+        parentRole: edge.parentRole,
       };
       child.parents!.push(parentEdge);
     }

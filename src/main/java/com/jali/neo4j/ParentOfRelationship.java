@@ -27,6 +27,9 @@ public class ParentOfRelationship {
 	private Boolean disputed = false;
 	private List<String> evidenceList = new ArrayList<>();
 
+	/** "MOTHER", "FATHER", or null when unspecified. */
+	private String parentRole;
+
 	public ParentOfRelationship(Person child) {
 		this.child = child;
 		this.confidenceScore = 0.10;

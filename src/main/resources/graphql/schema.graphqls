@@ -10,6 +10,7 @@ type Mutation {
 	updatePerson(uuid: String!, input: UpdatePersonInput!): Person
 	createRelationship(fromUuid: String!, toUuid: String!, relationshipType: String!): Boolean
 	deleteRelationship(anchorUuid: String!, fromUuid: String!, toUuid: String!, relationshipType: String!): Boolean
+	updateParentRole(fromUuid: String!, toUuid: String!, parentRole: String): Boolean
 	addEvidence(fromUuid: String!, toUuid: String!, relationshipType: String!, evidenceType: String!, source: String): Person
 }
 
@@ -35,6 +36,7 @@ type PersonEdge {
 	person: Person
 	confidenceScore: Float
 	disputed: Boolean
+	parentRole: String
 }
 
 input CreatePersonInput {

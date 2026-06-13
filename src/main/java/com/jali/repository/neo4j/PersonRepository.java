@@ -119,6 +119,18 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
 			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
 			MATCH (from)-[r:PARENT_OF]->(to)
+			SET r.parentRole = $parentRole
+			""")
+	void setParentRole(
+			@Param("fromUuid") String fromUuid,
+			@Param("toUuid") String toUuid,
+			@Param("familyTreeId") Long familyTreeId,
+			@Param("parentRole") String parentRole);
+
+	@Query("""
+			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
+			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
+			MATCH (from)-[r:PARENT_OF]->(to)
 			DELETE r
 			""")
 	void deleteParentOfEdge(
