@@ -17,7 +17,6 @@ import com.jali.neo4j.EvidenceType;
 import com.jali.neo4j.Person;
 import com.jali.security.UserPrincipal;
 import com.jali.service.ConfidenceScoreService;
-import com.jali.service.PersonFieldMapper;
 import com.jali.service.PersonGracePeriodService;
 import com.jali.service.PersonGraphService;
 import com.jali.service.RelationshipService;
@@ -29,19 +28,16 @@ public class PersonGraphQLController {
 	private final ConfidenceScoreService confidenceScoreService;
 	private final RelationshipService relationshipService;
 	private final PersonGracePeriodService personGracePeriodService;
-	private final PersonFieldMapper personFieldMapper;
 
 	public PersonGraphQLController(
 			PersonGraphService personGraphService,
 			ConfidenceScoreService confidenceScoreService,
 			RelationshipService relationshipService,
-			PersonGracePeriodService personGracePeriodService,
-			PersonFieldMapper personFieldMapper) {
+			PersonGracePeriodService personGracePeriodService) {
 		this.personGraphService = personGraphService;
 		this.confidenceScoreService = confidenceScoreService;
 		this.relationshipService = relationshipService;
 		this.personGracePeriodService = personGracePeriodService;
-		this.personFieldMapper = personFieldMapper;
 	}
 
 	@QueryMapping
@@ -88,12 +84,11 @@ public class PersonGraphQLController {
 		Person person = personGraphService.requireInTree(uuid, principal.familyTreeId());
 		personGracePeriodService.requireWithinGracePeriod(person);
 		try {
-			personFieldMapper.applyUpdateFields(person, input);
+			return personGraphService.updatePersonDetails(uuid, principal.familyTreeId(), input);
 		}
 		catch (IllegalArgumentException e) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 		}
-		return personGraphService.saveInTree(person, principal.familyTreeId());
 	}
 
 	@MutationMapping

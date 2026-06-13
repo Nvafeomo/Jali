@@ -135,4 +135,40 @@ class PersonRepositoryTest {
 
 		assertThat(personRepository.hasMarriageBetween(carol.getUuid(), dave.getUuid(), TREE_A)).isTrue();
 	}
+
+	@Test
+	void saveAfterScalarOnlyLoad_clearsUnloadedRelationships() {
+		Person parent = personRepository.save(new Person("Ibrahim Keita", TREE_A));
+		Person child = personRepository.save(new Person("Aminata Keita", TREE_A));
+		parent.getChildren().add(new ParentOfRelationship(child));
+		personRepository.save(parent);
+
+		Person scalarOnly = personRepository.findByUuidAndFamilyTreeId(parent.getUuid(), TREE_A).orElseThrow();
+		scalarOnly.setFullName("Ibrahim Keita Sr.");
+		scalarOnly.setDeathDate("living");
+		personRepository.save(scalarOnly);
+
+		Person reloaded = personRepository.findById(parent.getId()).orElseThrow();
+		assertThat(reloaded.getFullName()).isEqualTo("Ibrahim Keita Sr.");
+		assertThat(reloaded.getChildren()).isEmpty();
+	}
+
+	@Test
+	void saveAfterRelationshipLoad_preservesEdgesWhenUpdatingScalars() {
+		Person parent = personRepository.save(new Person("Ibrahim Keita", TREE_A));
+		Person child = personRepository.save(new Person("Aminata Keita", TREE_A));
+		parent.getChildren().add(new ParentOfRelationship(child));
+		personRepository.save(parent);
+
+		Person withRelationships = personRepository.findById(parent.getId()).orElseThrow();
+		withRelationships.setFullName("Ibrahim Keita Sr.");
+		withRelationships.setDeathDate("living");
+		personRepository.save(withRelationships);
+
+		Person reloaded = personRepository.findById(parent.getId()).orElseThrow();
+		assertThat(reloaded.getFullName()).isEqualTo("Ibrahim Keita Sr.");
+		assertThat(reloaded.getDeathDate()).isEqualTo("living");
+		assertThat(reloaded.getChildren()).hasSize(1);
+		assertThat(reloaded.getChildren().getFirst().getChild().getFullName()).isEqualTo("Aminata Keita");
+	}
 }

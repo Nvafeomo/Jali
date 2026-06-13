@@ -57,6 +57,12 @@ public class PersonGraphService {
 		return saveInTree(person, familyTreeId);
 	}
 
+	public Person updatePersonDetails(String uuid, Long familyTreeId, Map<String, Object> input) {
+		Person person = requireInTreeWithRelationships(uuid, familyTreeId);
+		personFieldMapper.applyUpdateFields(person, input);
+		return saveInTree(person, familyTreeId);
+	}
+
 	public Person createPerson(CreatePersonRequest request, Long familyTreeId) {
 		Map<String, Object> fields = new HashMap<>();
 		fields.put("birthDate", request.birthDate());
