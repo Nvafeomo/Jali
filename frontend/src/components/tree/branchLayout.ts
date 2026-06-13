@@ -10,6 +10,7 @@ import {
 import {
   collectSiblingBand,
   comparePeopleByBirthOldestFirst,
+  hasKnownBirthYear,
   sortPeopleByBirthOldestFirst,
 } from './siblingOrder';
 import { layoutSiblingBandOnParentRow } from './siblingParentRowLayout';
@@ -61,13 +62,6 @@ function shiftNodes(nodes: PositionedNode[], deltaX: number): void {
   for (const node of nodes) {
     node.position.x += deltaX;
   }
-}
-
-function centerRow(nodes: PositionedNode[]): void {
-  if (nodes.length === 0) return;
-  const minX = Math.min(...nodes.map(n => n.position.x));
-  const maxX = Math.max(...nodes.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
-  shiftNodes(nodes, -(minX + maxX) / 2);
 }
 
 function collectSubtreeIds(rootId: string, byId: Map<string, Person>): Set<string> {
@@ -131,6 +125,52 @@ function groupByBranch(
   return byBranch;
 }
 
+function branchChildCount(anchorId: string, byBranch: Map<string, PedigreeGroup[]>): number {
+  const ids = new Set<string>();
+  for (const group of byBranch.get(anchorId) ?? []) {
+    group.childIds.forEach(id => ids.add(id));
+  }
+  return ids.size;
+}
+
+/**
+ * Left-to-right branch order for the child row. Known births: oldest branch left.
+ * Unknown births: smaller branches flank the largest hub — small left, hub center, larger right.
+ */
+function orderBranchAnchors(
+  anchors: Person[],
+  byBranch: Map<string, PedigreeGroup[]>,
+): Person[] {
+  if (anchors.length === 0) return [];
+  if (anchors.every(hasKnownBirthYear)) {
+    return sortPeopleByBirthOldestFirst(anchors);
+  }
+
+  const counts = new Map(anchors.map(a => [a.id, branchChildCount(a.id, byBranch)]));
+  const hub = anchors.reduce((best, a) =>
+    (counts.get(a.id) ?? 0) > (counts.get(best.id) ?? 0) ? a : best,
+  );
+  const rest = anchors.filter(a => a.id !== hub.id);
+
+  if (rest.length === 0) return [hub];
+  if (rest.length === 1) return [hub, rest[0]!];
+
+  const sorted = [...rest].sort(
+    (a, b) =>
+      (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0) ||
+      comparePeopleByBirthOldestFirst(a, b),
+  );
+  const mid = Math.floor(sorted.length / 2);
+  return [...sorted.slice(0, mid), hub, ...sorted.slice(mid)];
+}
+
+export function centerAllNodes(nodes: PositionedNode[]): void {
+  if (nodes.length === 0) return;
+  const minX = Math.min(...nodes.map(n => n.position.x));
+  const maxX = Math.max(...nodes.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
+  shiftNodes(nodes, -(minX + maxX) / 2);
+}
+
 /**
  * Pack child generation by sibling branch (oldest branch left). Within each branch,
  * co-parent child sets (e.g. polygamy) pack left-to-right oldest-first.
@@ -148,8 +188,9 @@ export function layoutChildGenerationByBranch(
   const relevant = groupsForChildGen(pedigreeGroups, childGen, parentGen, genMap);
   const byBranch = groupByBranch(relevant, parentGen, genMap, byId);
 
-  const branchAnchors = sortPeopleByBirthOldestFirst(
+  const branchAnchors = orderBranchAnchors(
     [...byBranch.keys()].map(id => byId.get(id)).filter((p): p is Person => p != null),
+    byBranch,
   );
 
   const allNodes: PositionedNode[] = [];
@@ -182,7 +223,6 @@ export function layoutChildGenerationByBranch(
     allNodes.push(...branchNodes);
   }
 
-  centerRow(allNodes);
   return allNodes;
 }
 
@@ -285,7 +325,6 @@ export function layoutParentGenerationByBranch(
     placedIds.add(person.id);
   }
 
-  centerRow(allNodes);
   return allNodes;
 }
 

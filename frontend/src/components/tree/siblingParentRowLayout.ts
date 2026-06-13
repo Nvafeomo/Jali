@@ -19,9 +19,6 @@ export interface PositionedNode {
   data: Person;
 }
 
-/** Minimum child count to treat a branch as "large" for left/right side choice. */
-const LARGE_BRANCH_CHILDREN = 3;
-
 interface SiblingRowItem {
   rep: Person;
   cluster: Person[];
@@ -184,9 +181,6 @@ function placeBySpacePacking(
     leftCursor = clusterLeft - H_GAP;
   }
 
-  const leftWidthUsed = hubFoot.min - leftCursor;
-  let rightmostChildMax = hubFoot.max;
-
   const others = withChildren.filter(i => i.rep.id !== hub.rep.id);
   others.sort((a, b) => {
     const aFoot = childFootprint(a.childNodes)!;
@@ -196,20 +190,11 @@ function placeBySpacePacking(
 
   for (const item of others) {
     const foot = childFootprint(item.childNodes)!;
-    let centerX = (foot.min + foot.max) / 2;
-
-    const rightWidth = rightmostChildMax - hubFoot.max;
-    if (
-      item.childNodes.length >= LARGE_BRANCH_CHILDREN &&
-      leftWidthUsed > rightWidth + LAYOUT_NODE_WIDTH
-    ) {
-      centerX = Math.max(centerX, rightmostChildMax + H_GAP + item.clusterWidth / 2);
-    }
+    const centerX = (foot.min + foot.max) / 2;
 
     nodes.push(
       ...placeSpouseClusterAt(item.cluster, centerX - item.clusterWidth / 2, genY, byId),
     );
-    rightmostChildMax = Math.max(rightmostChildMax, foot.max, centerX + item.clusterWidth / 2);
   }
 
   return nodes;

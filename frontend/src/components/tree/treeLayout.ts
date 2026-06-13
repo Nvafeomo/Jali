@@ -5,6 +5,7 @@ import type { PedigreeEdgeData } from './pedigreeGeometry';
 import type { MarriageEdgeData } from './marriageGeometry';
 import {
   layoutChildGenerationByBranch,
+  centerAllNodes,
   layoutGen0ParentsByFootprint,
   layoutParentGenerationByBranch,
   type PositionedNode,
@@ -378,6 +379,8 @@ export function buildLayout(people: Person[]): {
   });
 
   addPedigreeEdges(edges, people);
+
+  centerAllNodes(nodes);
 
   return { nodes, edges };
 }
