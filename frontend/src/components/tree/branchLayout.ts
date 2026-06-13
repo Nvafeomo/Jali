@@ -224,6 +224,9 @@ export function layoutParentGenerationByBranch(
   for (const band of bands) {
     for (const anchor of band) {
       if (clusterPlaced.has(anchor.id)) continue;
+      // Co-parent-only people (e.g. a second mother not linked as spouse) are placed
+      // in the co-parent pass centered on their own children.
+      if (!byBranch.has(anchor.id)) continue;
 
       const cluster = collectSpouseComponent(anchor, genIds, byId);
       cluster.forEach(p => clusterPlaced.add(p.id));
@@ -265,7 +268,7 @@ export function layoutParentGenerationByBranch(
   }
 
   const placedIds = new Set(allNodes.map(n => n.id));
-  const coParentCandidates: { person: Person; childNodes: PositionedNode[] }[] = [];
+  const coParentById = new Map<string, PositionedNode[]>();
 
   for (const group of groupsForChildGen(pedigreeGroups, childGen, parentGen, genMap)) {
     const childNodes = group.childIds
@@ -273,17 +276,29 @@ export function layoutParentGenerationByBranch(
       .filter((n): n is PositionedNode => n != null);
     if (childNodes.length === 0) continue;
 
+    const branchAnchor = branchAnchorId(group.parentIds, parentGen, genMap, byId);
+
     for (const parentId of group.parentIds) {
       if (placedIds.has(parentId)) continue;
+      if (parentId === branchAnchor) continue;
       if ((genMap.get(parentId) ?? -1) !== parentGen) continue;
 
-      const person = byId.get(parentId);
-      if (!person) continue;
-
-      coParentCandidates.push({ person, childNodes });
-      placedIds.add(parentId);
+      const existing = coParentById.get(parentId) ?? [];
+      for (const node of childNodes) {
+        if (!existing.some(n => n.id === node.id)) {
+          existing.push(node);
+        }
+      }
+      coParentById.set(parentId, existing);
     }
   }
+
+  const coParentCandidates = [...coParentById.entries()]
+    .map(([id, childNodes]) => ({
+      person: byId.get(id)!,
+      childNodes,
+    }))
+    .filter((c): c is { person: Person; childNodes: PositionedNode[] } => c.person != null);
 
   coParentCandidates.sort((a, b) => {
     const ax = Math.min(...a.childNodes.map(n => n.position.x));
@@ -301,6 +316,7 @@ export function layoutParentGenerationByBranch(
       position: { x: centerX - LAYOUT_NODE_WIDTH / 2, y: genY },
       data: person,
     });
+    placedIds.add(person.id);
   }
 
   centerRow(allNodes);
