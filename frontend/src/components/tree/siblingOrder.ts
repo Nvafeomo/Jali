@@ -77,3 +77,32 @@ export function collectSiblingBand(
 
   return sortPeopleByBirthOldestFirst(component);
 }
+
+/** Sibling-connected component (for generation alignment across half-siblings). */
+export function collectSiblingComponentAll(
+  start: Person,
+  byId: Map<string, Person>,
+): Person[] {
+  const component: Person[] = [];
+  const seen = new Set<string>();
+  const queue = [start.id];
+
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    const person = byId.get(id);
+    if (!person) continue;
+
+    component.push(person);
+
+    for (const rel of person.siblings ?? []) {
+      if (!seen.has(rel.person.id)) {
+        queue.push(rel.person.id);
+      }
+    }
+  }
+
+  return component;
+}

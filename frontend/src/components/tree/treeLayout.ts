@@ -3,18 +3,24 @@ import { edgeStyle } from './relationshipStyles';
 import { groupPedigreeFamilies } from './pedigreeGeometry';
 import type { PedigreeEdgeData } from './pedigreeGeometry';
 import type { MarriageEdgeData } from './marriageGeometry';
-import { layoutChildrenUnderParents } from './childGenerationLayout';
 import {
-  clusterPixelWidth,
-  collectSpouseComponent,
+  layoutChildGenerationByBranch,
+  layoutGen0ParentsByFootprint,
+  layoutParentGenerationByBranch,
+  type PositionedNode,
+} from './branchLayout';
+import {
   H_GAP,
-  layoutSpouseCluster,
   NODE_HEIGHT,
   V_GAP,
+  clusterPixelWidth,
+  collectSpouseComponent,
+  layoutSpouseCluster,
 } from './spouseLayout';
 import {
-  collectSiblingBand,
+  collectSiblingComponentAll,
   comparePeopleByBirthOldestFirst,
+  collectSiblingBand,
 } from './siblingOrder';
 
 export interface LayoutNode {
@@ -131,6 +137,23 @@ function assignGenerations(people: Person[]): Map<string, number> {
         const current = genMap.get(child.id) ?? 0;
         if (newGen > current) {
           genMap.set(child.id, newGen);
+          changed = true;
+        }
+      }
+    }
+
+    const sibVisited = new Set<string>();
+    for (const person of people) {
+      if (sibVisited.has(person.id)) continue;
+
+      const component = collectSiblingComponentAll(person, byId);
+      component.forEach(p => sibVisited.add(p.id));
+
+      const maxGen = Math.max(...component.map(p => genMap.get(p.id) ?? 0));
+      for (const p of component) {
+        const current = genMap.get(p.id) ?? 0;
+        if (maxGen > current) {
+          genMap.set(p.id, maxGen);
           changed = true;
         }
       }
@@ -255,37 +278,78 @@ export function buildLayout(people: Person[]): {
     byGen.get(gen)!.push(p);
   });
 
-  const nodes: LayoutNode[] = [];
   const sortedGens = [...byGen.keys()].sort((a, b) => a - b);
+  const maxGen = sortedGens[sortedGens.length - 1] ?? 0;
 
-  for (const gen of sortedGens) {
-    const genPeople = byGen.get(gen)!;
-    const genY = gen * (NODE_HEIGHT + V_GAP);
+  const nodes: LayoutNode[] = [];
+  const nodeById = new Map<string, PositionedNode>();
 
-    if (gen === 0) {
-      nodes.push(...layoutGenerationRow(genPeople, genY, byId));
-      continue;
+  const addNodes = (newNodes: PositionedNode[]) => {
+    for (const n of newNodes) {
+      nodes.push(n);
+      nodeById.set(n.id, n);
     }
+  };
 
-    const parentPositions = new Map(
-      nodes.filter(n => (genMap.get(n.id) ?? -1) === gen - 1).map(n => [n.id, n.position]),
-    );
+  if (maxGen === 0) {
+    const genY = 0;
+    addNodes(layoutGenerationRow(byGen.get(0) ?? [], genY, byId));
+  } else {
+    for (let gen = maxGen; gen >= 0; gen--) {
+      const genY = gen * (NODE_HEIGHT + V_GAP);
+      const genPeople = byGen.get(gen) ?? [];
 
-    const { nodes: childNodes, assigned } = layoutChildrenUnderParents(
-      pedigreeGroups,
-      genPeople,
-      genY,
-      gen - 1,
-      genMap,
-      parentPositions,
-      byId,
-    );
+      if (gen === maxGen) {
+        const childNodes = layoutChildGenerationByBranch(
+          gen,
+          gen - 1,
+          genY,
+          genMap,
+          pedigreeGroups,
+          genPeople,
+          byId,
+        );
+        addNodes(childNodes);
 
-    nodes.push(...childNodes);
+        const assigned = new Set(childNodes.map(n => n.id));
+        const remaining = genPeople.filter(p => !assigned.has(p.id));
+        if (remaining.length > 0) {
+          addNodes(layoutGenerationRow(remaining, genY, byId));
+        }
+      } else if (gen === 0) {
+        const parentNodes = layoutGen0ParentsByFootprint(
+          genPeople,
+          genY,
+          genMap,
+          byId,
+          nodeById,
+        );
+        addNodes(parentNodes);
 
-    const remaining = genPeople.filter(p => !assigned.has(p.id));
-    if (remaining.length > 0) {
-      nodes.push(...layoutGenerationRow(remaining, genY, byId));
+        const assigned = new Set(parentNodes.map(n => n.id));
+        const remaining = genPeople.filter(p => !assigned.has(p.id));
+        if (remaining.length > 0) {
+          addNodes(layoutGenerationRow(remaining, genY, byId));
+        }
+      } else {
+        const parentNodes = layoutParentGenerationByBranch(
+          gen,
+          gen + 1,
+          genY,
+          genMap,
+          pedigreeGroups,
+          genPeople,
+          byId,
+          nodeById,
+        );
+        addNodes(parentNodes);
+
+        const assigned = new Set(parentNodes.map(n => n.id));
+        const remaining = genPeople.filter(p => !assigned.has(p.id));
+        if (remaining.length > 0) {
+          addNodes(layoutGenerationRow(remaining, genY, byId));
+        }
+      }
     }
   }
 
