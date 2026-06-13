@@ -39,7 +39,10 @@ export function middleChildCenterX(childNodes: PositionedNode[]): number | null 
   if (childNodes.length === 0) return null;
 
   const sorted = [...childNodes].sort((a, b) => a.position.x - b.position.x);
-  const middle = sorted[Math.floor((sorted.length - 1) / 2)]!;
+  // For odd n: exact middle child. For even n: right-of-center child,
+  // so the first flanker (placed left) lands above the left-of-center child —
+  // together the hub+flanker straddle the two middle children.
+  const middle = sorted[Math.floor(sorted.length / 2)]!;
   return middle.position.x + LAYOUT_NODE_WIDTH / 2;
 }
 
