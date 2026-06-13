@@ -1,7 +1,16 @@
 import type { Person, RelationshipEdge } from '../../types';
 import { edgeStyle } from './relationshipStyles';
-import { groupPedigreeFamilies, LAYOUT_NODE_WIDTH } from './pedigreeGeometry';
+import { groupPedigreeFamilies } from './pedigreeGeometry';
 import type { PedigreeEdgeData } from './pedigreeGeometry';
+import type { MarriageEdgeData } from './marriageGeometry';
+import {
+  clusterPixelWidth,
+  collectSpouseComponent,
+  H_GAP,
+  layoutSpouseCluster,
+  NODE_HEIGHT,
+  V_GAP,
+} from './spouseLayout';
 
 export interface LayoutNode {
   id: string;
@@ -13,30 +22,20 @@ export interface LayoutEdge {
   id: string;
   source: string;
   target: string;
-  sourceHandle?: string;
-  targetHandle?: string;
-  type: 'step' | 'pedigree';
+  type: 'step' | 'pedigree' | 'marriage';
   animated: boolean;
   selectable?: boolean;
   focusable?: boolean;
-  data: {
-    relationshipType: 'PARENT_OF' | 'MARRIED_TO';
-    confidenceScore: number;
-    disputed: boolean;
-  } | PedigreeEdgeData;
+  data:
+    | {
+        relationshipType: 'PARENT_OF' | 'MARRIED_TO';
+        confidenceScore: number;
+        disputed: boolean;
+      }
+    | PedigreeEdgeData
+    | MarriageEdgeData;
   style?: { stroke: string; strokeWidth: number; strokeDasharray?: string };
-  markerEnd?: {
-    type: 'arrowclosed';
-    color: string;
-    width: number;
-    height: number;
-  };
 }
-
-const NODE_WIDTH = LAYOUT_NODE_WIDTH;
-const NODE_HEIGHT = 140;
-const H_GAP = 60;
-const V_GAP = 100;
 
 function assignGenerations(people: Person[]): Map<string, number> {
   const genMap = new Map<string, number>();
@@ -71,73 +70,70 @@ function assignGenerations(people: Person[]): Map<string, number> {
   return genMap;
 }
 
-/** Place spouses next to each other within each generation row. */
-function orderGenerationRow(genPeople: Person[]): Person[] {
-  const ordered: Person[] = [];
+function layoutGenerationRow(
+  genPeople: Person[],
+  genY: number,
+  byId: Map<string, Person>,
+): LayoutNode[] {
+  const genIds = new Set(genPeople.map(p => p.id));
   const placed = new Set<string>();
+  const nodes: LayoutNode[] = [];
+  let rowCursor = 0;
 
   for (const person of genPeople) {
     if (placed.has(person.id)) continue;
 
-    ordered.push(person);
-    placed.add(person.id);
+    const cluster = collectSpouseComponent(person, genIds, byId);
+    cluster.forEach(p => placed.add(p.id));
 
-    const spouse = person.spouses?.[0];
-    if (spouse && !placed.has(spouse.person.id)) {
-      const spousePerson = genPeople.find(p => p.id === spouse.person.id);
-      if (spousePerson) {
-        ordered.push(spousePerson);
-        placed.add(spousePerson.id);
-      }
+    const clusterPositions = layoutSpouseCluster(cluster);
+    const clusterWidth = clusterPixelWidth(clusterPositions);
+
+    for (const { id, x } of clusterPositions) {
+      const p = byId.get(id);
+      if (!p) continue;
+      nodes.push({
+        id,
+        position: { x: rowCursor + x, y: genY },
+        data: p,
+      });
     }
+
+    rowCursor += clusterWidth + H_GAP;
   }
 
-  return ordered;
+  if (nodes.length === 0) return nodes;
+
+  const totalWidth = rowCursor - H_GAP;
+  const rowOffset = -totalWidth / 2;
+  return nodes.map(n => ({
+    ...n,
+    position: { x: n.position.x + rowOffset, y: n.position.y },
+  }));
 }
 
-function addRelationshipEdge(
+function addMarriageEdge(
   edges: LayoutEdge[],
   edgeSeen: Set<string>,
   sourceId: string,
   targetId: string,
   rel: RelationshipEdge,
-  handles?: { sourceHandle: string; targetHandle: string },
 ) {
-  const relationshipType =
-    rel.type === 'MARRIED_TO' ? 'MARRIED_TO' : 'PARENT_OF';
-  const edgeId =
-    relationshipType === 'MARRIED_TO'
-      ? `marriage:${[sourceId, targetId].sort().join(':')}`
-      : `${sourceId}->${targetId}`;
-
+  const edgeId = `marriage:${[sourceId, targetId].sort().join(':')}`;
   if (edgeSeen.has(edgeId)) return;
   edgeSeen.add(edgeId);
 
-  const style = edgeStyle(relationshipType, rel.confidenceScore, rel.disputed);
+  const style = edgeStyle('MARRIED_TO', rel.confidenceScore, rel.disputed);
 
   edges.push({
     id: edgeId,
     source: sourceId,
     target: targetId,
-    ...handles,
-    type: 'step',
+    type: 'marriage',
     animated: false,
-    data: {
-      relationshipType,
-      confidenceScore: rel.confidenceScore,
-      disputed: rel.disputed,
-    },
-    style,
-    ...(relationshipType === 'PARENT_OF'
-      ? {
-          markerEnd: {
-            type: 'arrowclosed' as const,
-            color: style.stroke,
-            width: 20,
-            height: 20,
-          },
-        }
-      : {}),
+    selectable: false,
+    focusable: false,
+    data: { style },
   });
 }
 
@@ -165,6 +161,7 @@ export function buildLayout(people: Person[]): {
   edges: LayoutEdge[];
 } {
   const genMap = assignGenerations(people);
+  const byId = new Map(people.map(p => [p.id, p]));
 
   const byGen = new Map<number, Person[]>();
   people.forEach(p => {
@@ -175,18 +172,12 @@ export function buildLayout(people: Person[]): {
 
   const nodes: LayoutNode[] = [];
   byGen.forEach((genPeople, gen) => {
-    const rowPeople = orderGenerationRow(genPeople);
-    const rowWidth = rowPeople.length * (NODE_WIDTH + H_GAP) - H_GAP;
-    rowPeople.forEach((person, i) => {
-      nodes.push({
-        id: person.id,
-        position: {
-          x: i * (NODE_WIDTH + H_GAP) - rowWidth / 2,
-          y: gen * (NODE_HEIGHT + V_GAP),
-        },
-        data: person,
-      });
-    });
+    const rowNodes = layoutGenerationRow(
+      genPeople,
+      gen * (NODE_HEIGHT + V_GAP),
+      byId,
+    );
+    nodes.push(...rowNodes);
   });
 
   const edges: LayoutEdge[] = [];
@@ -194,10 +185,7 @@ export function buildLayout(people: Person[]): {
 
   people.forEach(person => {
     person.spouses?.forEach(rel => {
-      addRelationshipEdge(edges, edgeSeen, person.id, rel.person.id, rel, {
-        sourceHandle: 'spouse-out',
-        targetHandle: 'spouse-in',
-      });
+      addMarriageEdge(edges, edgeSeen, person.id, rel.person.id, rel);
     });
   });
 
