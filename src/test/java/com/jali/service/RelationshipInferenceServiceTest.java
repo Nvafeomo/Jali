@@ -159,4 +159,33 @@ class RelationshipInferenceServiceTest {
 
 		verify(personRepository, never()).createParentOfEdge(eq("father"), eq("sibling1"), eq(TREE_ID));
 	}
+
+	@Test
+	void spouseLinkAddsCoParentWhenChildHasExactlyOneParent() {
+		when(personRepository.findChildUuidsOf("father", TREE_ID)).thenReturn(List.of("child1"));
+		when(personRepository.hasDirectParentOf("mother", "child1", TREE_ID)).thenReturn(false);
+		when(personRepository.countParentsOf("child1", TREE_ID)).thenReturn(1L);
+		when(personRepository.wouldCreateParentCycle("mother", "child1", TREE_ID)).thenReturn(false);
+		when(personRepository.hasSiblingBetween("mother", "child1", TREE_ID)).thenReturn(false);
+		when(personRepository.hasMarriageBetween("mother", "child1", TREE_ID)).thenReturn(false);
+		when(personRepository.findOtherChildUuidsByParent("mother", "child1", TREE_ID)).thenReturn(List.of());
+		when(personRepository.findSiblingUuidsOf("child1", TREE_ID)).thenReturn(List.of());
+		when(personRepository.findChildUuidsOf("mother", TREE_ID)).thenReturn(List.of());
+
+		inferenceService.afterSpouseLinked("father", "mother", TREE_ID);
+
+		verify(personRepository).createParentOfEdge("mother", "child1", TREE_ID);
+	}
+
+	@Test
+	void spouseLinkSkipsChildWithTwoParents() {
+		when(personRepository.findChildUuidsOf("father", TREE_ID)).thenReturn(List.of("child1"));
+		when(personRepository.hasDirectParentOf("mother", "child1", TREE_ID)).thenReturn(false);
+		when(personRepository.countParentsOf("child1", TREE_ID)).thenReturn(2L);
+		when(personRepository.findChildUuidsOf("mother", TREE_ID)).thenReturn(List.of());
+
+		inferenceService.afterSpouseLinked("father", "mother", TREE_ID);
+
+		verify(personRepository, never()).createParentOfEdge(eq("mother"), eq("child1"), eq(TREE_ID));
+	}
 }

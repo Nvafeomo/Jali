@@ -104,6 +104,22 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 			@Param("familyTreeId") Long familyTreeId);
 
 	@Query("""
+			MATCH (parent:Person {uuid: $parentUuid, familyTreeId: $familyTreeId})-[:PARENT_OF]->(child:Person)
+			RETURN child.uuid
+			""")
+	List<String> findChildUuidsOf(
+			@Param("parentUuid") String parentUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (parent:Person)-[:PARENT_OF]->(child:Person {uuid: $childUuid, familyTreeId: $familyTreeId})
+			RETURN count(parent)
+			""")
+	long countParentsOf(
+			@Param("childUuid") String childUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
 			MATCH (p:Person)-[:PARENT_OF]->(a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
 			MATCH (p)-[:PARENT_OF]->(b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
 			RETURN count(DISTINCT p)

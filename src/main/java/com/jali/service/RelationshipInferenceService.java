@@ -19,6 +19,8 @@ import com.jali.repository.neo4j.PersonRepository;
  *       siblings (not marked {@code halfSibling}) so the row stays connected.</li>
  *   <li>When two people share a second parent, any half-sibling edge between them
  *       is promoted to a full sibling ({@code halfSibling = false}).</li>
+ *   <li>Linking spouses adds each spouse as co-parent to the other's children who
+ *       have exactly one parent recorded (symmetric both ways).</li>
  * </ul>
  */
 @Service
@@ -59,6 +61,26 @@ public class RelationshipInferenceService {
 
 		markSiblingLinkHalfStatus(anchorUuid, siblingUuid, familyTreeId, siblingParents.size());
 		refreshSiblingHalfFlag(anchorUuid, siblingUuid, familyTreeId);
+	}
+
+	public void afterSpouseLinked(String aUuid, String bUuid, Long familyTreeId) {
+		inferCoParentForSpousesChildren(aUuid, bUuid, familyTreeId);
+		inferCoParentForSpousesChildren(bUuid, aUuid, familyTreeId);
+	}
+
+	private void inferCoParentForSpousesChildren(
+			String parentUuid,
+			String spouseUuid,
+			Long familyTreeId) {
+		for (String childUuid : personRepository.findChildUuidsOf(parentUuid, familyTreeId)) {
+			if (personRepository.hasDirectParentOf(spouseUuid, childUuid, familyTreeId)) {
+				continue;
+			}
+			if (personRepository.countParentsOf(childUuid, familyTreeId) != 1) {
+				continue;
+			}
+			inferParentLink(spouseUuid, childUuid, familyTreeId, null);
+		}
 	}
 
 	private void syncParentsToFullSiblings(String childUuid, Long familyTreeId) {

@@ -56,7 +56,10 @@ public class RelationshipService {
 				}
 				relationshipInferenceService.afterParentLinked(fromUuid, toUuid, familyTreeId);
 			}
-			case "MARRIED_TO" -> personRepository.createMarriedToEdge(fromUuid, toUuid, familyTreeId);
+			case "MARRIED_TO" -> {
+				personRepository.createMarriedToEdge(fromUuid, toUuid, familyTreeId);
+				relationshipInferenceService.afterSpouseLinked(fromUuid, toUuid, familyTreeId);
+			}
 			case "SIBLING_OF" -> {
 				personRepository.createSiblingOfEdge(fromUuid, toUuid, familyTreeId);
 				relationshipInferenceService.afterSiblingLinked(fromUuid, toUuid, familyTreeId);
