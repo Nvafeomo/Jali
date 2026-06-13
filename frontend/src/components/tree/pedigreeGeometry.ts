@@ -120,6 +120,20 @@ export function groupPedigreeFamilies(people: Person[]): PedigreeGroup[] {
   }));
 }
 
+export function parentCenterX(
+  parentIds: string[],
+  positions: Map<string, { x: number }>,
+): number | null {
+  const parentPos = parentIds
+    .map(id => positions.get(id))
+    .filter((p): p is { x: number } => p != null);
+  if (parentPos.length === 0) return null;
+
+  const left = Math.min(...parentPos.map(p => p.x));
+  const right = Math.max(...parentPos.map(p => p.x)) + LAYOUT_NODE_WIDTH;
+  return (left + right) / 2;
+}
+
 function pedigreeGroupStyle(
   parentIds: string[],
   childIds: string[],

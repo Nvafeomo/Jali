@@ -3,6 +3,7 @@ import { edgeStyle } from './relationshipStyles';
 import { groupPedigreeFamilies } from './pedigreeGeometry';
 import type { PedigreeEdgeData } from './pedigreeGeometry';
 import type { MarriageEdgeData } from './marriageGeometry';
+import { layoutChildrenUnderParents } from './childGenerationLayout';
 import {
   clusterPixelWidth,
   collectSpouseComponent,
@@ -180,6 +181,7 @@ export function buildLayout(people: Person[]): {
 } {
   const genMap = assignGenerations(people);
   const byId = new Map(people.map(p => [p.id, p]));
+  const pedigreeGroups = groupPedigreeFamilies(people);
 
   const byGen = new Map<number, Person[]>();
   people.forEach(p => {
@@ -189,14 +191,38 @@ export function buildLayout(people: Person[]): {
   });
 
   const nodes: LayoutNode[] = [];
-  byGen.forEach((genPeople, gen) => {
-    const rowNodes = layoutGenerationRow(
+  const sortedGens = [...byGen.keys()].sort((a, b) => a - b);
+
+  for (const gen of sortedGens) {
+    const genPeople = byGen.get(gen)!;
+    const genY = gen * (NODE_HEIGHT + V_GAP);
+
+    if (gen === 0) {
+      nodes.push(...layoutGenerationRow(genPeople, genY, byId));
+      continue;
+    }
+
+    const parentPositions = new Map(
+      nodes.filter(n => (genMap.get(n.id) ?? -1) === gen - 1).map(n => [n.id, n.position]),
+    );
+
+    const { nodes: childNodes, assigned } = layoutChildrenUnderParents(
+      pedigreeGroups,
       genPeople,
-      gen * (NODE_HEIGHT + V_GAP),
+      genY,
+      gen - 1,
+      genMap,
+      parentPositions,
       byId,
     );
-    nodes.push(...rowNodes);
-  });
+
+    nodes.push(...childNodes);
+
+    const remaining = genPeople.filter(p => !assigned.has(p.id));
+    if (remaining.length > 0) {
+      nodes.push(...layoutGenerationRow(remaining, genY, byId));
+    }
+  }
 
   const edges: LayoutEdge[] = [];
   const edgeSeen = new Set<string>();
