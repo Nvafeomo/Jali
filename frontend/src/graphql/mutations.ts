@@ -47,3 +47,19 @@ export const CREATE_RELATIONSHIP_MUTATION = gql`
     )
   }
 `;
+
+export const DELETE_RELATIONSHIP_MUTATION = gql`
+  mutation DeleteRelationship(
+    $anchorUuid: String!
+    $fromUuid: String!
+    $toUuid: String!
+    $relationshipType: String!
+  ) {
+    deleteRelationship(
+      anchorUuid: $anchorUuid
+      fromUuid: $fromUuid
+      toUuid: $toUuid
+      relationshipType: $relationshipType
+    )
+  }
+`;

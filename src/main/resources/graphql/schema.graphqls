@@ -9,6 +9,7 @@ type Mutation {
 	createPerson(input: CreatePersonInput!): Person
 	updatePerson(uuid: String!, input: UpdatePersonInput!): Person
 	createRelationship(fromUuid: String!, toUuid: String!, relationshipType: String!): Boolean
+	deleteRelationship(anchorUuid: String!, fromUuid: String!, toUuid: String!, relationshipType: String!): Boolean
 	addEvidence(fromUuid: String!, toUuid: String!, relationshipType: String!, evidenceType: String!, source: String): Person
 }
 

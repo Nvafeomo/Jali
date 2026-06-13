@@ -6,6 +6,7 @@ import {
   isLiving,
 } from '../../utils/vitalYears';
 import LinkRelationshipForm from './LinkRelationshipForm';
+import RelationshipChip from './RelationshipChip';
 import PersonProfileEditor from './PersonProfileEditor';
 import lockedStyles from './PersonProfileEditor.module.css';
 import styles from './PersonDrawer.module.css';
@@ -149,7 +150,7 @@ const PersonDrawer = ({
         <>
           <p className={lockedStyles.lockedNotice}>
             <strong>Details locked.</strong> Names and vitals can only be changed within
-            the first 7 days after adding someone. Relationship links can still be updated.
+            the first 7 days after adding someone. You can still add relationship links.
           </p>
           {person.bio && <p className={lockedStyles.readOnlyBio}>{person.bio}</p>}
         </>
@@ -204,20 +205,29 @@ const PersonDrawer = ({
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Relationships</h3>
 
+        {person.canEditDetails &&
+          (person.parents?.length ||
+            person.children?.length ||
+            person.spouses?.length ||
+            person.siblings?.length) && (
+            <p className={styles.relHint}>Click × next to a name to remove a link.</p>
+          )}
+
         {person.parents && person.parents.length > 0 && (
           <>
             <p className={styles.relGroupLabel}>Parents</p>
             <div className={styles.chips}>
               {person.parents.map(rel => (
-                <button
+                <RelationshipChip
                   key={rel.person.id}
-                  className={[styles.chip, rel.disputed ? styles.chipDisputed : ''].join(' ')}
-                  onClick={() => handleChipClick(rel.person)}
-                  title={`${Math.round(rel.confidenceScore * 100)}% confidence${rel.disputed ? ' · disputed' : ''}`}
-                >
-                  {rel.person.fullName}
-                  {rel.disputed && <span className={styles.disputedDot}>⚠</span>}
-                </button>
+                  anchorId={person.id}
+                  related={rel.person}
+                  role="parent"
+                  canDetach={!!person.canEditDetails}
+                  disputed={rel.disputed}
+                  confidenceScore={rel.confidenceScore}
+                  onViewPerson={handleChipClick}
+                />
               ))}
             </div>
           </>
@@ -228,9 +238,14 @@ const PersonDrawer = ({
             <p className={styles.relGroupLabel}>Children</p>
             <div className={styles.chips}>
               {person.children.map(rel => (
-                <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
-                  {rel.person.fullName}
-                </button>
+                <RelationshipChip
+                  key={rel.person.id}
+                  anchorId={person.id}
+                  related={rel.person}
+                  role="child"
+                  canDetach={!!person.canEditDetails}
+                  onViewPerson={handleChipClick}
+                />
               ))}
             </div>
           </>
@@ -241,9 +256,14 @@ const PersonDrawer = ({
             <p className={styles.relGroupLabel}>Spouse{person.spouses.length > 1 ? 's' : ''}</p>
             <div className={styles.chips}>
               {person.spouses.map(rel => (
-                <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
-                  {rel.person.fullName}
-                </button>
+                <RelationshipChip
+                  key={rel.person.id}
+                  anchorId={person.id}
+                  related={rel.person}
+                  role="spouse"
+                  canDetach={!!person.canEditDetails}
+                  onViewPerson={handleChipClick}
+                />
               ))}
             </div>
           </>
@@ -254,9 +274,14 @@ const PersonDrawer = ({
             <p className={styles.relGroupLabel}>Siblings</p>
             <div className={styles.chips}>
               {person.siblings.map(rel => (
-                <button key={rel.person.id} className={styles.chip} onClick={() => handleChipClick(rel.person)}>
-                  {rel.person.fullName}
-                </button>
+                <RelationshipChip
+                  key={rel.person.id}
+                  anchorId={person.id}
+                  related={rel.person}
+                  role="sibling"
+                  canDetach={!!person.canEditDetails}
+                  onViewPerson={handleChipClick}
+                />
               ))}
             </div>
           </>

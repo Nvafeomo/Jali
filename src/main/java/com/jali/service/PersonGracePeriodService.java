@@ -38,4 +38,14 @@ public class PersonGracePeriodService {
 							+ " days of adding them to the tree.");
 		}
 	}
+
+	public void requireWithinGracePeriodToRemoveLinks(Person person) {
+		if (!isWithinGracePeriod(person)) {
+			throw new ResponseStatusException(
+					HttpStatus.FORBIDDEN,
+					"Relationship links can only be removed within "
+							+ GRACE_DAYS
+							+ " days of adding this person to the tree.");
+		}
+	}
 }

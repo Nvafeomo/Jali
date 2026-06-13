@@ -114,4 +114,37 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 			@Param("fromUuid") String fromUuid,
 			@Param("toUuid") String toUuid,
 			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
+			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
+			MATCH (from)-[r:PARENT_OF]->(to)
+			DELETE r
+			""")
+	void deleteParentOfEdge(
+			@Param("fromUuid") String fromUuid,
+			@Param("toUuid") String toUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
+			MATCH (b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
+			MATCH (a)-[r:MARRIED_TO]-(b)
+			DELETE r
+			""")
+	void deleteMarriedToEdge(
+			@Param("aUuid") String aUuid,
+			@Param("bUuid") String bUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
+			MATCH (b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
+			MATCH (a)-[r:SIBLING_OF]-(b)
+			DELETE r
+			""")
+	void deleteSiblingOfEdge(
+			@Param("aUuid") String aUuid,
+			@Param("bUuid") String bUuid,
+			@Param("familyTreeId") Long familyTreeId);
 }

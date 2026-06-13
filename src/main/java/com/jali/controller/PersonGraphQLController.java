@@ -107,6 +107,18 @@ public class PersonGraphQLController {
 	}
 
 	@MutationMapping
+	public Boolean deleteRelationship(
+			@Argument String anchorUuid,
+			@Argument String fromUuid,
+			@Argument String toUuid,
+			@Argument String relationshipType,
+			@AuthenticationPrincipal UserPrincipal principal) {
+		relationshipService.delete(
+				anchorUuid, fromUuid, toUuid, relationshipType, principal.familyTreeId());
+		return true;
+	}
+
+	@MutationMapping
 	public Person addEvidence(
 			@Argument String fromUuid,
 			@Argument String toUuid,

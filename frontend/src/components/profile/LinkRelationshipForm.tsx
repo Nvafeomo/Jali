@@ -4,6 +4,7 @@ import { CREATE_RELATIONSHIP_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import type { Person } from '../../types';
 import { formatLifeYears } from '../../utils/vitalYears';
+import { toRelationshipMutationVars, type RelRole } from '../../utils/relationshipMutation';
 import styles from './LinkRelationshipForm.module.css';
 
 function graphQLErrorMessage(error: unknown): string {
@@ -19,8 +20,6 @@ function graphQLErrorMessage(error: unknown): string {
   return 'Could not create relationship.';
 }
 
-type RelRole = 'parent' | 'child' | 'spouse' | 'sibling';
-
 interface Props {
   person: Person;
   allPeople: Person[];
@@ -34,19 +33,6 @@ interface Props {
   onCancelLinkPick: () => void;
   onViewPerson: (person: Person) => void;
   onLinked: () => void;
-}
-
-function toMutationVars(anchorId: string, otherId: string, role: RelRole) {
-  switch (role) {
-    case 'parent':
-      return { fromUuid: otherId, toUuid: anchorId, relationshipType: 'PARENT_OF' };
-    case 'child':
-      return { fromUuid: anchorId, toUuid: otherId, relationshipType: 'PARENT_OF' };
-    case 'spouse':
-      return { fromUuid: anchorId, toUuid: otherId, relationshipType: 'MARRIED_TO' };
-    case 'sibling':
-      return { fromUuid: anchorId, toUuid: otherId, relationshipType: 'SIBLING_OF' };
-  }
 }
 
 function candidateLabel(person: Person, onTree: boolean): string {
@@ -104,7 +90,7 @@ const LinkRelationshipForm = ({
 
     try {
       const result = await linkPeople({
-        variables: toMutationVars(person.id, linkTargetId, role),
+        variables: toRelationshipMutationVars(person.id, linkTargetId, role),
       });
 
       if (result.error) {

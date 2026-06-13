@@ -136,7 +136,52 @@
 .vitalValue { color: var(--jali-text); }
 .living { color: var(--jali-confidence-high); font-weight: 500; }
 
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
+
+.chipWrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-width: 100%;
+}
+
+.chipInner {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.detachBtn {
+  background: none;
+  border: none;
+  color: var(--jali-text-subtle);
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.detachBtn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+.detachBtn:disabled { opacity: 0.5; cursor: wait; }
+
+.chipError {
+  display: block;
+  width: 100%;
+  font-size: 11px;
+  color: #f87171;
+  margin-top: 2px;
+}
+
+.relHint {
+  font-size: 11px;
+  color: var(--jali-text-subtle);
+  margin: 0 0 10px;
+}
 
 .relGroupLabel {
   font-size: 12px;
