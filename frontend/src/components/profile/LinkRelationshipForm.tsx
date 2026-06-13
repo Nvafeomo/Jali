@@ -182,6 +182,12 @@ const LinkRelationshipForm = ({
         </p>
       )}
 
+      <p className={styles.inferenceHint}>
+        Linking to a parent also connects you to their other children as siblings.
+        Linking to a sibling copies their known parents. Remove or adjust links in
+        Relationships if anything looks wrong.
+      </p>
+
       <label className={styles.label}>
         Relationship
         <select

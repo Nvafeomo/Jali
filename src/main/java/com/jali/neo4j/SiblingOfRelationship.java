@@ -26,6 +26,15 @@ public class SiblingOfRelationship {
 	private Double confidenceScore = 1.0;
 	private List<String> evidenceList = new ArrayList<>();
 
+	/** True when only one shared parent is known (stored for future queries; UI shows as sibling). */
+	private Boolean halfSibling = false;
+
+	/** Parent uuid when {@link #halfSibling} is true. */
+	private String sharedParentUuid;
+
+	/** Created automatically from parent/sibling inference, not by direct user action. */
+	private Boolean inferred = false;
+
 	public SiblingOfRelationship(Person sibling) {
 		this.sibling = sibling;
 		this.confidenceScore = 1.0;

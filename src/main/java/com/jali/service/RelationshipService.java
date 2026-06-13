@@ -14,16 +14,19 @@ public class RelationshipService {
 	private final PersonRepository personRepository;
 	private final RelationshipValidationService relationshipValidationService;
 	private final PersonGracePeriodService personGracePeriodService;
+	private final RelationshipInferenceService relationshipInferenceService;
 
 	public RelationshipService(
 			PersonGraphService personGraphService,
 			PersonRepository personRepository,
 			RelationshipValidationService relationshipValidationService,
-			PersonGracePeriodService personGracePeriodService) {
+			PersonGracePeriodService personGracePeriodService,
+			RelationshipInferenceService relationshipInferenceService) {
 		this.personGraphService = personGraphService;
 		this.personRepository = personRepository;
 		this.relationshipValidationService = relationshipValidationService;
 		this.personGracePeriodService = personGracePeriodService;
+		this.relationshipInferenceService = relationshipInferenceService;
 	}
 
 	@Transactional("neo4jTransactionManager")
@@ -51,9 +54,13 @@ public class RelationshipService {
 					}
 					personRepository.setParentRole(fromUuid, toUuid, familyTreeId, normalised);
 				}
+				relationshipInferenceService.afterParentLinked(fromUuid, toUuid, familyTreeId);
 			}
 			case "MARRIED_TO" -> personRepository.createMarriedToEdge(fromUuid, toUuid, familyTreeId);
-			case "SIBLING_OF" -> personRepository.createSiblingOfEdge(fromUuid, toUuid, familyTreeId);
+			case "SIBLING_OF" -> {
+				personRepository.createSiblingOfEdge(fromUuid, toUuid, familyTreeId);
+				relationshipInferenceService.afterSiblingLinked(fromUuid, toUuid, familyTreeId);
+			}
 			default -> throw new ResponseStatusException(
 					HttpStatus.BAD_REQUEST,
 					"Unknown relationship type. Use PARENT_OF, MARRIED_TO, or SIBLING_OF");

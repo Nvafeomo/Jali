@@ -30,6 +30,8 @@ export interface RelationshipEdge {
   evidenceList?: Evidence[];
   /** Only on PARENT_OF edges. "MOTHER" | "FATHER" | undefined. */
   parentRole?: 'MOTHER' | 'FATHER';
+  /** Only on SIBLING_OF edges; UI shows as sibling for now. */
+  halfSibling?: boolean;
 }
 
 // A story can be a voice memo (has audio) or a written memory (text only).

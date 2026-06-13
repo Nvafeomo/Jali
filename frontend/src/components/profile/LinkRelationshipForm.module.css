@@ -37,6 +37,13 @@
   border-radius: var(--jali-radius-sm);
 }
 
+.inferenceHint {
+  font-size: 11px;
+  color: var(--jali-text-subtle);
+  margin: 0;
+  line-height: 1.45;
+}
+
 .label {
   display: flex;
   flex-direction: column;

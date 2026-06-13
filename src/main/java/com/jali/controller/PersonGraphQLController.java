@@ -204,6 +204,7 @@ public class PersonGraphQLController {
 			edge.put("person", r.getSibling());
 			edge.put("confidenceScore", r.getConfidenceScore() != null ? r.getConfidenceScore() : 1.0);
 			edge.put("disputed", false);
+			edge.put("halfSibling", Boolean.TRUE.equals(r.getHalfSibling()));
 			return edge;
 		}).toList();
 	}

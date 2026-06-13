@@ -86,6 +86,74 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 			@Param("familyTreeId") Long familyTreeId);
 
 	@Query("""
+			MATCH (parent:Person {uuid: $parentUuid, familyTreeId: $familyTreeId})-[:PARENT_OF]->(child:Person)
+			WHERE child.uuid <> $excludeChildUuid
+			RETURN child.uuid
+			""")
+	List<String> findOtherChildUuidsByParent(
+			@Param("parentUuid") String parentUuid,
+			@Param("excludeChildUuid") String excludeChildUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (parent:Person)-[r:PARENT_OF]->(child:Person {uuid: $childUuid, familyTreeId: $familyTreeId})
+			RETURN parent.uuid AS parentUuid, r.parentRole AS parentRole
+			""")
+	List<ParentLinkRow> findParentLinksOfChild(
+			@Param("childUuid") String childUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (p:Person)-[:PARENT_OF]->(a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
+			MATCH (p)-[:PARENT_OF]->(b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
+			RETURN count(DISTINCT p)
+			""")
+	long countSharedParents(
+			@Param("aUuid") String aUuid,
+			@Param("bUuid") String bUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (a:Person {uuid: $uuid, familyTreeId: $familyTreeId})-[:SIBLING_OF]-(sibling:Person)
+			RETURN DISTINCT sibling.uuid
+			""")
+	List<String> findSiblingUuidsOf(
+			@Param("uuid") String uuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})
+			MATCH (b:Person {uuid: $bUuid, familyTreeId: $familyTreeId})
+			MATCH (a)-[r:SIBLING_OF]-(b)
+			SET r.halfSibling = $halfSibling, r.sharedParentUuid = $sharedParentUuid
+			""")
+	void updateSiblingHalfStatus(
+			@Param("aUuid") String aUuid,
+			@Param("bUuid") String bUuid,
+			@Param("familyTreeId") Long familyTreeId,
+			@Param("halfSibling") boolean halfSibling,
+			@Param("sharedParentUuid") String sharedParentUuid);
+
+	@Query("""
+			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
+			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
+			WHERE NOT EXISTS { (from)-[:SIBLING_OF]-(to) }
+			CREATE (from)-[:SIBLING_OF {
+				confidenceScore: 1.0,
+				halfSibling: $halfSibling,
+				sharedParentUuid: $sharedParentUuid,
+				inferred: $inferred
+			}]->(to)
+			""")
+	void createSiblingOfEdgeIfAbsent(
+			@Param("fromUuid") String fromUuid,
+			@Param("toUuid") String toUuid,
+			@Param("familyTreeId") Long familyTreeId,
+			@Param("halfSibling") boolean halfSibling,
+			@Param("sharedParentUuid") String sharedParentUuid,
+			@Param("inferred") boolean inferred);
+
+	@Query("""
 			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
 			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
 			CREATE (from)-[:PARENT_OF {confidenceScore: 0.10, disputed: false}]->(to)

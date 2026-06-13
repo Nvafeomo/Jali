@@ -9,6 +9,7 @@ interface RawEdge {
   confidenceScore: number;
   disputed: boolean;
   parentRole?: 'MOTHER' | 'FATHER';
+  halfSibling?: boolean;
 }
 
 interface RawPerson {
@@ -125,6 +126,7 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
         type: 'SIBLING_OF',
         confidenceScore: edge.confidenceScore,
         disputed: edge.disputed,
+        halfSibling: edge.halfSibling,
       };
       if (!person.siblings!.some(s => s.person.id === sibling.id)) {
         person.siblings!.push(forward);
@@ -135,6 +137,7 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
         type: 'SIBLING_OF',
         confidenceScore: edge.confidenceScore,
         disputed: edge.disputed,
+        halfSibling: edge.halfSibling,
       };
       if (!sibling.siblings!.some(s => s.person.id === person.id)) {
         sibling.siblings!.push(reverse);

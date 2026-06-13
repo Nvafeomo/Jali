@@ -37,6 +37,7 @@ type PersonEdge {
 	confidenceScore: Float
 	disputed: Boolean
 	parentRole: String
+	halfSibling: Boolean
 }
 
 input CreatePersonInput {
