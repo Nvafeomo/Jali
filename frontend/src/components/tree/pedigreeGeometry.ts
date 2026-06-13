@@ -1,6 +1,7 @@
 import type { InternalNode } from '@xyflow/react';
 import type { Person } from '../../types';
 import { edgeStyle } from './relationshipStyles';
+import { sortIdsByBirthOldestFirst } from './siblingOrder';
 
 /** Must match PersonNode.module.css width and treeLayout spacing. */
 export const LAYOUT_NODE_WIDTH = 110;
@@ -91,6 +92,7 @@ export function buildPedigreePaths(
 }
 
 export function groupPedigreeFamilies(people: Person[]): PedigreeGroup[] {
+  const byId = new Map(people.map(p => [p.id, p]));
   const groups = new Map<string, { parentIds: string[]; childIds: string[] }>();
 
   for (const child of people) {
@@ -113,7 +115,7 @@ export function groupPedigreeFamilies(people: Person[]): PedigreeGroup[] {
   return Array.from(groups.entries()).map(([key, group]) => ({
     key,
     parentIds: group.parentIds,
-    childIds: group.childIds.sort(),
+    childIds: sortIdsByBirthOldestFirst(group.childIds, byId),
     style: pedigreeGroupStyle(group.parentIds, group.childIds, people),
   }));
 }

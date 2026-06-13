@@ -11,6 +11,10 @@ import {
   NODE_HEIGHT,
   V_GAP,
 } from './spouseLayout';
+import {
+  collectSiblingBand,
+  comparePeopleByBirthOldestFirst,
+} from './siblingOrder';
 
 export interface LayoutNode {
   id: string;
@@ -80,26 +84,40 @@ function layoutGenerationRow(
   const nodes: LayoutNode[] = [];
   let rowCursor = 0;
 
+  const bands: Person[][] = [];
   for (const person of genPeople) {
     if (placed.has(person.id)) continue;
+    const band = collectSiblingBand(person, genIds, genPeople, byId);
+    band.forEach(p => placed.add(p.id));
+    bands.push(band);
+  }
 
-    const cluster = collectSpouseComponent(person, genIds, byId);
-    cluster.forEach(p => placed.add(p.id));
+  bands.sort((a, b) => comparePeopleByBirthOldestFirst(a[0]!, b[0]!));
 
-    const clusterPositions = layoutSpouseCluster(cluster);
-    const clusterWidth = clusterPixelWidth(clusterPositions);
+  const clusterPlaced = new Set<string>();
 
-    for (const { id, x } of clusterPositions) {
-      const p = byId.get(id);
-      if (!p) continue;
-      nodes.push({
-        id,
-        position: { x: rowCursor + x, y: genY },
-        data: p,
-      });
+  for (const band of bands) {
+    for (const person of band) {
+      if (clusterPlaced.has(person.id)) continue;
+
+      const cluster = collectSpouseComponent(person, genIds, byId);
+      cluster.forEach(p => clusterPlaced.add(p.id));
+
+      const clusterPositions = layoutSpouseCluster(cluster);
+      const clusterWidth = clusterPixelWidth(clusterPositions);
+
+      for (const { id, x } of clusterPositions) {
+        const p = byId.get(id);
+        if (!p) continue;
+        nodes.push({
+          id,
+          position: { x: rowCursor + x, y: genY },
+          data: p,
+        });
+      }
+
+      rowCursor += clusterWidth + H_GAP;
     }
-
-    rowCursor += clusterWidth + H_GAP;
   }
 
   if (nodes.length === 0) return nodes;
