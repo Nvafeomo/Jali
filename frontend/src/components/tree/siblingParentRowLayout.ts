@@ -26,13 +26,6 @@ interface SiblingRowItem {
   clusterWidth: number;
 }
 
-function shiftNodes(nodes: PositionedNode[], deltaX: number): void {
-  if (deltaX === 0) return;
-  for (const node of nodes) {
-    node.position.x += deltaX;
-  }
-}
-
 function childFootprint(nodes: PositionedNode[]): { min: number; max: number } | null {
   if (nodes.length === 0) return null;
   return {
@@ -80,40 +73,123 @@ function collectBranchParentPeople(
   );
 }
 
-function layoutParentUnitRow(
-  people: Person[],
-  startX: number,
-  genY: number,
-  genIds: Set<string>,
-  byId: Map<string, Person>,
-): PositionedNode[] {
-  const clusterPlaced = new Set<string>();
-  const nodes: PositionedNode[] = [];
-  let cursor = startX;
-
-  for (const person of people) {
-    if (clusterPlaced.has(person.id)) continue;
-
-    const cluster = collectSpouseComponent(person, genIds, byId);
-    cluster.forEach(p => clusterPlaced.add(p.id));
-
-    const clusterPositions = layoutSpouseCluster(cluster);
-    const clusterWidth = clusterPixelWidth(clusterPositions);
-
-    for (const { id, x } of clusterPositions) {
-      const p = byId.get(id);
-      if (!p) continue;
-      nodes.push({
-        id,
-        position: { x: cursor + x, y: genY },
-        data: p,
-      });
+function parentGroupCounts(
+  groups: PedigreeGroup[],
+  parentGen: number,
+  genMap: Map<string, number>,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const group of groups) {
+    for (const pid of group.parentIds) {
+      if ((genMap.get(pid) ?? -1) !== parentGen) continue;
+      counts.set(pid, (counts.get(pid) ?? 0) + 1);
     }
+  }
+  return counts;
+}
 
-    cursor += clusterWidth + H_GAP;
+function isLikelyFather(
+  person: Person,
+  childIds: Iterable<string>,
+  byId: Map<string, Person>,
+): boolean {
+  if (person.biologicalSex === 'MALE') return true;
+  for (const childId of childIds) {
+    const edge = byId.get(childId)?.parents?.find(p => p.person.id === person.id);
+    if (edge?.parentRole === 'FATHER') return true;
+  }
+  return false;
+}
+
+/** Parent shared by every child set, else the one in the most sets; prefer father, then branch anchor. */
+function findBranchHubParent(
+  anchorId: string,
+  groups: PedigreeGroup[],
+  parents: Person[],
+  parentGen: number,
+  genMap: Map<string, number>,
+  byId: Map<string, Person>,
+): Person {
+  const childIds = new Set<string>();
+  for (const group of groups) {
+    group.childIds.forEach(id => childIds.add(id));
   }
 
+  const counts = parentGroupCounts(groups, parentGen, genMap);
+  const totalGroups = groups.length;
+
+  const pickFrom = (candidates: Person[]): Person => {
+    const father = candidates.find(p => isLikelyFather(p, childIds, byId));
+    if (father) return father;
+    const anchor = candidates.find(p => p.id === anchorId);
+    if (anchor) return anchor;
+    return sortPeopleByBirthOldestFirst(candidates)[0]!;
+  };
+
+  const universal = parents.filter(p => (counts.get(p.id) ?? 0) === totalGroups);
+  if (universal.length > 0) return pickFrom(universal);
+
+  const maxCount = Math.max(...parents.map(p => counts.get(p.id) ?? 0));
+  const topTier = parents.filter(p => (counts.get(p.id) ?? 0) === maxCount);
+  return pickFrom(topTier);
+}
+
+function hubCenteredParentUnitWidth(parentCount: number): number {
+  if (parentCount <= 1) return LAYOUT_NODE_WIDTH;
+  const tiers = Math.ceil((parentCount - 1) / 2);
+  return LAYOUT_NODE_WIDTH + 2 * tiers * (LAYOUT_NODE_WIDTH + H_GAP);
+}
+
+/** Hub parent centered above children; other co-parents alternate left / right by birth order. */
+function layoutHubCenteredParentRow(
+  anchorId: string,
+  groups: PedigreeGroup[],
+  parents: Person[],
+  centerX: number,
+  parentGen: number,
+  genMap: Map<string, number>,
+  genY: number,
+  byId: Map<string, Person>,
+): PositionedNode[] {
+  if (parents.length === 0) return [];
+
+  const hub = findBranchHubParent(anchorId, groups, parents, parentGen, genMap, byId);
+  const flankers = sortPeopleByBirthOldestFirst(parents.filter(p => p.id !== hub.id));
+  const slot = LAYOUT_NODE_WIDTH + H_GAP;
+  const nodes: PositionedNode[] = [];
+
+  nodes.push({
+    id: hub.id,
+    position: { x: centerX - LAYOUT_NODE_WIDTH / 2, y: genY },
+    data: hub,
+  });
+
+  flankers.forEach((person, i) => {
+    const tier = Math.floor(i / 2) + 1;
+    const side = i % 2 === 0 ? -1 : 1;
+    nodes.push({
+      id: person.id,
+      position: { x: centerX + side * tier * slot - LAYOUT_NODE_WIDTH / 2, y: genY },
+      data: person,
+    });
+  });
+
   return nodes;
+}
+
+function branchParentCount(
+  anchorId: string,
+  byBranch: Map<string, PedigreeGroup[]>,
+  parentGen: number,
+  genMap: Map<string, number>,
+): number {
+  const ids = new Set<string>();
+  for (const group of byBranch.get(anchorId) ?? []) {
+    for (const pid of group.parentIds) {
+      if ((genMap.get(pid) ?? -1) === parentGen) ids.add(pid);
+    }
+  }
+  return ids.size;
 }
 
 function parentUnitWidth(
@@ -121,19 +197,11 @@ function parentUnitWidth(
   byBranch: Map<string, PedigreeGroup[]>,
   parentGen: number,
   genMap: Map<string, number>,
-  genIds: Set<string>,
-  byId: Map<string, Person>,
 ): number {
-  const parents = collectBranchParentPeople(anchorId, byBranch, parentGen, genMap, byId);
-  if (parents.length === 0) return 0;
-  const row = layoutParentUnitRow(parents, 0, 0, genIds, byId);
-  if (row.length === 0) return 0;
-  const minX = Math.min(...row.map(n => n.position.x));
-  const maxX = Math.max(...row.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
-  return maxX - minX;
+  return hubCenteredParentUnitWidth(branchParentCount(anchorId, byBranch, parentGen, genMap));
 }
 
-/** All branch co-parents in one row, centered above the branch child footprint. */
+/** Branch co-parents with the shared parent centered above the child footprint. */
 function layoutBranchParentUnit(
   anchorId: string,
   byBranch: Map<string, PedigreeGroup[]>,
@@ -141,20 +209,23 @@ function layoutBranchParentUnit(
   parentGen: number,
   genMap: Map<string, number>,
   genY: number,
-  genIds: Set<string>,
   byId: Map<string, Person>,
 ): PositionedNode[] {
+  const groups = byBranch.get(anchorId) ?? [];
   const parents = collectBranchParentPeople(anchorId, byBranch, parentGen, genMap, byId);
   const foot = childFootprint(childNodes);
   if (parents.length === 0 || !foot) return [];
 
-  const row = layoutParentUnitRow(parents, 0, genY, genIds, byId);
-  if (row.length === 0) return [];
-
-  const rowMin = Math.min(...row.map(n => n.position.x));
-  const rowMax = Math.max(...row.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
-  shiftNodes(row, (foot.min + foot.max) / 2 - (rowMin + rowMax) / 2);
-  return row;
+  return layoutHubCenteredParentRow(
+    anchorId,
+    groups,
+    parents,
+    (foot.min + foot.max) / 2,
+    parentGen,
+    genMap,
+    genY,
+    byId,
+  );
 }
 
 function buildSiblingRowItems(
@@ -195,7 +266,7 @@ function buildSiblingRowItems(
       cluster,
       childNodes,
       clusterWidth:
-        parentUnitWidth(rep.id, byBranch, parentGen, genMap, genIds, byId) ||
+        parentUnitWidth(rep.id, byBranch, parentGen, genMap) ||
         clusterPixelWidth(layoutSpouseCluster(cluster)),
     });
   }
@@ -209,7 +280,6 @@ function placeByBirthOrder(
   parentGen: number,
   genMap: Map<string, number>,
   genY: number,
-  genIds: Set<string>,
   byId: Map<string, Person>,
 ): PositionedNode[] {
   const sorted = [...items].sort((a, b) => comparePeopleByBirthOldestFirst(a.rep, b.rep));
@@ -228,7 +298,6 @@ function placeByBirthOrder(
         parentGen,
         genMap,
         genY,
-        genIds,
         byId,
       );
       nodes.push(...unitNodes);
@@ -275,7 +344,6 @@ function placeBySpacePacking(
   parentGen: number,
   genMap: Map<string, number>,
   genY: number,
-  genIds: Set<string>,
   byId: Map<string, Person>,
 ): PositionedNode[] {
   const nodes: PositionedNode[] = [];
@@ -306,7 +374,6 @@ function placeBySpacePacking(
       parentGen,
       genMap,
       genY,
-      genIds,
       byId,
     ),
   );
@@ -336,7 +403,6 @@ function placeBySpacePacking(
         parentGen,
         genMap,
         genY,
-        genIds,
         byId,
       ),
     );
@@ -368,7 +434,7 @@ export function layoutSiblingBandOnParentRow(
 
   const bandHasUnknownBirth = items.some(i => !hasKnownBirthYear(i.rep));
   if (!bandHasUnknownBirth) {
-    return placeByBirthOrder(items, byBranch, parentGen, genMap, genY, genIds, byId);
+    return placeByBirthOrder(items, byBranch, parentGen, genMap, genY, byId);
   }
-  return placeBySpacePacking(items, byBranch, parentGen, genMap, genY, genIds, byId);
+  return placeBySpacePacking(items, byBranch, parentGen, genMap, genY, byId);
 }
