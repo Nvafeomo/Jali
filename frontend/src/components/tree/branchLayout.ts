@@ -12,6 +12,7 @@ import {
   comparePeopleByBirthOldestFirst,
   sortPeopleByBirthOldestFirst,
 } from './siblingOrder';
+import { layoutSiblingBandOnParentRow } from './siblingParentRowLayout';
 
 export interface PositionedNode {
   id: string;
@@ -218,53 +219,18 @@ export function layoutParentGenerationByBranch(
   bands.sort((a, b) => comparePeopleByBirthOldestFirst(a[0]!, b[0]!));
 
   const allNodes: PositionedNode[] = [];
-  const clusterPlaced = new Set<string>();
-  let previousChildRight = -Infinity;
 
   for (const band of bands) {
-    for (const anchor of band) {
-      if (clusterPlaced.has(anchor.id)) continue;
-      // Co-parent-only people (e.g. a second mother not linked as spouse) are placed
-      // in the co-parent pass centered on their own children.
-      if (!byBranch.has(anchor.id)) continue;
-
-      const cluster = collectSpouseComponent(anchor, genIds, byId);
-      cluster.forEach(p => clusterPlaced.add(p.id));
-
-      const childIdSet = new Set<string>();
-      for (const group of byBranch.get(anchor.id) ?? []) {
-        group.childIds.forEach(id => childIdSet.add(id));
-      }
-
-      const childNodes = [...childIdSet]
-        .map(id => existingNodes.get(id))
-        .filter((n): n is PositionedNode => n != null);
-
-      const clusterPositions = layoutSpouseCluster(cluster);
-      const clusterWidth = clusterPixelWidth(clusterPositions);
-
-      let clusterLeft: number;
-      if (childNodes.length > 0) {
-        const childMin = Math.min(...childNodes.map(n => n.position.x));
-        const childMax = Math.max(...childNodes.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
-        const centerX = (childMin + childMax) / 2;
-        clusterLeft = centerX - clusterWidth / 2;
-        previousChildRight = childMax;
-      } else {
-        const afterX = previousChildRight > -Infinity ? previousChildRight + H_GAP : 0;
-        clusterLeft = afterX;
-      }
-
-      for (const { id, x } of clusterPositions) {
-        const p = byId.get(id);
-        if (!p) continue;
-        allNodes.push({
-          id,
-          position: { x: clusterLeft + x, y: genY },
-          data: p,
-        });
-      }
-    }
+    allNodes.push(
+      ...layoutSiblingBandOnParentRow(
+        band,
+        byBranch,
+        existingNodes,
+        genIds,
+        byId,
+        genY,
+      ),
+    );
   }
 
   const placedIds = new Set(allNodes.map(n => n.id));

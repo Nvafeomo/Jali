@@ -1,7 +1,11 @@
 import type { Person } from '../../types';
 import { birthYearFromStored } from '../../utils/vitalYears';
 
-/** Sort key for birth year; unknown births sort last (rightmost). */
+export function hasKnownBirthYear(person: Person): boolean {
+  return birthYearSortKey(person.birthDate) !== Number.MAX_SAFE_INTEGER;
+}
+
+/** Oldest first; unknown birth dates sort last (rightmost). */
 export function birthYearSortKey(birthDate?: string | null): number {
   const year = birthYearFromStored(birthDate ?? undefined);
   if (!year) return Number.MAX_SAFE_INTEGER;
