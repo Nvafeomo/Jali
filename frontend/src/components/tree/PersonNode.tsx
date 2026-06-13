@@ -29,6 +29,13 @@ function initials(name: string): string {
     .slice(0, 2);
 }
 
+function genderAvatarClass(sex?: string): string {
+  const s = sex?.toLowerCase();
+  if (s === 'male' || s === 'm') return styles.avatarMale;
+  if (s === 'female' || s === 'f') return styles.avatarFemale;
+  return '';
+}
+
 const PersonNode = ({ data, selected }: PersonNodeProps) => {
   const { linkPickTarget, linkPickDimmed, linkPickHover, ...person } = data;
   const life = formatLifeDisplay(
@@ -57,7 +64,7 @@ const PersonNode = ({ data, selected }: PersonNodeProps) => {
         className={styles.handle}
       />
 
-      <div className={styles.avatar}>
+      <div className={[styles.avatar, genderAvatarClass(person.biologicalSex)].join(' ')}>
         {person.isUnknownPlaceholder ? (
           <span className={styles.unknown}>?</span>
         ) : person.photoUrl ? (

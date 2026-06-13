@@ -59,6 +59,10 @@
   margin-bottom: 8px;
 }
 
+/* Gender accent — avatar background only, kept subtle */
+.avatarMale   { background: #1f4e52; } /* deep teal   */
+.avatarFemale { background: #5c3030; } /* deep terracotta */
+
 .photo {
   width: 100%;
   height: 100%;

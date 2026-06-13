@@ -27,6 +27,24 @@ const TreeLegend = () => (
     </section>
 
     <section className={styles.section}>
+      <p className={styles.heading}>Avatar colour (biological sex)</p>
+      <ul>
+        <li>
+          <span className={styles.swatch} style={{ background: '#1f4e52' }} />
+          Male
+        </li>
+        <li>
+          <span className={styles.swatch} style={{ background: '#5c3030' }} />
+          Female
+        </li>
+        <li>
+          <span className={styles.swatch} style={{ background: '#3b3b52' }} />
+          Not specified
+        </li>
+      </ul>
+    </section>
+
+    <section className={styles.section}>
       <p className={styles.heading}>Lines between people</p>
       <ul>
         <li>
