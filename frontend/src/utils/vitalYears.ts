@@ -91,8 +91,10 @@ export function formatLifeDisplay(
   }
 
   if (lifeStatus === 'alive') {
-    if (birthYear) return { primary: `b. ${birthYear}${approx}` };
-    return { primary: null, showLivingBadge: true };
+    return {
+      primary: birthYear ? `b. ${birthYear}${approx}` : null,
+      showLivingBadge: true,
+    };
   }
 
   // Deceased
