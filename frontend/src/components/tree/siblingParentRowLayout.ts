@@ -34,6 +34,15 @@ function childFootprint(nodes: PositionedNode[]): { min: number; max: number } |
   };
 }
 
+/** X center of the middle child in the laid-out row (hub parent aligns here). */
+export function middleChildCenterX(childNodes: PositionedNode[]): number | null {
+  if (childNodes.length === 0) return null;
+
+  const sorted = [...childNodes].sort((a, b) => a.position.x - b.position.x);
+  const middle = sorted[Math.floor((sorted.length - 1) / 2)]!;
+  return middle.position.x + LAYOUT_NODE_WIDTH / 2;
+}
+
 function placeSpouseClusterAt(
   cluster: Person[],
   clusterLeft: number,
@@ -221,7 +230,7 @@ function parentUnitWidth(
   return hubCenteredParentUnitWidth(branchParentCount(anchorId, byBranch, parentGen, genMap));
 }
 
-/** Branch co-parents with the shared parent centered above the child footprint. */
+/** Branch co-parents: hub parent above middle child, spouses flank left / right. */
 function layoutBranchParentUnit(
   anchorId: string,
   byBranch: Map<string, PedigreeGroup[]>,
@@ -233,14 +242,14 @@ function layoutBranchParentUnit(
 ): PositionedNode[] {
   const groups = byBranch.get(anchorId) ?? [];
   const parents = collectBranchParentPeople(anchorId, byBranch, parentGen, genMap, byId);
-  const foot = childFootprint(childNodes);
-  if (parents.length === 0 || !foot) return [];
+  const hubCenterX = middleChildCenterX(childNodes);
+  if (parents.length === 0 || hubCenterX == null) return [];
 
   return layoutHubCenteredParentRow(
     anchorId,
     groups,
     parents,
-    (foot.min + foot.max) / 2,
+    hubCenterX,
     parentGen,
     genMap,
     genY,

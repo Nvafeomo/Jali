@@ -13,7 +13,7 @@ import {
   hasKnownBirthYear,
   sortPeopleByBirthOldestFirst,
 } from './siblingOrder';
-import { layoutSiblingBandOnParentRow } from './siblingParentRowLayout';
+import { layoutSiblingBandOnParentRow, middleChildCenterX } from './siblingParentRowLayout';
 
 export interface PositionedNode {
   id: string;
@@ -317,7 +317,7 @@ export function layoutParentGenerationByBranch(
   for (const { person, childNodes } of coParentCandidates) {
     const childMin = Math.min(...childNodes.map(n => n.position.x));
     const childMax = Math.max(...childNodes.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
-    const centerX = (childMin + childMax) / 2;
+    const centerX = middleChildCenterX(childNodes) ?? (childMin + childMax) / 2;
 
     allNodes.push({
       id: person.id,

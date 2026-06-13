@@ -158,5 +158,10 @@ export function useMyTree() {
 
   const people: Person[] = data?.myTree ? mapToPersons(data.myTree) : [];
 
-  return { people, loading, error, refetch };
+  return {
+    people,
+    loading: loading && people.length === 0,
+    error,
+    refetch,
+  };
 }

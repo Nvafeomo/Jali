@@ -4,10 +4,8 @@ import {
   Background,
   Controls,
   MiniMap,
-  ReactFlowProvider,
   useNodesState,
   useEdgesState,
-  useReactFlow,
   type Node,
   type NodeMouseHandler,
 } from '@xyflow/react';
@@ -15,7 +13,7 @@ import '@xyflow/react/dist/style.css';
 
 import type { Person } from '../../types';
 import type { LinkPickState } from '../../types/linkPick';
-import { buildLayout, LAYOUT_VERSION } from './treeLayout';
+import { buildLayout } from './treeLayout';
 import PersonNode from './PersonNode';
 import PedigreeEdge from './PedigreeEdge';
 import MarriageEdge from './MarriageEdge';
@@ -35,73 +33,41 @@ interface FamilyTreeProps {
   onCancelLinkPick: () => void;
 }
 
-function layoutSignature(nodes: Node[]): string {
-  return nodes
-    .map(n => `${n.id}:${Math.round(n.position.x)}:${Math.round(n.position.y)}`)
-    .sort()
-    .join('|');
-}
-
-function FitViewOnLayoutChange({ layoutKey }: { layoutKey: string }) {
-  const { fitView } = useReactFlow();
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      fitView({ padding: 0.2, duration: 200 });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [layoutKey, fitView]);
-
-  return null;
-}
-
-interface FamilyTreeCanvasProps {
-  people: Person[];
-  unattached: Person[];
-  linkPick: LinkPickState | null;
-  anchorName: string | null;
-  onPersonSelect: (person: Person) => void;
-  onCancelLinkPick: () => void;
-}
-
-const FamilyTreeCanvas = ({
+const FamilyTree = ({
   people,
-  unattached,
+  unattached = [],
   linkPick,
   anchorName,
   onPersonSelect,
   onCancelLinkPick,
-}: FamilyTreeCanvasProps) => {
+}: FamilyTreeProps) => {
   const picking = linkPick?.picking ?? false;
   const linkTargetId = linkPick?.targetId ?? null;
 
-  const { nodes: initialNodes, edges: initialEdges, layoutKey } = useMemo(
+  const { nodes: initialNodes, edges: initialEdges } = useMemo(
     () => {
       const { nodes, edges } = buildLayout(people);
-      const flowNodes = nodes.map(n => {
-        const person = n.data as Person;
-        const isTarget = linkTargetId === n.id;
-        const isDimmed = picking && !isTarget;
-
-        return {
-          id: n.id,
-          type: 'person',
-          position: n.position,
-          draggable: false,
-          selected: isTarget,
-          data: {
-            ...person,
-            linkPickTarget: isTarget,
-            linkPickDimmed: isDimmed,
-            linkPickHover: picking,
-          },
-        };
-      }) as Node[];
-
       return {
-        nodes: flowNodes,
+        nodes: nodes.map(n => {
+          const person = n.data as Person;
+          const isTarget = linkTargetId === n.id;
+          const isDimmed = picking && !isTarget;
+
+          return {
+            id: n.id,
+            type: 'person',
+            position: n.position,
+            draggable: false,
+            selected: isTarget,
+            data: {
+              ...person,
+              linkPickTarget: isTarget,
+              linkPickDimmed: isDimmed,
+              linkPickHover: picking,
+            },
+          };
+        }) as Node[],
         edges,
-        layoutKey: `${LAYOUT_VERSION}:${layoutSignature(flowNodes)}`,
       };
     },
     [people, picking, linkTargetId],
@@ -139,7 +105,6 @@ const FamilyTreeCanvas = ({
       )}
 
       <ReactFlow
-        key={layoutKey}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -157,7 +122,6 @@ const FamilyTreeCanvas = ({
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
       >
-        <FitViewOnLayoutChange layoutKey={layoutKey} />
         <Background color="#334155" gap={20} />
         <Controls />
         <MiniMap
@@ -175,11 +139,5 @@ const FamilyTreeCanvas = ({
     </div>
   );
 };
-
-const FamilyTree = (props: FamilyTreeProps) => (
-  <ReactFlowProvider>
-    <FamilyTreeCanvas {...props} unattached={props.unattached ?? []} />
-  </ReactFlowProvider>
-);
 
 export default FamilyTree;
