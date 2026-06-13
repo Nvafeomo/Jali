@@ -101,7 +101,7 @@ function isLikelyFather(
   return false;
 }
 
-/** Parent shared by every child set, else the one in the most sets; prefer father, then branch anchor. */
+/** Branch owner centered above children; spouses flank left / right (most-shared first). */
 function findBranchHubParent(
   anchorId: string,
   groups: PedigreeGroup[],
@@ -110,6 +110,9 @@ function findBranchHubParent(
   genMap: Map<string, number>,
   byId: Map<string, Person>,
 ): Person {
+  const branchOwner = parents.find(p => p.id === anchorId);
+  if (branchOwner) return branchOwner;
+
   const childIds = new Set<string>();
   for (const group of groups) {
     group.childIds.forEach(id => childIds.add(id));
@@ -121,8 +124,6 @@ function findBranchHubParent(
   const pickFrom = (candidates: Person[]): Person => {
     const father = candidates.find(p => isLikelyFather(p, childIds, byId));
     if (father) return father;
-    const anchor = candidates.find(p => p.id === anchorId);
-    if (anchor) return anchor;
     return sortPeopleByBirthOldestFirst(candidates)[0]!;
   };
 
@@ -132,6 +133,20 @@ function findBranchHubParent(
   const maxCount = Math.max(...parents.map(p => counts.get(p.id) ?? 0));
   const topTier = parents.filter(p => (counts.get(p.id) ?? 0) === maxCount);
   return pickFrom(topTier);
+}
+
+function sortFlankers(
+  flankers: Person[],
+  groups: PedigreeGroup[],
+  parentGen: number,
+  genMap: Map<string, number>,
+): Person[] {
+  const counts = parentGroupCounts(groups, parentGen, genMap);
+  return [...flankers].sort((a, b) => {
+    const countDiff = (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0);
+    if (countDiff !== 0) return countDiff;
+    return comparePeopleByBirthOldestFirst(a, b);
+  });
 }
 
 function hubCenteredParentUnitWidth(parentCount: number): number {
@@ -154,7 +169,12 @@ function layoutHubCenteredParentRow(
   if (parents.length === 0) return [];
 
   const hub = findBranchHubParent(anchorId, groups, parents, parentGen, genMap, byId);
-  const flankers = sortPeopleByBirthOldestFirst(parents.filter(p => p.id !== hub.id));
+  const flankers = sortFlankers(
+    parents.filter(p => p.id !== hub.id),
+    groups,
+    parentGen,
+    genMap,
+  );
   const slot = LAYOUT_NODE_WIDTH + H_GAP;
   const nodes: PositionedNode[] = [];
 

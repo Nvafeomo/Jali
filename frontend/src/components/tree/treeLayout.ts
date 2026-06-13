@@ -279,6 +279,8 @@ function addPedigreeEdges(edges: LayoutEdge[], people: Person[]) {
   }
 }
 
+export const LAYOUT_VERSION = 3;
+
 export function buildLayout(people: Person[]): {
   nodes: LayoutNode[];
   edges: LayoutEdge[];
