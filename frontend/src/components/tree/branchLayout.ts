@@ -259,20 +259,27 @@ export function layoutParentGenerationByBranch(
   bands.sort((a, b) => comparePeopleByBirthOldestFirst(a[0]!, b[0]!));
 
   const allNodes: PositionedNode[] = [];
+  // Deduplicate across bands: a spouse-only band (e.g. Kadijah with no siblings)
+  // will re-process its spouse cluster including the sibling-band anchor (e.g. Khalifala)
+  // which was already correctly placed by the sibling band. Keep only first placement.
+  const placedNodeIds = new Set<string>();
 
   for (const band of bands) {
-    allNodes.push(
-      ...layoutSiblingBandOnParentRow(
-        band,
-        byBranch,
-        existingNodes,
-        genIds,
-        byId,
-        genY,
-        parentGen,
-        genMap,
-      ),
-    );
+    for (const node of layoutSiblingBandOnParentRow(
+      band,
+      byBranch,
+      existingNodes,
+      genIds,
+      byId,
+      genY,
+      parentGen,
+      genMap,
+    )) {
+      if (!placedNodeIds.has(node.id)) {
+        placedNodeIds.add(node.id);
+        allNodes.push(node);
+      }
+    }
   }
 
   const placedIds = new Set(allNodes.map(n => n.id));
