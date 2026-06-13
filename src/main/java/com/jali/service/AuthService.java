@@ -39,12 +39,13 @@ public class AuthService {
 
 	@Transactional
 	public AuthResponse register(RegisterRequest request) {
-		if (userRepository.existsByEmail(request.email())) {
+		String email = normalizeEmail(request.email());
+		if (userRepository.existsByEmail(email)) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
 		}
 
 		User user = new User(
-				request.email(),
+				email,
 				passwordEncoder.encode(request.password()),
 				Role.USER);
 		user = userRepository.save(user);
@@ -59,8 +60,10 @@ public class AuthService {
 				token, user.getId(), user.getEmail(), user.getRole().name(), familyTree.getId());
 	}
 
+	@Transactional
 	public AuthResponse login(LoginRequest request) {
-		User user = userRepository.findByEmail(request.email())
+		String email = normalizeEmail(request.email());
+		User user = userRepository.findByEmail(email)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
 		if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
@@ -68,8 +71,8 @@ public class AuthService {
 		}
 
 		FamilyTree familyTree = familyTreeRepository.findByOwnerId(user.getId())
-				.orElseThrow(() -> new ResponseStatusException(
-						HttpStatus.INTERNAL_SERVER_ERROR, "Family tree not found for user"));
+				.orElseGet(() -> familyTreeRepository.save(
+						new FamilyTree(user, defaultTreeName(user.getEmail()))));
 
 		String token = jwtService.generateToken(
 				user.getId(), user.getEmail(), user.getRole(), familyTree.getId());
@@ -118,5 +121,9 @@ public class AuthService {
 		int at = email.indexOf('@');
 		String localPart = at > 0 ? email.substring(0, at) : email;
 		return localPart + "'s family tree";
+	}
+
+	private static String normalizeEmail(String email) {
+		return email.trim().toLowerCase();
 	}
 }

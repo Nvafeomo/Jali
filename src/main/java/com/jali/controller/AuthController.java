@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.jali.dto.AuthResponse;
 import com.jali.dto.LoginRequest;
@@ -43,6 +44,9 @@ public class AuthController {
 
 	@GetMapping("/me")
 	public UserResponse me(@AuthenticationPrincipal UserPrincipal principal) {
+		if (principal == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+		}
 		return authService.getCurrentUser(principal);
 	}
 

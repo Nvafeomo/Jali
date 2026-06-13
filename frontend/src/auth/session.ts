@@ -31,6 +31,50 @@ export function getStoredEmail() {
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
+async function readApiError(res: Response, fallback: string): Promise<string> {
+  try {
+    const data = await res.json() as { detail?: string; message?: string; title?: string };
+    if (data.detail) return data.detail;
+    if (data.message) return data.message;
+  } catch {
+    // ignore non-JSON bodies
+  }
+  return fallback;
+}
+
+async function authRequest(
+  path: string,
+  body: object,
+  fallbackError: string,
+): Promise<AuthResponse> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error(
+      `Could not reach the server at ${API_URL}. Check that the backend is running and VITE_API_URL is correct.`,
+    );
+  }
+
+  if (!res.ok) {
+    const fallback =
+      res.status === 401
+        ? 'Incorrect email or password.'
+        : res.status === 409
+          ? 'An account with that email already exists.'
+          : res.status === 400
+            ? 'Check your email and password and try again.'
+            : fallbackError;
+    throw Object.assign(new Error(await readApiError(res, fallback)), { status: res.status });
+  }
+
+  return res.json() as Promise<AuthResponse>;
+}
+
 export async function fetchCurrentUser(): Promise<CurrentUser | null> {
   const token = getAuthToken();
   if (!token) return null;
@@ -59,29 +103,19 @@ export interface AuthResponse {
 
 // Centralised login/register so pages don't hardcode the API URL.
 export async function authLogin(email: string, password: string): Promise<AuthResponse> {
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  if (!res.ok) {
-    const status = res.status;
-    throw Object.assign(new Error(status === 401 ? 'Incorrect email or password.' : 'Something went wrong. Try again.'), { status });
-  }
-  return res.json() as Promise<AuthResponse>;
+  return authRequest(
+    '/auth/login',
+    { email: email.trim().toLowerCase(), password },
+    'Sign in failed. Try again.',
+  );
 }
 
 export async function authRegister(email: string, password: string): Promise<AuthResponse> {
-  const res = await fetch(`${API_URL}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  if (!res.ok) {
-    const status = res.status;
-    throw Object.assign(new Error(status === 409 ? 'An account with that email already exists.' : 'Something went wrong. Try again.'), { status });
-  }
-  return res.json() as Promise<AuthResponse>;
+  return authRequest(
+    '/auth/register',
+    { email: email.trim().toLowerCase(), password },
+    'Could not create account. Try again.',
+  );
 }
 
 export async function fetchCurrentUserEmail(): Promise<string | null> {

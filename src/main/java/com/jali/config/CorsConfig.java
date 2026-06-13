@@ -1,5 +1,6 @@
 package com.jali.config;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,7 +20,12 @@ public class CorsConfig {
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(parseOrigins(allowedOrigins));
+
+		List<String> patterns = new ArrayList<>(parseOrigins(allowedOrigins));
+		patterns.add("http://localhost:*");
+		patterns.add("https://*.vercel.app");
+		configuration.setAllowedOriginPatterns(patterns);
+
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setExposedHeaders(List.of("Authorization"));
