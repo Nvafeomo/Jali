@@ -15,6 +15,8 @@ import com.jali.repository.neo4j.PersonRepository;
  *       parent.</li>
  *   <li>Linking to a sibling copies that sibling's known parents onto the new
  *       person, which may trigger further sibling links per parent.</li>
+ *   <li>When a parent is added later, that parent is copied to existing full
+ *       siblings (not marked {@code halfSibling}) so the row stays connected.</li>
  *   <li>When two people share a second parent, any half-sibling edge between them
  *       is promoted to a full sibling ({@code halfSibling = false}).</li>
  * </ul>
@@ -41,17 +43,60 @@ public class RelationshipInferenceService {
 		for (String siblingUuid : relatedSiblings) {
 			refreshSiblingHalfFlag(childUuid, siblingUuid, familyTreeId);
 		}
+
+		syncParentsToFullSiblings(childUuid, familyTreeId);
 	}
 
 	public void afterSiblingLinked(String anchorUuid, String siblingUuid, Long familyTreeId) {
-		for (ParentLinkRow parentLink : personRepository.findParentLinksOfChild(siblingUuid, familyTreeId)) {
+		var siblingParents = personRepository.findParentLinksOfChild(siblingUuid, familyTreeId);
+		for (ParentLinkRow parentLink : siblingParents) {
 			inferParentLink(
 					parentLink.parentUuid(),
 					anchorUuid,
 					familyTreeId,
 					parentLink.parentRole());
 		}
+
+		markSiblingLinkHalfStatus(anchorUuid, siblingUuid, familyTreeId, siblingParents.size());
 		refreshSiblingHalfFlag(anchorUuid, siblingUuid, familyTreeId);
+	}
+
+	private void syncParentsToFullSiblings(String childUuid, Long familyTreeId) {
+		for (String siblingUuid : personRepository.findSiblingUuidsOf(childUuid, familyTreeId)) {
+			if (personRepository.isHalfSiblingEdge(childUuid, siblingUuid, familyTreeId)) {
+				continue;
+			}
+			for (ParentLinkRow parentLink : personRepository.findParentLinksOfChild(childUuid, familyTreeId)) {
+				inferParentLink(
+						parentLink.parentUuid(),
+						siblingUuid,
+						familyTreeId,
+						parentLink.parentRole());
+			}
+		}
+	}
+
+	/**
+	 * When linked via a sibling who only had one known parent, treat as half-sibling
+	 * so a second parent added later is not copied automatically.
+	 */
+	private void markSiblingLinkHalfStatus(
+			String anchorUuid,
+			String siblingUuid,
+			Long familyTreeId,
+			int siblingParentCountAtLink) {
+		if (!personRepository.hasSiblingBetween(anchorUuid, siblingUuid, familyTreeId)) {
+			return;
+		}
+		if (siblingParentCountAtLink >= 2) {
+			personRepository.updateSiblingHalfStatus(anchorUuid, siblingUuid, familyTreeId, false, null);
+			return;
+		}
+		if (siblingParentCountAtLink == 1) {
+			var parent = personRepository.findParentLinksOfChild(siblingUuid, familyTreeId).getFirst();
+			personRepository.updateSiblingHalfStatus(
+					anchorUuid, siblingUuid, familyTreeId, true, parent.parentUuid());
+		}
 	}
 
 	private void inferParentLink(

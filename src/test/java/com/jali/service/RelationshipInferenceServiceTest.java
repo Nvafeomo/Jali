@@ -63,6 +63,7 @@ class RelationshipInferenceServiceTest {
 		when(personRepository.findOtherChildUuidsByParent(eq("mother"), eq("anchor"), eq(TREE_ID)))
 				.thenReturn(List.of());
 		when(personRepository.findSiblingUuidsOf("anchor", TREE_ID)).thenReturn(List.of());
+		when(personRepository.hasSiblingBetween("anchor", "sibling", TREE_ID)).thenReturn(true);
 
 		inferenceService.afterSiblingLinked("anchor", "sibling", TREE_ID);
 
@@ -78,6 +79,7 @@ class RelationshipInferenceServiceTest {
 		when(personRepository.hasSiblingBetween("child", "sibling1", TREE_ID)).thenReturn(true);
 		when(personRepository.findSiblingUuidsOf("child", TREE_ID)).thenReturn(List.of("sibling1"));
 		when(personRepository.countSharedParents("child", "sibling1", TREE_ID)).thenReturn(1L);
+		when(personRepository.isHalfSiblingEdge("child", "sibling1", TREE_ID)).thenReturn(true);
 
 		inferenceService.afterParentLinked("parent", "child", TREE_ID);
 
@@ -94,6 +96,11 @@ class RelationshipInferenceServiceTest {
 		when(personRepository.hasSiblingBetween("child", "sibling1", TREE_ID)).thenReturn(true);
 		when(personRepository.findSiblingUuidsOf("child", TREE_ID)).thenReturn(List.of("sibling1"));
 		when(personRepository.countSharedParents("child", "sibling1", TREE_ID)).thenReturn(2L);
+		when(personRepository.isHalfSiblingEdge("child", "sibling1", TREE_ID)).thenReturn(false);
+		when(personRepository.findParentLinksOfChild("child", TREE_ID))
+				.thenReturn(List.of(new ParentLinkRow("mother", "MOTHER"), new ParentLinkRow("father", "FATHER")));
+		when(personRepository.hasDirectParentOf("mother", "sibling1", TREE_ID)).thenReturn(true);
+		when(personRepository.hasDirectParentOf("father", "sibling1", TREE_ID)).thenReturn(true);
 
 		inferenceService.afterParentLinked("father", "child", TREE_ID);
 
@@ -115,5 +122,41 @@ class RelationshipInferenceServiceTest {
 
 		verify(personRepository).createSiblingOfEdgeIfAbsent(
 				"child", "sibling1", TREE_ID, false, null, true);
+	}
+
+	@Test
+	void syncsNewParentsToFullSiblingsWhenChildGainsParentsLater() {
+		when(personRepository.findOtherChildUuidsByParent("father", "child", TREE_ID))
+				.thenReturn(List.of());
+		when(personRepository.findSiblingUuidsOf("child", TREE_ID)).thenReturn(List.of("sibling1"));
+		when(personRepository.isHalfSiblingEdge("child", "sibling1", TREE_ID)).thenReturn(false);
+		when(personRepository.findParentLinksOfChild("child", TREE_ID))
+				.thenReturn(List.of(new ParentLinkRow("mother", "MOTHER"), new ParentLinkRow("father", "FATHER")));
+		when(personRepository.hasDirectParentOf("mother", "sibling1", TREE_ID)).thenReturn(false);
+		when(personRepository.hasDirectParentOf("father", "sibling1", TREE_ID)).thenReturn(false);
+		when(personRepository.wouldCreateParentCycle(anyString(), eq("sibling1"), eq(TREE_ID))).thenReturn(false);
+		when(personRepository.hasSiblingBetween(anyString(), eq("sibling1"), eq(TREE_ID))).thenReturn(false);
+		when(personRepository.hasMarriageBetween(anyString(), eq("sibling1"), eq(TREE_ID))).thenReturn(false);
+		when(personRepository.findOtherChildUuidsByParent(eq("mother"), eq("sibling1"), eq(TREE_ID)))
+				.thenReturn(List.of());
+		when(personRepository.findOtherChildUuidsByParent(eq("father"), eq("sibling1"), eq(TREE_ID)))
+				.thenReturn(List.of());
+
+		inferenceService.afterParentLinked("father", "child", TREE_ID);
+
+		verify(personRepository).createParentOfEdge("mother", "sibling1", TREE_ID);
+		verify(personRepository).createParentOfEdge("father", "sibling1", TREE_ID);
+	}
+
+	@Test
+	void doesNotSyncSecondParentToHalfSibling() {
+		when(personRepository.findOtherChildUuidsByParent("father", "child", TREE_ID))
+				.thenReturn(List.of());
+		when(personRepository.findSiblingUuidsOf("child", TREE_ID)).thenReturn(List.of("sibling1"));
+		when(personRepository.isHalfSiblingEdge("child", "sibling1", TREE_ID)).thenReturn(true);
+
+		inferenceService.afterParentLinked("father", "child", TREE_ID);
+
+		verify(personRepository, never()).createParentOfEdge(eq("father"), eq("sibling1"), eq(TREE_ID));
 	}
 }

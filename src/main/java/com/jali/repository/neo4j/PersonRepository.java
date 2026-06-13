@@ -135,6 +135,15 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 			@Param("sharedParentUuid") String sharedParentUuid);
 
 	@Query("""
+			MATCH (a:Person {uuid: $aUuid, familyTreeId: $familyTreeId})-[r:SIBLING_OF]-(b:Person {uuid: $bUuid})
+			RETURN coalesce(r.halfSibling, false)
+			""")
+	boolean isHalfSiblingEdge(
+			@Param("aUuid") String aUuid,
+			@Param("bUuid") String bUuid,
+			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
 			MATCH (from:Person {uuid: $fromUuid, familyTreeId: $familyTreeId})
 			MATCH (to:Person {uuid: $toUuid, familyTreeId: $familyTreeId})
 			WHERE NOT EXISTS { (from)-[:SIBLING_OF]-(to) }
