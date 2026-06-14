@@ -8,10 +8,15 @@ interface Props {
   onSelect: (person: Person) => void;
 }
 
+const MAX_UNLINKED_VISIBLE = 150;
+
 const UnattachedPanel = ({ people, onSelect }: Props) => {
   const [collapsed, setCollapsed] = useState(false);
 
   if (people.length === 0) return null;
+
+  const visible = people.slice(0, MAX_UNLINKED_VISIBLE);
+  const hiddenCount = people.length - visible.length;
 
   return (
     <aside className={styles.panel} aria-label="Unlinked family members">
@@ -35,7 +40,7 @@ const UnattachedPanel = ({ people, onSelect }: Props) => {
             relationship, not name alone.
           </p>
           <ul className={styles.list}>
-            {people.map(person => {
+            {visible.map(person => {
               const dates = formatLifeYears(
                 person.birthDate,
                 person.deathDate,
@@ -56,6 +61,11 @@ const UnattachedPanel = ({ people, onSelect }: Props) => {
               );
             })}
           </ul>
+          {hiddenCount > 0 && (
+            <p className={styles.hint}>
+              + {hiddenCount.toLocaleString()} more unlinked — link people above to reduce this list.
+            </p>
+          )}
         </>
       )}
     </aside>

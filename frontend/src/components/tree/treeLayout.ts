@@ -15,6 +15,7 @@ import { resolveRowOverlaps } from './layoutSpacing';
 import {
   H_GAP,
   NODE_HEIGHT,
+  NODE_WIDTH,
   V_GAP,
   clusterPixelWidth,
   collectSpouseComponent,
@@ -84,6 +85,15 @@ function assignGenerations(people: Person[]): Map<string, number> {
   const byId = new Map(people.map(p => [p.id, p]));
   const genMap = new Map<string, number>();
 
+  const childrenByParent = new Map<string, Person[]>();
+  for (const person of people) {
+    for (const rel of person.parents ?? []) {
+      const list = childrenByParent.get(rel.person.id);
+      if (list) list.push(person);
+      else childrenByParent.set(rel.person.id, [person]);
+    }
+  }
+
   const hasParents = new Set<string>();
   people.forEach(p => {
     p.parents?.forEach(() => hasParents.add(p.id));
@@ -92,19 +102,21 @@ function assignGenerations(people: Person[]): Map<string, number> {
   const roots = people.filter(p => !hasParents.has(p.id));
   roots.forEach(p => genMap.set(p.id, 0));
 
+  const queued = new Set(roots.map(p => p.id));
   const queue = [...roots];
   while (queue.length > 0) {
     const current = queue.shift()!;
     const currentGen = genMap.get(current.id) ?? 0;
 
-    people
-      .filter(p => p.parents?.some(rel => rel.person.id === current.id))
-      .forEach(child => {
-        const existing = genMap.get(child.id) ?? -1;
-        const newGen = Math.max(existing, currentGen + 1);
-        genMap.set(child.id, newGen);
-        if (!queue.includes(child)) queue.push(child);
-      });
+    for (const child of childrenByParent.get(current.id) ?? []) {
+      const existing = genMap.get(child.id) ?? -1;
+      const newGen = Math.max(existing, currentGen + 1);
+      genMap.set(child.id, newGen);
+      if (!queued.has(child.id)) {
+        queued.add(child.id);
+        queue.push(child);
+      }
+    }
   }
 
   people.forEach(p => {
@@ -282,6 +294,59 @@ function addPedigreeEdges(edges: LayoutEdge[], people: Person[]) {
 }
 
 export const LAYOUT_VERSION = 6;
+
+/** Above this count, use a fast grid layout so the browser stays responsive. */
+export const LARGE_TREE_LAYOUT_THRESHOLD = 200;
+
+/** Simple row-major grid for very large trees (demo / stress data). */
+export function buildSimpleGridLayout(people: Person[]): {
+  nodes: LayoutNode[];
+  edges: LayoutEdge[];
+} {
+  const cols = Math.max(1, Math.ceil(Math.sqrt(people.length)));
+  const nodes: LayoutNode[] = people.map((person, index) => ({
+    id: person.id,
+    position: {
+      x: (index % cols) * (NODE_WIDTH + H_GAP),
+      y: Math.floor(index / cols) * (NODE_HEIGHT + V_GAP),
+    },
+    data: person,
+  }));
+
+  const edges: LayoutEdge[] = [];
+  const edgeSeen = new Set<string>();
+
+  for (const person of people) {
+    for (const rel of person.children ?? []) {
+      const key = `parent:${person.id}:${rel.person.id}`;
+      if (edgeSeen.has(key)) continue;
+      edgeSeen.add(key);
+      const style = edgeStyle('PARENT_OF', rel.confidenceScore, rel.disputed);
+      edges.push({
+        id: key,
+        source: person.id,
+        target: rel.person.id,
+        type: 'step',
+        animated: false,
+        selectable: false,
+        focusable: false,
+        data: {
+          relationshipType: 'PARENT_OF',
+          confidenceScore: rel.confidenceScore,
+          disputed: rel.disputed,
+        },
+        style,
+      });
+    }
+
+    for (const rel of person.spouses ?? []) {
+      addMarriageEdge(edges, edgeSeen, person.id, rel.person.id, rel);
+    }
+  }
+
+  centerAllNodes(nodes);
+  return { nodes, edges };
+}
 
 export function buildLayout(people: Person[]): {
   nodes: LayoutNode[];

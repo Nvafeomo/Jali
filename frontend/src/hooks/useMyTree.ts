@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { MY_TREE_QUERY } from '../graphql/queries';
 import type { Person, RelationshipEdge } from '../types';
@@ -158,8 +159,10 @@ export function useMyTree() {
     notifyOnNetworkStatusChange: true,
   });
 
-  // Never show cached tree data from a previous session when the fetch failed.
-  const people: Person[] = !error && data?.myTree ? mapToPersons(data.myTree) : [];
+  const people: Person[] = useMemo(
+    () => (!error && data?.myTree ? mapToPersons(data.myTree) : []),
+    [data?.myTree, error],
+  );
 
   return {
     people,
