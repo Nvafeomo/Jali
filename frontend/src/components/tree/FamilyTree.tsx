@@ -15,8 +15,6 @@ import type { Person } from '../../types';
 import type { LinkPickState } from '../../types/linkPick';
 import {
   buildLayout,
-  buildSimpleGridLayout,
-  LARGE_TREE_LAYOUT_THRESHOLD,
   type LayoutEdge,
 } from './treeLayout';
 import PersonNode from './PersonNode';
@@ -76,7 +74,6 @@ const FamilyTree = ({
   const linkTargetId = linkPick?.targetId ?? null;
 
   const [layouting, setLayouting] = useState(true);
-  const [usedSimpleLayout, setUsedSimpleLayout] = useState(false);
   const [initialNodes, setInitialNodes] = useState<Node[]>([]);
   const [initialEdges, setInitialEdges] = useState<LayoutEdge[]>([]);
 
@@ -84,21 +81,21 @@ const FamilyTree = ({
     setLayouting(true);
     let cancelled = false;
 
-    const timer = window.setTimeout(() => {
+    const runLayout = () => {
       if (cancelled) return;
 
-      const useSimple = people.length > LARGE_TREE_LAYOUT_THRESHOLD;
-      const { nodes, edges } = useSimple
-        ? buildSimpleGridLayout(people)
-        : buildLayout(people);
+      const { nodes, edges } = buildLayout(people);
 
       if (cancelled) return;
 
-      setUsedSimpleLayout(useSimple);
       setInitialNodes(mapLayoutNodes(nodes, picking, linkTargetId));
       setInitialEdges(edges);
       setLayouting(false);
-    }, 0);
+    };
+
+    // Yield so the arranging overlay paints before heavy layout work.
+    const delay = people.length > 300 ? 16 : 0;
+    const timer = window.setTimeout(runLayout, delay);
 
     return () => {
       cancelled = true;
@@ -131,12 +128,6 @@ const FamilyTree = ({
         <div className={styles.layoutOverlay} role="status">
           <div className={styles.layoutSpinner} aria-hidden />
           <p>Arranging {people.length.toLocaleString()} people…</p>
-        </div>
-      )}
-
-      {usedSimpleLayout && !layouting && (
-        <div className={styles.largeTreeBanner} role="status">
-          Large tree — showing simplified grid layout for performance.
         </div>
       )}
 

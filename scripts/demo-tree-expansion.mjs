@@ -1,8 +1,8 @@
 /**
- * Expands the core Kouyaté demo tree to 100 people:
- * - Aminata's France diaspora branch
- * - Spouses and children for gen-3 members
- * - Gen 5 great-grandchildren
+ * Expands the core Kouyaté demo tree:
+ * - Aminata's France diaspora branch, gen-3/4/5 families (structured)
+ * - For targets > 100: grow new branches downward (couples → children → spouses)
+ *   instead of dumping hundreds of siblings under one parent pair.
  */
 
 const ETHNIC = ['Mandinka', 'Fula', 'Vai', 'Bambara', 'Wolof'];
@@ -18,6 +18,12 @@ const CITIES = [
   'Lyon, France',
 ];
 
+const MALE_NAMES = ['Mamadu', 'Ousmane', 'Ibrahim', 'Lamin', 'Modibo', 'Sekou', 'Alpha', 'Saidu', 'Bakary', 'Karamo'];
+const FEMALE_NAMES = ['Fatoumata', 'Aminata', 'Kadiatou', 'Hawa', 'Mariama', 'Bintou', 'Ramata', 'Awa', 'Fatou', 'Khady'];
+
+/** Max children per couple — keeps each generation row layout-friendly. */
+const MAX_CHILDREN_PER_COUPLE = 4;
+
 function person(key, fullName, bio, birthDate, sex, opts = {}) {
   return {
     key,
@@ -29,6 +35,107 @@ function person(key, fullName, bio, birthDate, sex, opts = {}) {
     ethnicGroup: opts.ethnicGroup ?? 'Mandinka',
     biologicalSex: sex,
   };
+}
+
+function coupleId(father, mother) {
+  return `${father}|${mother ?? ''}`;
+}
+
+/** Collect married / co-parent pairs that can grow downward. */
+function buildCouplePool(rels) {
+  const pool = [];
+  const seen = new Set();
+
+  const addCouple = (father, mother) => {
+    const id = coupleId(father, mother);
+    if (seen.has(id)) return;
+    seen.add(id);
+    pool.push({ father, mother, id, childCount: 0 });
+  };
+
+  for (const rel of rels) {
+    if (rel.type === 'MARRIED_TO') {
+      addCouple(rel.from, rel.to);
+    }
+  }
+
+  // Core gen-2 branch heads (may already appear via MARRIED_TO in core rels).
+  addCouple('amadou_g2', 'hawa_g2');
+  addCouple('bakary_g2', 'adama_g2');
+  addCouple('sekou_g2', 'nene_g2');
+  addCouple('ibrahim_g1', 'mariama_g1');
+
+  return pool;
+}
+
+/** Grow toward target by adding children to couples, then spouses + new couples. */
+function growGenerationalBranches(coreCount, people, rels, add, parent, marry, targetTotal) {
+  const pool = buildCouplePool(rels);
+  if (pool.length === 0) {
+    throw new Error('No couples available for generational expansion');
+  }
+
+  let n = 1;
+  let poolIdx = 0;
+  let passesWithoutAdd = 0;
+
+  while (coreCount + people.length < targetTotal) {
+    const couple = pool[poolIdx % pool.length];
+    poolIdx++;
+
+    if (couple.childCount >= MAX_CHILDREN_PER_COUPLE) {
+      passesWithoutAdd++;
+      if (passesWithoutAdd > pool.length * MAX_CHILDREN_PER_COUPLE) {
+        throw new Error('Ran out of couple capacity before reaching target person count');
+      }
+      continue;
+    }
+    passesWithoutAdd = 0;
+
+    const isFemale = n % 2 === 0;
+    const firstName = (isFemale ? FEMALE_NAMES : MALE_NAMES)[n % 10];
+    const key = `ext_${n}`;
+    const birthYear = String(1962 + (n % 58));
+
+    add(
+      person(
+        key,
+        `${firstName} Kouyaté ${n}`,
+        `Extended family member ${n} — ${isFemale ? 'daughter' : 'son'} in a diaspora branch.`,
+        birthYear,
+        isFemale ? 'FEMALE' : 'MALE',
+        { birthplace: CITIES[n % CITIES.length], ethnicGroup: ETHNIC[n % ETHNIC.length] },
+      ),
+    );
+    parent(couple.father, couple.mother, key);
+    couple.childCount++;
+
+    // Every 2nd child: add spouse and register a new couple for the next generation down.
+    if (n % 2 === 0 && coreCount + people.length < targetTotal) {
+      const spKey = `ext_sp_${n}`;
+      const spFemale = !isFemale;
+      const spName = (spFemale ? FEMALE_NAMES : MALE_NAMES)[(n + 3) % 10];
+      add(
+        person(
+          spKey,
+          `${spName} Kouyaté`,
+          `Spouse of ${firstName} Kouyaté ${n}.`,
+          String(Number(birthYear) + 1),
+          spFemale ? 'FEMALE' : 'MALE',
+          { birthplace: CITIES[(n + 2) % CITIES.length], ethnicGroup: ETHNIC[(n + 1) % ETHNIC.length] },
+        ),
+      );
+      marry(key, spKey);
+      pool.push({
+        father: isFemale ? spKey : key,
+        mother: isFemale ? key : spKey,
+        id: coupleId(isFemale ? spKey : key, isFemale ? key : spKey),
+        childCount: 0,
+      });
+    }
+
+    n++;
+  }
 }
 
 export function buildExpansion(coreCount, target = 100) {
@@ -281,21 +388,8 @@ export function buildExpansion(coreCount, target = 100) {
   parent('mariam_cousin_g3', null, 'safiatou_g4_c');
 
   const targetTotal = target;
-  let n = 1;
-  while (coreCount + people.length < targetTotal) {
-    const key = `cousin_fill_${n}`;
-    add(
-      person(
-        key,
-        `Mamadu Kouyaté ${n}`,
-        `Extended cousin ${n} in the diaspora network.`,
-        String(1975 + (n % 25)),
-        n % 2 === 0 ? 'FEMALE' : 'MALE',
-        { birthplace: CITIES[n % CITIES.length], ethnicGroup: ETHNIC[n % ETHNIC.length] },
-      ),
-    );
-    parent('ibrahim_g1', 'mariama_g1', key);
-    n++;
+  if (coreCount + people.length < targetTotal) {
+    growGenerationalBranches(coreCount, people, rels, add, parent, marry, targetTotal);
   }
 
   if (coreCount + people.length !== targetTotal) {

@@ -126,8 +126,11 @@ function assignGenerations(people: Person[]): Map<string, number> {
   // When someone gains a parent, their spouses must move down to the same row;
   // then re-push children so they stay one generation below their parents.
   let changed = true;
-  while (changed) {
+  let iterations = 0;
+  const maxIterations = people.length > 300 ? 24 : 48;
+  while (changed && iterations < maxIterations) {
     changed = false;
+    iterations++;
 
     const visited = new Set<string>();
     for (const person of people) {

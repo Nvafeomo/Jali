@@ -1,4 +1,4 @@
-/** Demo Kouyaté family — 5 generations, 1000 people, Mandinka / West African diaspora. */
+/** Demo Kouyaté family — 5 generations, up to 1000 people, Mandinka / West African diaspora. */
 
 import { buildExpansion } from './demo-tree-expansion.mjs';
 

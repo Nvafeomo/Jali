@@ -194,6 +194,7 @@ async function main() {
 
   if (existing >= DEMO_PERSON_COUNT) {
     console.log(`Tree has ${existing} people — linking relationships only.`);
+    console.log('If the tree layout looks wrong (flat grid), use a fresh DEMO_EMAIL and re-seed.');
     const byKey = await fetchPeopleByName(token);
     uuidByKey = new Map();
     for (const person of PEOPLE) {
