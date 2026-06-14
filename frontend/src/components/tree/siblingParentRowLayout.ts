@@ -396,7 +396,6 @@ function placeBySpacePacking(
   const hub = withChildren.reduce((best, item) =>
     item.childNodes.length > best.childNodes.length ? item : best,
   );
-  const hubFoot = childFootprint(hub.childNodes)!;
 
   nodes.push(
     ...layoutBranchParentUnit(
