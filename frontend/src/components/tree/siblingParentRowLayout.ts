@@ -410,7 +410,11 @@ function placeBySpacePacking(
     ),
   );
 
-  let leftCursor = hubFoot.min - H_GAP;
+  // Childless siblings must clear ALL placed parents, not just the hub.
+  // E.g. if Nvasiki (withChildren) has children starting at x=0, a childless sibling
+  // placed at hubFoot.min-H_GAP would land on top of Nvasiki. Use the global min.
+  const allChildrenMinX = Math.min(...withChildren.map(i => childFootprint(i.childNodes)!.min));
+  let leftCursor = allChildrenMinX - H_GAP;
   for (const item of sortPeopleByBirthOldestFirst(childless.map(i => i.rep)).map(rep =>
     childless.find(i => i.rep.id === rep.id)!,
   )) {
