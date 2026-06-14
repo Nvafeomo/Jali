@@ -14,8 +14,8 @@
 import { DEMO_TREE_NAME, DEMO_PERSON_COUNT, PEOPLE, RELATIONSHIPS } from './demo-tree-data.mjs';
 
 const API_URL = (process.env.API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
-const DEMO_EMAIL = process.env.DEMO_EMAIL ?? 'demo@jali.app';
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? 'DemoTree2026!';
+const DEMO_EMAIL = process.env.DEMO_EMAIL ?? 'demo100@gmail.com';
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? 'demo100@';
 
 async function jsonFetch(path, { method = 'GET', body, token } = {}) {
   const res = await fetch(`${API_URL}${path}`, {
@@ -63,12 +63,13 @@ async function auth() {
   try {
     const created = await jsonFetch('/auth/register', {
       method: 'POST',
-      body: { email: DEMO_EMAIL, password: DEMO_PASSWORD },
+      body: { email: DEMO_EMAIL, password: DEMO_PASSWORD, termsAccepted: true },
     });
     console.log(`Registered ${DEMO_EMAIL}`);
     return created.token;
   } catch (err) {
-    if (!String(err.message).includes('409') && !String(err.message).toLowerCase().includes('already')) {
+    const msg = String(err.message);
+    if (!msg.includes('409') && !msg.toLowerCase().includes('already')) {
       throw err;
     }
     console.log(`Account exists — logging in as ${DEMO_EMAIL}`);

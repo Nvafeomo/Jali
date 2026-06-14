@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ import com.jali.repository.neo4j.PersonRepository;
 
 @Service
 public class PersonGraphService {
+
+	private static final Logger log = LoggerFactory.getLogger(PersonGraphService.class);
 
 	private static final int MIN_TRAVERSAL_DEPTH = 1;
 	private static final int MAX_TRAVERSAL_DEPTH = 20;
@@ -48,14 +52,19 @@ public class PersonGraphService {
 	 * inserted belong to the current account.
 	 */
 	public void purgeStaleNodes(Long familyTreeId, Instant treeCreatedAt) {
-		neo4jClient.query("""
-				MATCH (p:Person {familyTreeId: $familyTreeId})
-				WHERE p.createdAt IS NULL OR p.createdAt < $treeCreatedAt
-				DETACH DELETE p
-				""")
-				.bind(familyTreeId).to("familyTreeId")
-				.bind(treeCreatedAt).to("treeCreatedAt")
-				.run();
+		try {
+			neo4jClient.query("""
+					MATCH (p:Person {familyTreeId: $familyTreeId})
+					WHERE p.createdAt IS NULL OR p.createdAt < $treeCreatedAt
+					DETACH DELETE p
+					""")
+					.bind(familyTreeId).to("familyTreeId")
+					.bind(treeCreatedAt).to("treeCreatedAt")
+					.run();
+		}
+		catch (Exception ex) {
+			log.warn("Could not purge stale Neo4j nodes for familyTreeId={}: {}", familyTreeId, ex.getMessage());
+		}
 	}
 
 	public Person requireInTree(String uuid, Long familyTreeId) {
