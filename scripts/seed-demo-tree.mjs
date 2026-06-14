@@ -138,34 +138,27 @@ async function renameTree(token, name) {
   });
 }
 
-async function main() {
-  console.log(`API: ${API_URL}`);
-  const token = await auth();
-
-  const existing = await treeHasPeople(token);
-  if (existing >= DEMO_PERSON_COUNT) {
-    console.log(`Tree already has ${existing} people (target ${DEMO_PERSON_COUNT}) — skipping.`);
-    console.log(`Login: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
-    return;
+async function fetchPeopleByName(token) {
+  const data = await gql(
+    token,
+    `query { myTree { uuid fullName birthDate } }`,
+  );
+  const byKey = new Map();
+  for (const person of data.myTree ?? []) {
+    const lookup = `${person.fullName}\0${person.birthDate ?? ''}`;
+    if (byKey.has(lookup)) {
+      throw new Error(`Duplicate person in tree: ${person.fullName} (${person.birthDate ?? 'no birthDate'})`);
+    }
+    byKey.set(lookup, person.uuid);
   }
-  if (existing > 0) {
-    console.error(
-      `Tree has ${existing} people but this script seeds ${DEMO_PERSON_COUNT} on a fresh account.`,
-    );
-    console.error('Use a new DEMO_EMAIL or delete the existing tree before re-seeding.');
-    process.exit(1);
-  }
+  return byKey;
+}
 
-  console.log(`Creating ${PEOPLE.length} people…`);
-  const uuidByKey = new Map();
+function personLookupKey(person) {
+  return `${person.fullName}\0${person.birthDate ?? ''}`;
+}
 
-  for (const person of PEOPLE) {
-    const uuid = await createPerson(token, person);
-    uuidByKey.set(person.key, uuid);
-    process.stdout.write('.');
-  }
-  console.log(' done');
-
+async function linkRelationships(token, uuidByKey) {
   console.log(`Linking ${RELATIONSHIPS.length} relationships…`);
   const typeOrder = { PARENT_OF: 0, MARRIED_TO: 1, SIBLING_OF: 2 };
   const sortedRels = [...RELATIONSHIPS].sort(
@@ -190,8 +183,48 @@ async function main() {
     process.stdout.write('.');
   }
   console.log(' done');
+}
 
-  await renameTree(token, DEMO_TREE_NAME);
+async function main() {
+  console.log(`API: ${API_URL}`);
+  const token = await auth();
+
+  const existing = await treeHasPeople(token);
+  let uuidByKey;
+
+  if (existing >= DEMO_PERSON_COUNT) {
+    console.log(`Tree has ${existing} people — linking relationships only.`);
+    const byKey = await fetchPeopleByName(token);
+    uuidByKey = new Map();
+    for (const person of PEOPLE) {
+      const uuid = byKey.get(personLookupKey(person));
+      if (!uuid) {
+        throw new Error(`Person missing from tree: ${person.fullName} (${person.birthDate ?? 'no birthDate'})`);
+      }
+      uuidByKey.set(person.key, uuid);
+    }
+    await linkRelationships(token, uuidByKey);
+    await renameTree(token, DEMO_TREE_NAME);
+  } else if (existing > 0) {
+    console.error(
+      `Tree has ${existing} people but this script seeds ${DEMO_PERSON_COUNT} on a fresh account.`,
+    );
+    console.error('Use a new DEMO_EMAIL or delete the existing tree before re-seeding.');
+    process.exit(1);
+  } else {
+    console.log(`Creating ${PEOPLE.length} people…`);
+    uuidByKey = new Map();
+
+    for (const person of PEOPLE) {
+      const uuid = await createPerson(token, person);
+      uuidByKey.set(person.key, uuid);
+      process.stdout.write('.');
+    }
+    console.log(' done');
+
+    await linkRelationships(token, uuidByKey);
+    await renameTree(token, DEMO_TREE_NAME);
+  }
 
   console.log('\nDemo tree ready.');
   console.log(`  Email:    ${DEMO_EMAIL}`);
