@@ -8,6 +8,7 @@ type Query {
 type Mutation {
 	createPerson(input: CreatePersonInput!): Person
 	updatePerson(uuid: String!, input: UpdatePersonInput!): Person
+	deletePerson(uuid: String!): Boolean
 	createRelationship(fromUuid: String!, toUuid: String!, relationshipType: String!, parentRole: String): Boolean
 	deleteRelationship(anchorUuid: String!, fromUuid: String!, toUuid: String!, relationshipType: String!): Boolean
 	updateParentRole(fromUuid: String!, toUuid: String!, parentRole: String): Boolean
@@ -27,6 +28,7 @@ type Person {
 	isUnknownPlaceholder: Boolean
 	createdAt: String
 	canEditDetails: Boolean
+	canDelete: Boolean
 	children: [PersonEdge]
 	spouses: [PersonEdge]
 	siblings: [PersonEdge]

@@ -15,6 +15,7 @@ export interface Person {
   photoUrl?: string;
   createdAt?: string;
   canEditDetails?: boolean;
+  canDelete?: boolean;
   parents?: RelationshipEdge[];
   children?: RelationshipEdge[];
   spouses?: RelationshipEdge[];

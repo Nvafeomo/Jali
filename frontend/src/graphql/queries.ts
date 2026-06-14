@@ -23,6 +23,7 @@ export const MY_TREE_QUERY = gql`
       isUnknownPlaceholder
       createdAt
       canEditDetails
+      canDelete
       children {
         person {
           uuid

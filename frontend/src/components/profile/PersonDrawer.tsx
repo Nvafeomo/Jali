@@ -26,6 +26,7 @@ interface Props {
   onLinked: () => void;
   onPersonSelect: (person: Person) => void;
   onClose: () => void;
+  onDeleted?: () => void;
 }
 
 function confidenceLabel(score: number): { label: string; cls: string } {
@@ -102,6 +103,7 @@ const PersonDrawer = ({
   onLinked,
   onPersonSelect,
   onClose,
+  onDeleted,
 }: Props) => {
   const { label: scoreLabel, cls: scoreCls } = confidenceLabel(person.confidenceScore);
 
@@ -145,7 +147,7 @@ const PersonDrawer = ({
       </div>
 
       {person.canEditDetails ? (
-        <PersonProfileEditor person={person} />
+        <PersonProfileEditor person={person} onDeleted={onDeleted} />
       ) : (
         <>
           <p className={lockedStyles.lockedNotice}>

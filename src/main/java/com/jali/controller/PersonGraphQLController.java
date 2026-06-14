@@ -92,6 +92,14 @@ public class PersonGraphQLController {
 	}
 
 	@MutationMapping
+	public Boolean deletePerson(
+			@Argument String uuid,
+			@AuthenticationPrincipal UserPrincipal principal) {
+		personGraphService.deletePerson(uuid, principal.familyTreeId());
+		return true;
+	}
+
+	@MutationMapping
 	public Boolean createRelationship(
 			@Argument String fromUuid,
 			@Argument String toUuid,
@@ -146,6 +154,11 @@ public class PersonGraphQLController {
 
 	@SchemaMapping(typeName = "Person", field = "canEditDetails")
 	public boolean canEditDetails(Person person) {
+		return personGracePeriodService.isWithinGracePeriod(person);
+	}
+
+	@SchemaMapping(typeName = "Person", field = "canDelete")
+	public boolean canDelete(Person person) {
 		return personGracePeriodService.isWithinGracePeriod(person);
 	}
 

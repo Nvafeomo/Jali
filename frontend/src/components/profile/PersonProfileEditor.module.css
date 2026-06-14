@@ -110,6 +110,27 @@
   cursor: not-allowed;
 }
 
+.deleteBtn {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid #7f1d1d;
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: rgba(127, 29, 29, 0.25);
+}
+
+.deleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .lockedNotice {
   padding: 12px 0 16px;
   border-bottom: 1px solid var(--jali-bg);

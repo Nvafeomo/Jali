@@ -277,6 +277,7 @@ const TreePage = () => {
               onLinked={handleLinked}
               onPersonSelect={handlePersonSelect}
               onClose={handleCloseDrawer}
+              onDeleted={handleCloseDrawer}
             />
           </aside>
         )}

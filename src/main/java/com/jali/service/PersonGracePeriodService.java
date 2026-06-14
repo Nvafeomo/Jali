@@ -48,4 +48,14 @@ public class PersonGracePeriodService {
 							+ " days of adding this person to the tree.");
 		}
 	}
+
+	public void requireWithinGracePeriodToDelete(Person person) {
+		if (!isWithinGracePeriod(person)) {
+			throw new ResponseStatusException(
+					HttpStatus.FORBIDDEN,
+					"People can only be deleted within "
+							+ GRACE_DAYS
+							+ " days of adding them to the tree.");
+		}
+	}
 }

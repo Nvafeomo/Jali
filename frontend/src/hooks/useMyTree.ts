@@ -25,6 +25,7 @@ interface RawPerson {
   isUnknownPlaceholder: boolean;
   createdAt?: string;
   canEditDetails?: boolean;
+  canDelete?: boolean;
   children: RawEdge[];
   spouses: RawEdge[];
   siblings: RawEdge[];
@@ -54,6 +55,7 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
       isUnknownPlaceholder: raw.isUnknownPlaceholder ?? false,
       createdAt: raw.createdAt ?? undefined,
       canEditDetails: raw.canEditDetails ?? false,
+      canDelete: raw.canDelete ?? false,
       children: [],
       parents: [],
       spouses: [],

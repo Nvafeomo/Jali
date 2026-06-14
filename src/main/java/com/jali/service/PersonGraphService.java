@@ -27,16 +27,19 @@ public class PersonGraphService {
 	private final FamilyTreeRepository familyTreeRepository;
 	private final Neo4jClient neo4jClient;
 	private final PersonFieldMapper personFieldMapper;
+	private final PersonGracePeriodService personGracePeriodService;
 
 	public PersonGraphService(
 			PersonRepository personRepository,
 			FamilyTreeRepository familyTreeRepository,
 			Neo4jClient neo4jClient,
-			PersonFieldMapper personFieldMapper) {
+			PersonFieldMapper personFieldMapper,
+			PersonGracePeriodService personGracePeriodService) {
 		this.personRepository = personRepository;
 		this.familyTreeRepository = familyTreeRepository;
 		this.neo4jClient = neo4jClient;
 		this.personFieldMapper = personFieldMapper;
+		this.personGracePeriodService = personGracePeriodService;
 	}
 
 	/**
@@ -105,6 +108,12 @@ public class PersonGraphService {
 		fields.put("biologicalSex", request.biologicalSex());
 		fields.put("isUnknownPlaceholder", request.isUnknownPlaceholder());
 		return createPerson(request.fullName(), familyTreeId, fields);
+	}
+
+	public void deletePerson(String uuid, Long familyTreeId) {
+		Person person = requireInTree(uuid, familyTreeId);
+		personGracePeriodService.requireWithinGracePeriodToDelete(person);
+		personRepository.deleteByUuidAndFamilyTreeId(uuid, familyTreeId);
 	}
 
 	public List<Person> findAllInTreeWithRelationships(Long familyTreeId) {

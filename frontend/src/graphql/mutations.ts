@@ -57,6 +57,12 @@ export const UPDATE_PARENT_ROLE_MUTATION = gql`
   }
 `;
 
+export const DELETE_PERSON_MUTATION = gql`
+  mutation DeletePerson($uuid: String!) {
+    deletePerson(uuid: $uuid)
+  }
+`;
+
 export const DELETE_RELATIONSHIP_MUTATION = gql`
   mutation DeleteRelationship(
     $anchorUuid: String!

@@ -252,4 +252,12 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 			@Param("aUuid") String aUuid,
 			@Param("bUuid") String bUuid,
 			@Param("familyTreeId") Long familyTreeId);
+
+	@Query("""
+			MATCH (p:Person {uuid: $uuid, familyTreeId: $familyTreeId})
+			DETACH DELETE p
+			""")
+	void deleteByUuidAndFamilyTreeId(
+			@Param("uuid") String uuid,
+			@Param("familyTreeId") Long familyTreeId);
 }

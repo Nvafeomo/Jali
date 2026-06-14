@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { UPDATE_PERSON_MUTATION } from '../../graphql/mutations';
+import { UPDATE_PERSON_MUTATION, DELETE_PERSON_MUTATION } from '../../graphql/mutations';
 import { MY_TREE_QUERY } from '../../graphql/queries';
 import type { Person } from '../../types';
 import {
@@ -20,9 +20,10 @@ import styles from './PersonProfileEditor.module.css';
 
 interface Props {
   person: Person;
+  onDeleted?: () => void;
 }
 
-const PersonProfileEditor = ({ person }: Props) => {
+const PersonProfileEditor = ({ person, onDeleted }: Props) => {
   const daysLeft = editDaysRemaining(person.createdAt);
 
   const [fullName, setFullName] = useState(person.fullName);
@@ -60,6 +61,28 @@ const PersonProfileEditor = ({ person }: Props) => {
     },
     onError: (err) => setError(err.message),
   });
+
+  const [deletePerson, { loading: deleting }] = useMutation(DELETE_PERSON_MUTATION, {
+    refetchQueries: [{ query: MY_TREE_QUERY }],
+    onCompleted: () => {
+      setError(null);
+      onDeleted?.();
+    },
+    onError: (err) => setError(err.message),
+  });
+
+  const handleDelete = async () => {
+    const name = person.fullName.trim() || 'this person';
+    if (
+      !window.confirm(
+        `Remove ${name} from your tree? Their relationship links will be removed too. This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    await deletePerson({ variables: { uuid: person.id } });
+  };
 
   const encodedBirth = encodeBirthYear(birthMode, birthYear);
   const encodedDeath = encodeLifeStatus(lifeStatus, deathYear);
@@ -180,9 +203,20 @@ const PersonProfileEditor = ({ person }: Props) => {
 
       {error && <p className={styles.error}>{error}</p>}
 
-      <button type="submit" className={styles.saveBtn} disabled={loading || !isDirty}>
+      <button type="submit" className={styles.saveBtn} disabled={loading || deleting || !isDirty}>
         {loading ? 'Saving…' : 'Save changes'}
       </button>
+
+      {person.canDelete && (
+        <button
+          type="button"
+          className={styles.deleteBtn}
+          disabled={loading || deleting}
+          onClick={handleDelete}
+        >
+          {deleting ? 'Removing…' : 'Remove from tree'}
+        </button>
+      )}
     </form>
   );
 };
