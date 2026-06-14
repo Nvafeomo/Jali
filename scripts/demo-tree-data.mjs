@@ -3,7 +3,7 @@
 import { buildExpansion } from './demo-tree-expansion.mjs';
 
 export const DEMO_TREE_NAME = 'Kouyaté Family Tree';
-export const DEMO_PERSON_COUNT = 1000;
+export const DEMO_PERSON_COUNT = 100;
 
 const CORE_PEOPLE = [
   // —— Generation 0 ——
@@ -212,8 +212,26 @@ const CORE_PEOPLE = [
   {
     key: 'saliou_b_g3',
     fullName: 'Saliou Kouyaté',
-    bio: 'Youngest of Bakary\'s three. Plays football semi-professionally in Dakar.',
+    bio: 'Fourth of Bakary\'s five. Plays football semi-professionally in Dakar.',
     birthDate: '1992',
+    birthplace: 'Monrovia, Liberia',
+    ethnicGroup: 'Mandinka',
+    biologicalSex: 'MALE',
+  },
+  {
+    key: 'fanta_b_g3',
+    fullName: 'Fanta Kouyaté',
+    bio: 'Fifth of Bakary\'s children. Studying nursing in Accra.',
+    birthDate: '1994',
+    birthplace: 'Monrovia, Liberia',
+    ethnicGroup: 'Mandinka',
+    biologicalSex: 'FEMALE',
+  },
+  {
+    key: 'modibo_b_g3',
+    fullName: 'Modibo Kouyaté',
+    bio: 'Youngest of Bakary\'s five. Apprentice electrician in Monrovia.',
+    birthDate: '1997',
     birthplace: 'Monrovia, Liberia',
     ethnicGroup: 'Mandinka',
     biologicalSex: 'MALE',
@@ -354,6 +372,10 @@ const CORE_RELATIONSHIPS = [
   { from: 'adama_g2', to: 'awa_b_g3', type: 'PARENT_OF', parentRole: 'MOTHER' },
   { from: 'bakary_g2', to: 'saliou_b_g3', type: 'PARENT_OF', parentRole: 'FATHER' },
   { from: 'adama_g2', to: 'saliou_b_g3', type: 'PARENT_OF', parentRole: 'MOTHER' },
+  { from: 'bakary_g2', to: 'fanta_b_g3', type: 'PARENT_OF', parentRole: 'FATHER' },
+  { from: 'adama_g2', to: 'fanta_b_g3', type: 'PARENT_OF', parentRole: 'MOTHER' },
+  { from: 'bakary_g2', to: 'modibo_b_g3', type: 'PARENT_OF', parentRole: 'FATHER' },
+  { from: 'adama_g2', to: 'modibo_b_g3', type: 'PARENT_OF', parentRole: 'MOTHER' },
 
   // Sekou branch
   { from: 'sekou_g2', to: 'bintou_g3', type: 'PARENT_OF', parentRole: 'FATHER' },

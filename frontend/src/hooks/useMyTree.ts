@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { MY_TREE_QUERY } from '../graphql/queries';
+import { getAuthToken } from '../auth/session';
 import type { Person, RelationshipEdge } from '../types';
 
 // --- Raw GraphQL shapes (what Apollo gives us before we map) ---
@@ -154,20 +155,36 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
 // --- Hook ---
 
 export function useMyTree() {
+  const hasToken = !!getAuthToken();
+  const autoRetried = useRef(false);
+
   const { data, loading, error, refetch } = useQuery<{ myTree: RawPerson[] }>(MY_TREE_QUERY, {
     fetchPolicy: 'network-only',
     notifyOnNetworkStatusChange: true,
+    skip: !hasToken,
   });
 
   const people: Person[] = useMemo(
-    () => (!error && data?.myTree ? mapToPersons(data.myTree) : []),
-    [data?.myTree, error],
+    () => (data?.myTree ? mapToPersons(data.myTree) : []),
+    [data?.myTree],
   );
+
+  // One soft retry for first-load failures (cold API, stale error after navigation).
+  useEffect(() => {
+    if (!error || !hasToken || autoRetried.current) return;
+    autoRetried.current = true;
+    const timer = window.setTimeout(() => {
+      void refetch();
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [error, hasToken, refetch]);
+
+  const showError = error && !loading && people.length === 0;
 
   return {
     people,
     loading: loading && people.length === 0,
-    error,
+    error: showError ? error : undefined,
     refetch,
   };
 }

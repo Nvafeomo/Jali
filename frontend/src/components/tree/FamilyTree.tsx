@@ -18,6 +18,7 @@ import {
   type LayoutEdge,
 } from './treeLayout';
 import PersonNode from './PersonNode';
+import { toPersonNodeDisplay } from './personNodeData';
 import PedigreeEdge from './PedigreeEdge';
 import MarriageEdge from './MarriageEdge';
 import TreeLegend from './TreeLegend';
@@ -53,13 +54,68 @@ function mapLayoutNodes(
       draggable: false,
       selected: isTarget,
       data: {
-        ...person,
+        ...toPersonNodeDisplay(person),
         linkPickTarget: isTarget,
         linkPickDimmed: isDimmed,
         linkPickHover: picking,
       },
     };
   }) as Node[];
+}
+
+interface FamilyTreeCanvasProps {
+  initialNodes: Node[];
+  initialEdges: LayoutEdge[];
+  peopleCount: number;
+  showMiniMap: boolean;
+  onNodeClick: NodeMouseHandler;
+}
+
+function FamilyTreeCanvas({
+  initialNodes,
+  initialEdges,
+  peopleCount,
+  showMiniMap,
+  onNodeClick,
+}: FamilyTreeCanvasProps) {
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onNodeClick={onNodeClick}
+      nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
+      nodesDraggable={false}
+      nodesConnectable={false}
+      edgesReconnectable={false}
+      onlyRenderVisibleElements={peopleCount > 50}
+      defaultEdgeOptions={{ type: 'marriage' }}
+      fitView
+      fitViewOptions={{ padding: 0.2 }}
+      minZoom={0.05}
+      maxZoom={2}
+      proOptions={{ hideAttribution: true }}
+    >
+      <Background color="#334155" gap={20} />
+      <Controls />
+      {showMiniMap && (
+        <MiniMap
+          nodeColor={node => {
+            const person = node.data as { isUnknownPlaceholder?: boolean; confidenceScore?: number };
+            if (person.isUnknownPlaceholder) return '#475569';
+            const score = person.confidenceScore ?? 1;
+            return score >= 0.7 ? '#4ade80' : score >= 0.4 ? '#facc15' : '#f87171';
+          }}
+          style={{ background: '#1e1e2e' }}
+        />
+      )}
+    </ReactFlow>
+  );
 }
 
 const FamilyTree = ({
@@ -93,8 +149,8 @@ const FamilyTree = ({
       setLayouting(false);
     };
 
-    // Yield so the arranging overlay paints before heavy layout work.
-    const delay = people.length > 300 ? 16 : 0;
+    // Yield so the arranging overlay paints before layout + React Flow mount.
+    const delay = people.length > 50 ? 16 : 0;
     const timer = window.setTimeout(runLayout, delay);
 
     return () => {
@@ -102,15 +158,6 @@ const FamilyTree = ({
       window.clearTimeout(timer);
     };
   }, [people, picking, linkTargetId]);
-
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  useEffect(() => {
-    if (layouting) return;
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-  }, [initialNodes, initialEdges, layouting, setNodes, setEdges]);
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
@@ -120,7 +167,9 @@ const FamilyTree = ({
     [people, onPersonSelect],
   );
 
-  const showMiniMap = people.length <= 100;
+  const showMiniMap = people.length <= 50;
+  const flowReady = !layouting && initialNodes.length > 0;
+  const canvasKey = `${initialNodes.length}-${linkTargetId ?? ''}-${picking}`;
 
   return (
     <div className={[styles.canvas, picking ? styles.canvasPicking : ''].join(' ')}>
@@ -144,39 +193,16 @@ const FamilyTree = ({
         </div>
       )}
 
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={onNodeClick}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        edgesReconnectable={false}
-        onlyRenderVisibleElements={people.length > 50}
-        defaultEdgeOptions={{ type: 'marriage' }}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.05}
-        maxZoom={2}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background color="#334155" gap={20} />
-        <Controls />
-        {showMiniMap && (
-          <MiniMap
-            nodeColor={node => {
-              const person = node.data as unknown as Person;
-              if (person.isUnknownPlaceholder) return '#475569';
-              const score = person.confidenceScore;
-              return score >= 0.7 ? '#4ade80' : score >= 0.4 ? '#facc15' : '#f87171';
-            }}
-            style={{ background: '#1e1e2e' }}
-          />
-        )}
-      </ReactFlow>
+      {flowReady && (
+        <FamilyTreeCanvas
+          key={canvasKey}
+          initialNodes={initialNodes}
+          initialEdges={initialEdges}
+          peopleCount={people.length}
+          showMiniMap={showMiniMap}
+          onNodeClick={onNodeClick}
+        />
+      )}
       <UnattachedPanel people={unattached} onSelect={onPersonSelect} />
       <TreeLegend />
     </div>

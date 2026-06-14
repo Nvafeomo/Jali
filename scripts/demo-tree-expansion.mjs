@@ -21,8 +21,14 @@ const CITIES = [
 const MALE_NAMES = ['Mamadu', 'Ousmane', 'Ibrahim', 'Lamin', 'Modibo', 'Sekou', 'Alpha', 'Saidu', 'Bakary', 'Karamo'];
 const FEMALE_NAMES = ['Fatoumata', 'Aminata', 'Kadiatou', 'Hawa', 'Mariama', 'Bintou', 'Ramata', 'Awa', 'Fatou', 'Khady'];
 
-/** Max children per couple — keeps each generation row layout-friendly. */
-const MAX_CHILDREN_PER_COUPLE = 4;
+/** Children per couple when auto-growing large trees (3–8, varies by couple). */
+const MIN_CHILDREN_PER_COUPLE = 3;
+const MAX_CHILDREN_PER_COUPLE = 8;
+
+function childTargetForCouple(couple) {
+  const hash = couple.id.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  return MIN_CHILDREN_PER_COUPLE + (hash % (MAX_CHILDREN_PER_COUPLE - MIN_CHILDREN_PER_COUPLE + 1));
+}
 
 function person(key, fullName, bio, birthDate, sex, opts = {}) {
   return {
@@ -83,7 +89,7 @@ function growGenerationalBranches(coreCount, people, rels, add, parent, marry, t
     const couple = pool[poolIdx % pool.length];
     poolIdx++;
 
-    if (couple.childCount >= MAX_CHILDREN_PER_COUPLE) {
+    if (couple.childCount >= childTargetForCouple(couple)) {
       passesWithoutAdd++;
       if (passesWithoutAdd > pool.length * MAX_CHILDREN_PER_COUPLE) {
         throw new Error('Ran out of couple capacity before reaching target person count');
@@ -183,7 +189,6 @@ export function buildExpansion(coreCount, target = 100) {
       kids: [
         ['lea_g3_a', 'Léa Kouyaté', 'Medical student in Marseille.', '1992', 'FEMALE'],
         ['thomas_g3_a', 'Thomas Kouyaté', 'Software designer; built a private family photo archive.', '1995', 'MALE'],
-        ['nina_g3_a', 'Nina Kouyaté', 'Studying African literature in Paris.', '1998', 'FEMALE'],
       ],
     },
     {
@@ -209,7 +214,6 @@ export function buildExpansion(coreCount, target = 100) {
       kids: [
         ['mariam_a_g3_a', 'Mariam Sow-Kouyaté', 'Event planner for diaspora weddings.', '1997', 'FEMALE'],
         ['karim_a_g3_a', 'Karim Sow-Kouyaté', 'Football coach in Lyon suburbs.', '2000', 'MALE'],
-        ['selim_a_g3_a', 'Selim Sow-Kouyaté', 'High school student; visits Bamako cousins in summer.', '2004', 'MALE'],
       ],
     },
   ];
@@ -230,13 +234,6 @@ export function buildExpansion(coreCount, target = 100) {
 
   add(person('pierre_bernard_sp', 'Pierre Bernard', 'Léa\'s husband. Civil engineer in Marseille.', '1990', 'MALE', { birthplace: 'Marseille, France', ethnicGroup: 'French' }));
   marry('lea_g3_a', 'pierre_bernard_sp');
-  for (const [k, name, bio, birth, sex] of [
-    ['julie_g4_a', 'Julie Kouyaté', 'Léa and Pierre\'s daughter.', '2020', 'FEMALE'],
-    ['lucas_g4_a', 'Lucas Kouyaté', 'Born during a family Zoom call with Columbus cousins.', '2022', 'MALE'],
-  ]) {
-    add(person(k, name, bio, birth, sex, { birthplace: 'Marseille, France' }));
-    parent('pierre_bernard_sp', 'lea_g3_a', k);
-  }
 
   add(person('camille_roux_sp', 'Camille Roux', 'Thomas\'s partner. Photographer who documented Ibrahim Sr.\'s funeral.', '1994', 'FEMALE', { birthplace: 'Paris, France', ethnicGroup: 'French' }));
   marry('thomas_g3_a', 'camille_roux_sp');
@@ -261,6 +258,8 @@ export function buildExpansion(coreCount, target = 100) {
       kids: [
         ['saidu_g4', 'Saidu Kouyaté', 'Ibrahim Jr.\'s eldest son.', '2017', 'MALE'],
         ['hawa2_g4', 'Hawa Kouyaté II', 'Named for great-grandmother Hawa Diallo.', '2020', 'FEMALE'],
+        ['mamadou_i_g4', 'Mamadou Kouyaté III', 'Middle child; wants to study medicine.', '2022', 'MALE'],
+        ['fatim_i_g4', 'Fatimata Kouyaté III', 'Youngest of Ibrahim Jr.\'s four.', '2024', 'FEMALE'],
       ],
     },
     {
@@ -275,7 +274,11 @@ export function buildExpansion(coreCount, target = 100) {
     {
       person: 'lamin_g3',
       spouse: ['yaa_mensah_sp', 'Yaa Mensah', 'Lamin\'s partner. Graphic designer for reunion T-shirts.', '1995', 'FEMALE', 'Accra, Ghana'],
-      kids: [['kojo_g4', 'Kojo Kouyaté', 'Learning kora from uncle recordings.', '2022', 'MALE']],
+      kids: [
+        ['kojo_g4', 'Kojo Kouyaté', 'Learning kora from uncle recordings.', '2022', 'MALE'],
+        ['kadi_l_g4', 'Kadiatou Kouyaté III', 'Lamin\'s second child.', '2024', 'FEMALE'],
+        ['amadou_l_g4', 'Amadou Kouyaté III', 'Youngest of Lamin\'s three.', '2026', 'MALE'],
+      ],
     },
     {
       person: 'fatou_g3',
@@ -296,20 +299,30 @@ export function buildExpansion(coreCount, target = 100) {
     {
       person: 'saliou_b_g3',
       spouse: ['ndeye_fall_sp', 'Ndeye Fall', 'Runs a café near the stadium in Dakar.', '1995', 'FEMALE', 'Dakar, Senegal'],
-      kids: [['cheikh_g4', 'Cheikh Kouyaté', 'Youth league footballer.', '2020', 'MALE']],
+      kids: [
+        ['cheikh_g4', 'Cheikh Kouyaté', 'Youth league footballer.', '2020', 'MALE'],
+        ['ndeye2_g4', 'Ndeye Kouyaté', 'Saliou\'s daughter; studies in Dakar.', '2022', 'FEMALE'],
+        ['alpha_s_g4', 'Alpha Kouyaté IV', 'Youngest of Saliou\'s three.', '2025', 'MALE'],
+      ],
     },
     {
       person: 'bintou_g3',
       spouse: ['idrissa_diakite_sp', 'Idrissa Diakité', 'Surgeon in Bamako.', '1987', 'MALE', 'Bamako, Mali'],
       kids: [
         ['aminata2_g4', 'Aminata Diakité-Kouyaté', 'Named for great-aunt Aminata in France.', '2015', 'FEMALE'],
-        ['moussa_g4', 'Moussa Diakité-Kouyaté', 'Bintou\'s youngest.', '2018', 'MALE'],
+        ['moussa_g4', 'Moussa Diakité-Kouyaté', 'Bintou\'s second child.', '2018', 'MALE'],
+        ['hawa_bint_g4', 'Hawa Diakité-Kouyaté', 'Third of Bintou\'s four.', '2020', 'FEMALE'],
+        ['sekou_bint_g4', 'Sekou Diakité-Kouyaté', 'Youngest of Bintou\'s four.', '2023', 'MALE'],
       ],
     },
     {
       person: 'mamadou_s_g3',
       spouse: ['awa_toure_sp', 'Awa Touré', 'Vocalist; featured on Mamasu\'s first EP.', '1993', 'FEMALE', 'Bamako, Mali'],
-      kids: [['djeli_g4', 'Djeli Kouyaté', 'Named for the jali tradition.', '2021', 'FEMALE']],
+      kids: [
+        ['djeli_g4', 'Djeli Kouyaté', 'Named for the jali tradition.', '2021', 'FEMALE'],
+        ['alpha_m_g4', 'Alpha Mamasu Kouyaté', 'Mamasu\'s son; already mixing beats.', '2023', 'MALE'],
+        ['bintou_m_g4', 'Bintou Mamasu Kouyaté', 'Youngest of Mamasu\'s three.', '2025', 'FEMALE'],
+      ],
     },
   ];
 
@@ -330,8 +343,28 @@ export function buildExpansion(coreCount, target = 100) {
   add(person('tyler_webb_sp', 'Tyler Webb', 'Aminata (gen 4)\'s partner in Columbus.', '1991', 'MALE', { birthplace: 'Columbus, Ohio, USA', ethnicGroup: 'American' }));
   add(person('erica_jones_sp', 'Erica Jones', 'Modou\'s partner in Columbus.', '1993', 'FEMALE', { birthplace: 'Columbus, Ohio, USA', ethnicGroup: 'American' }));
 
+  // Sekou's second wife — co-wife alongside Nene (realistic for Mandinka extended households)
+  add(
+    person(
+      'fanta_w_g2',
+      'Fanta Sidibé',
+      'Sekou\'s second wife. From a Sidibé trading family in Bamako; shares parenting with Nene.',
+      '1970',
+      'FEMALE',
+      { birthplace: 'Bamako, Mali', ethnicGroup: 'Mandinka' },
+    ),
+  );
+  marry('sekou_g2', 'fanta_w_g2');
+  for (const [k, name, bio, birth, sex] of [
+    ['lamine_sw_g3', 'Lamine Kouyaté', 'Eldest child of Sekou and Fanta Sidibé.', '1993', 'MALE'],
+    ['mariam_sw_g3', 'Mariam Kouyaté II', 'Daughter of Sekou and Fanta; close to Vasayo.', '1996', 'FEMALE'],
+  ]) {
+    add(person(k, name, bio, birth, sex, { birthplace: 'Bamako, Mali' }));
+    parent('sekou_g2', 'fanta_w_g2', k);
+  }
+
   // —— Gen 5 ——
-  const gen5 = [
+  const gen5All = [
     ['tyler_webb_sp', 'aminata_g4', 'zara_g5', 'Zara Kouyaté', 'Aminata and Tyler\'s daughter.', '2024', 'FEMALE'],
     ['erica_jones_sp', 'modou_g4', 'malick_g5', 'Malick Kouyaté', 'Modou and Erica\'s son.', '2025', 'MALE'],
     ['samba_traore_sp', 'hawa_g4', 'nana_g5', 'Nana Kouyaté', 'Hawa\'s daughter.', '2023', 'FEMALE'],
@@ -342,9 +375,9 @@ export function buildExpansion(coreCount, target = 100) {
     ['idrissa_diakite_sp', 'aminata2_g4', 'bintou2_g5', 'Bintou Kouyaté II', 'Named for her mother.', '2021', 'FEMALE'],
     ['ndeye_fall_sp', 'cheikh_g4', 'saliou2_g5', 'Saliou Kouyaté II', 'Cheikh\'s son.', '2023', 'MALE'],
     ['awa_toure_sp', 'djeli_g4', 'kora_g5', 'Kora Kouyaté', 'Djeli\'s son.', '2024', 'MALE'],
-    ['pierre_bernard_sp', 'julie_g4_a', 'chloe_g5', 'Chloé Kouyaté', 'Lyon branch gen 5.', '2024', 'FEMALE'],
     ['fatoumata_kone_sp', 'saidu_g4', 'musu_g5', 'Musu Kouyaté', 'Ibrahim Jr.\'s first grandchild.', '2023', 'FEMALE'],
   ];
+  const gen5 = target <= 100 ? gen5All.slice(0, 5) : gen5All;
 
   for (const [mother, father, key, name, bio, birth, sex] of gen5) {
     add(person(key, name, bio, birth, sex));
@@ -378,14 +411,16 @@ export function buildExpansion(coreCount, target = 100) {
   parent('sekou_g2', 'nene_g2', 'mariam_cousin_g3');
   parent('sekou_g2', 'nene_g2', 'kadiatou_cousin_g3');
 
-  add(person('ousmane3_g4_c', cousins[4][1], cousins[4][2], cousins[4][3], cousins[4][4]));
-  parent('yusuf_nephew_g3', null, 'ousmane3_g4_c');
-  add(person('fanta2_g4_c', cousins[5][1], cousins[5][2], cousins[5][3], cousins[5][4]));
-  parent('tijan_g3_c', null, 'fanta2_g4_c');
-  add(person('modibo_g4_c', cousins[6][1], cousins[6][2], cousins[6][3], cousins[6][4]));
-  parent('tijan_g3_c', null, 'modibo_g4_c');
-  add(person('safiatou_g4_c', cousins[7][1], cousins[7][2], cousins[7][3], cousins[7][4]));
-  parent('mariam_cousin_g3', null, 'safiatou_g4_c');
+  if (target > 100) {
+    add(person('ousmane3_g4_c', cousins[4][1], cousins[4][2], cousins[4][3], cousins[4][4]));
+    parent('yusuf_nephew_g3', null, 'ousmane3_g4_c');
+    add(person('fanta2_g4_c', cousins[5][1], cousins[5][2], cousins[5][3], cousins[5][4]));
+    parent('tijan_g3_c', null, 'fanta2_g4_c');
+    add(person('modibo_g4_c', cousins[6][1], cousins[6][2], cousins[6][3], cousins[6][4]));
+    parent('tijan_g3_c', null, 'modibo_g4_c');
+    add(person('safiatou_g4_c', cousins[7][1], cousins[7][2], cousins[7][3], cousins[7][4]));
+    parent('mariam_cousin_g3', null, 'safiatou_g4_c');
+  }
 
   const targetTotal = target;
   if (coreCount + people.length < targetTotal) {

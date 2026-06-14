@@ -68,6 +68,7 @@ const CheckEmailPage = () => {
             <p style={{ marginTop: '1.25rem' }}>
               <Link
                 to="/tree"
+                state={{ onboarding: true }}
                 style={{ color: 'var(--jali-text-muted)', fontSize: '0.85rem' }}
               >
                 Continue to your tree →

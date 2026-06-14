@@ -1,4 +1,5 @@
 import { ApolloClient, InMemoryCache, createHttpLink, ApolloLink } from '@apollo/client';
+import { RetryLink } from '@apollo/client/link/retry';
 
 // VITE_API_URL is set at build time.
 // In dev it defaults to localhost. In production, Vercel (or your host) injects
@@ -23,8 +24,21 @@ const authLink = new ApolloLink((operation, forward) => {
   return forward(operation);
 });
 
+/** Retry cold-start / transient network failures (e.g. Render waking up). */
+const retryLink = new RetryLink({
+  delay: { initial: 800, max: 4000, jitter: true },
+  attempts: {
+    max: 3,
+    retryIf: (error, _operation) => {
+      const status = (error as { statusCode?: number }).statusCode;
+      if (status === 401 || status === 403) return false;
+      return true;
+    },
+  },
+});
+
 const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: authLink.concat(retryLink).concat(httpLink),
   cache: new InMemoryCache(),
 });
 

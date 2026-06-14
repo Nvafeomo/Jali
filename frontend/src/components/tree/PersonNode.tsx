@@ -1,9 +1,9 @@
 import { Handle, Position } from '@xyflow/react';
-import type { Person } from '../../types';
 import { formatLifeDisplay } from '../../utils/vitalYears';
+import type { PersonNodeDisplay } from './personNodeData';
 import styles from './PersonNode.module.css';
 
-type PersonNodeData = Person & {
+type PersonNodeData = PersonNodeDisplay & {
   linkPickTarget?: boolean;
   linkPickDimmed?: boolean;
   linkPickHover?: boolean;

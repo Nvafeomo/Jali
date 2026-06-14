@@ -44,7 +44,7 @@ const TreePage = () => {
 
   const { email, isAuthenticated, logout } = useAuth();
   const { treeName, updateTreeName, canEdit: canEditTreeName } = useFamilyTree();
-  const { people, loading, error } = useMyTree();
+  const { people, loading, error, refetch } = useMyTree();
 
   const isEmptyTree = !loading && !error && people.length === 0;
   const isFirstPersonFlow = isEmptyTree;
@@ -207,7 +207,7 @@ const TreePage = () => {
             </div>
           )}
 
-          {error && (
+          {error && !loading && (
             <div className={`${styles.centered} ${styles.errorState}`}>
               <p className={styles.errorTitle}>Could not load tree</p>
               <p className={styles.errorDetail}>{error.message}</p>
@@ -215,6 +215,13 @@ const TreePage = () => {
                 If this persists, the family database may be unavailable — try again in a
                 minute or contact support.
               </p>
+              <button
+                type="button"
+                className={styles.emptyAddButton}
+                onClick={() => void refetch()}
+              >
+                Try again
+              </button>
             </div>
           )}
 

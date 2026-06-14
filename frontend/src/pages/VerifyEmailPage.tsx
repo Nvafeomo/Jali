@@ -46,6 +46,7 @@ const VerifyEmailPage = () => {
             </p>
             <Link
               to="/tree"
+              state={{ onboarding: true }}
               style={{
                 display: 'inline-block',
                 padding: '0.75rem 1.75rem',
