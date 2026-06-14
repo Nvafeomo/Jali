@@ -50,7 +50,7 @@ public class PersonController {
 
 	@GetMapping
 	public List<PersonResponse> listPeople(@AuthenticationPrincipal UserPrincipal principal) {
-		return personRepository.findAllByFamilyTreeId(principal.familyTreeId())
+		return personGraphService.findAllInTreeWithRelationships(principal.familyTreeId())
 				.stream()
 				.map(PersonResponse::from)
 				.toList();

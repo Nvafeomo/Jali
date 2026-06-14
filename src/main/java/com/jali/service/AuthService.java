@@ -27,16 +27,19 @@ public class AuthService {
 	private final FamilyTreeRepository familyTreeRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtService jwtService;
+	private final PersonGraphService personGraphService;
 
 	public AuthService(
 			UserRepository userRepository,
 			FamilyTreeRepository familyTreeRepository,
 			PasswordEncoder passwordEncoder,
-			JwtService jwtService) {
+			JwtService jwtService,
+			PersonGraphService personGraphService) {
 		this.userRepository = userRepository;
 		this.familyTreeRepository = familyTreeRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.jwtService = jwtService;
+		this.personGraphService = personGraphService;
 	}
 
 	@Transactional
@@ -59,6 +62,7 @@ public class AuthService {
 
 		FamilyTree familyTree = familyTreeRepository.save(
 				new FamilyTree(user, defaultTreeName(user.getEmail())));
+		personGraphService.purgeStaleNodes(familyTree.getId(), familyTree.getCreatedAt());
 
 		String token = jwtService.generateToken(
 				user.getId(), user.getEmail(), user.getRole(), familyTree.getId());
@@ -80,6 +84,7 @@ public class AuthService {
 		FamilyTree familyTree = familyTreeRepository.findByOwnerId(user.getId())
 				.orElseGet(() -> familyTreeRepository.save(
 						new FamilyTree(user, defaultTreeName(user.getEmail()))));
+		personGraphService.purgeStaleNodes(familyTree.getId(), familyTree.getCreatedAt());
 
 		String token = jwtService.generateToken(
 				user.getId(), user.getEmail(), user.getRole(), familyTree.getId());

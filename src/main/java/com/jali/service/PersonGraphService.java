@@ -1,5 +1,6 @@
 package com.jali.service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.jali.dto.CreatePersonRequest;
+import com.jali.entity.FamilyTree;
 import com.jali.neo4j.Person;
+import com.jali.repository.jpa.FamilyTreeRepository;
 import com.jali.repository.neo4j.PersonRepository;
 
 @Service
@@ -21,21 +24,46 @@ public class PersonGraphService {
 	private static final int MAX_TRAVERSAL_DEPTH = 20;
 
 	private final PersonRepository personRepository;
+	private final FamilyTreeRepository familyTreeRepository;
 	private final Neo4jClient neo4jClient;
 	private final PersonFieldMapper personFieldMapper;
 
 	public PersonGraphService(
 			PersonRepository personRepository,
+			FamilyTreeRepository familyTreeRepository,
 			Neo4jClient neo4jClient,
 			PersonFieldMapper personFieldMapper) {
 		this.personRepository = personRepository;
+		this.familyTreeRepository = familyTreeRepository;
 		this.neo4jClient = neo4jClient;
 		this.personFieldMapper = personFieldMapper;
 	}
 
+	/**
+	 * Removes Neo4j nodes left over from a previous owner when PostgreSQL reuses a
+	 * {@code familyTreeId}. Only people created at or after this tree row was
+	 * inserted belong to the current account.
+	 */
+	public void purgeStaleNodes(Long familyTreeId, Instant treeCreatedAt) {
+		neo4jClient.query("""
+				MATCH (p:Person {familyTreeId: $familyTreeId})
+				WHERE p.createdAt IS NULL OR p.createdAt < $treeCreatedAt
+				DETACH DELETE p
+				""")
+				.bind(familyTreeId).to("familyTreeId")
+				.bind(treeCreatedAt).to("treeCreatedAt")
+				.run();
+	}
+
 	public Person requireInTree(String uuid, Long familyTreeId) {
-		return personRepository.findByUuidAndFamilyTreeId(uuid, familyTreeId)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found in this family tree"));
+		Instant treeCreatedAt = requireTreeCreatedAt(familyTreeId);
+		Person person = personRepository.findByUuidAndFamilyTreeId(uuid, familyTreeId)
+				.orElseThrow(() -> new ResponseStatusException(
+						HttpStatus.NOT_FOUND, "Person not found in this family tree"));
+		if (!belongsToTree(person, treeCreatedAt)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found in this family tree");
+		}
+		return person;
 	}
 
 	public Person requireInTreeWithRelationships(String uuid, Long familyTreeId) {
@@ -44,7 +72,8 @@ public class PersonGraphService {
 				personRepository.findById(person.getId())
 						.orElseThrow(() -> new ResponseStatusException(
 								HttpStatus.NOT_FOUND, "Person not found in this family tree")),
-				familyTreeId);
+				familyTreeId,
+				requireTreeCreatedAt(familyTreeId));
 	}
 
 	public Person saveInTree(Person person, Long familyTreeId) {
@@ -79,30 +108,55 @@ public class PersonGraphService {
 	}
 
 	public List<Person> findAllInTreeWithRelationships(Long familyTreeId) {
+		Instant treeCreatedAt = requireTreeCreatedAt(familyTreeId);
 		return personRepository.findAllByFamilyTreeId(familyTreeId).stream()
 				.filter(person -> familyTreeId.equals(person.getFamilyTreeId()))
+				.filter(person -> belongsToTree(person, treeCreatedAt))
 				.map(person -> personRepository.findById(person.getId())
 						.orElseThrow(() -> new ResponseStatusException(
 								HttpStatus.NOT_FOUND, "Person not found in this family tree")))
-				.filter(person -> familyTreeId.equals(person.getFamilyTreeId()))
-				.map(person -> sanitizeRelationships(person, familyTreeId))
+				.filter(person -> belongsToTree(person, treeCreatedAt))
+				.map(person -> sanitizeRelationships(person, familyTreeId, treeCreatedAt))
 				.toList();
 	}
 
-	private static Person sanitizeRelationships(Person person, Long familyTreeId) {
+	private Instant requireTreeCreatedAt(Long familyTreeId) {
+		FamilyTree tree = familyTreeRepository.findById(familyTreeId)
+				.orElseThrow(() -> new ResponseStatusException(
+						HttpStatus.FORBIDDEN, "Family tree not found"));
+		if (tree.getCreatedAt() == null) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Family tree is missing createdAt");
+		}
+		return tree.getCreatedAt();
+	}
+
+	private static boolean belongsToTree(Person person, Instant treeCreatedAt) {
+		if (person.getCreatedAt() == null) {
+			return false;
+		}
+		return !person.getCreatedAt().isBefore(treeCreatedAt);
+	}
+
+	private Person sanitizeRelationships(Person person, Long familyTreeId, Instant treeCreatedAt) {
 		if (person.getChildren() != null) {
 			person.setChildren(person.getChildren().stream()
-					.filter(r -> r.getChild() != null && familyTreeId.equals(r.getChild().getFamilyTreeId()))
+					.filter(r -> r.getChild() != null
+							&& familyTreeId.equals(r.getChild().getFamilyTreeId())
+							&& belongsToTree(r.getChild(), treeCreatedAt))
 					.toList());
 		}
 		if (person.getSpouses() != null) {
 			person.setSpouses(person.getSpouses().stream()
-					.filter(r -> r.getSpouse() != null && familyTreeId.equals(r.getSpouse().getFamilyTreeId()))
+					.filter(r -> r.getSpouse() != null
+							&& familyTreeId.equals(r.getSpouse().getFamilyTreeId())
+							&& belongsToTree(r.getSpouse(), treeCreatedAt))
 					.toList());
 		}
 		if (person.getSiblings() != null) {
 			person.setSiblings(person.getSiblings().stream()
-					.filter(r -> r.getSibling() != null && familyTreeId.equals(r.getSibling().getFamilyTreeId()))
+					.filter(r -> r.getSibling() != null
+							&& familyTreeId.equals(r.getSibling().getFamilyTreeId())
+							&& belongsToTree(r.getSibling(), treeCreatedAt))
 					.toList());
 		}
 		return person;
@@ -117,11 +171,14 @@ public class PersonGraphService {
 				WHERE ancestor.familyTreeId = $familyTreeId
 				RETURN DISTINCT ancestor
 				""".formatted(clampedDepth);
+		Instant treeCreatedAt = requireTreeCreatedAt(familyTreeId);
 		return new ArrayList<>(neo4jClient.query(cypher)
 				.bind(uuid).to("uuid")
 				.bind(familyTreeId).to("familyTreeId")
 				.fetchAs(Person.class)
-				.all());
+				.all()).stream()
+				.filter(p -> belongsToTree(p, treeCreatedAt))
+				.toList();
 	}
 
 	public List<Person> findDescendants(String uuid, Long familyTreeId, int depth) {
@@ -133,11 +190,14 @@ public class PersonGraphService {
 				WHERE descendant.familyTreeId = $familyTreeId
 				RETURN DISTINCT descendant
 				""".formatted(clampedDepth);
+		Instant treeCreatedAt = requireTreeCreatedAt(familyTreeId);
 		return new ArrayList<>(neo4jClient.query(cypher)
 				.bind(uuid).to("uuid")
 				.bind(familyTreeId).to("familyTreeId")
 				.fetchAs(Person.class)
-				.all());
+				.all()).stream()
+				.filter(p -> belongsToTree(p, treeCreatedAt))
+				.toList();
 	}
 
 	private static int clampDepth(int depth) {
