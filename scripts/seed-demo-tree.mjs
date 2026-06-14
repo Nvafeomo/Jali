@@ -7,7 +7,7 @@
  *   API_URL=https://jali-api.onrender.com node scripts/seed-demo-tree.mjs
  *   DEMO_EMAIL=demo@jali.app DEMO_PASSWORD=DemoTree2026! API_URL=https://jali-api.onrender.com node scripts/seed-demo-tree.mjs
  *
- * Registers (or logs in if the email exists), creates 100 people with bios,
+ * Registers (or logs in if the email exists), creates 1000 people with bios,
  * links relationships, and renames the tree.
  */
 

@@ -43,3 +43,5 @@ src/main/resources/application-local.properties
 
 ### Local API test payloads (curl/PowerShell debugging) ###
 /*.json
+
+node_modules/

@@ -118,6 +118,68 @@ export async function authRegister(email: string, password: string, termsAccepte
   );
 }
 
+export async function verifyEmail(token: string): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/auth/verify-email?token=${encodeURIComponent(token)}`);
+  } catch {
+    throw new Error('Could not reach the server. Check your connection and try again.');
+  }
+  if (!res.ok) {
+    const fallback = 'Invalid or expired link.';
+    throw Object.assign(new Error(await readApiError(res, fallback)), { status: res.status });
+  }
+}
+
+export async function resendVerification(): Promise<void> {
+  const token = getAuthToken();
+  if (!token) throw new Error('Not authenticated.');
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/auth/resend-verification`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    throw new Error('Could not reach the server.');
+  }
+  if (!res.ok) {
+    throw new Error(await readApiError(res, 'Could not resend verification email.'));
+  }
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    });
+  } catch {
+    throw new Error('Could not reach the server.');
+  }
+  if (!res.ok) {
+    throw new Error(await readApiError(res, 'Something went wrong. Try again.'));
+  }
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword }),
+    });
+  } catch {
+    throw new Error('Could not reach the server.');
+  }
+  if (!res.ok) {
+    throw new Error(await readApiError(res, 'Invalid or expired link.'));
+  }
+}
+
 export async function fetchCurrentUserEmail(): Promise<string | null> {
   const user = await fetchCurrentUser();
   return user?.email ?? null;

@@ -31,7 +31,7 @@ function person(key, fullName, bio, birthDate, sex, opts = {}) {
   };
 }
 
-export function buildExpansion(coreCount) {
+export function buildExpansion(coreCount, target = 100) {
   const people = [];
   const rels = [];
   const keys = new Set();
@@ -280,9 +280,9 @@ export function buildExpansion(coreCount) {
   add(person('safiatou_g4_c', cousins[7][1], cousins[7][2], cousins[7][3], cousins[7][4]));
   parent('mariam_cousin_g3', null, 'safiatou_g4_c');
 
-  const target = 100;
+  const targetTotal = target;
   let n = 1;
-  while (coreCount + people.length < target) {
+  while (coreCount + people.length < targetTotal) {
     const key = `cousin_fill_${n}`;
     add(
       person(
@@ -298,8 +298,8 @@ export function buildExpansion(coreCount) {
     n++;
   }
 
-  if (coreCount + people.length !== target) {
-    throw new Error(`Expected ${target} people, got core ${coreCount} + expansion ${people.length}`);
+  if (coreCount + people.length !== targetTotal) {
+    throw new Error(`Expected ${targetTotal} people, got core ${coreCount} + expansion ${people.length}`);
   }
 
   return { people, rels };

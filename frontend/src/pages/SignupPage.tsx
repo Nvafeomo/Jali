@@ -37,7 +37,7 @@ const SignupPage = () => {
       const data = await authRegister(email, password, termsAccepted);
       saveAuthSession({ token: data.token, email: data.email });
       await client.clearStore();
-      navigate('/tree', { replace: true, state: { onboarding: true } });
+      navigate('/check-email', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not connect to server.');
     } finally {

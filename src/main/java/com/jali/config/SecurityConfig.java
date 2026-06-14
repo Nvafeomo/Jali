@@ -37,7 +37,9 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/health", "/health/live").permitAll()
-						.requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
+						.requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login",
+							"/auth/forgot-password", "/auth/reset-password").permitAll()
+					.requestMatchers(HttpMethod.GET, "/auth/verify-email").permitAll()
 						.requestMatchers("/graphiql", "/graphiql/**").permitAll()
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 						.anyRequest().authenticated())

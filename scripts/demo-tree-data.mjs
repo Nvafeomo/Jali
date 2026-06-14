@@ -1,9 +1,9 @@
-/** Demo Kouyaté family — 5 generations, 100 people, Mandinka / West African diaspora. */
+/** Demo Kouyaté family — 5 generations, 1000 people, Mandinka / West African diaspora. */
 
 import { buildExpansion } from './demo-tree-expansion.mjs';
 
 export const DEMO_TREE_NAME = 'Kouyaté Family Tree';
-export const DEMO_PERSON_COUNT = 100;
+export const DEMO_PERSON_COUNT = 1000;
 
 const CORE_PEOPLE = [
   // —— Generation 0 ——
@@ -374,7 +374,10 @@ const CORE_RELATIONSHIPS = [
   { from: 'kadiatou_g4', to: 'sira_g4', type: 'PARENT_OF', parentRole: 'MOTHER' },
 ];
 
-const { people: expansionPeople, rels: expansionRels } = buildExpansion(CORE_PEOPLE.length);
+const { people: expansionPeople, rels: expansionRels } = buildExpansion(
+  CORE_PEOPLE.length,
+  DEMO_PERSON_COUNT,
+);
 
 export const PEOPLE = [...CORE_PEOPLE, ...expansionPeople];
 export const RELATIONSHIPS = [...CORE_RELATIONSHIPS, ...expansionRels];
