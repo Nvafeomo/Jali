@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Jali</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0f172a;
+      --surface:      #1e1e2e;
+      --surface-muted:#2a2a3e;
+      --border:       #334155;
+      --accent:       #a78bfa;
+      --accent-hover: #8b5cf6;
+      --accent-glow:  rgba(167, 139, 250, 0.14);
+      --accent-ring:  rgba(167, 139, 250, 0.22);
+      --accent-border:rgba(167, 139, 250, 0.18);
+      --text:         #e2e8f0;
+      --text-heading: #f1f5f9;
+      --text-muted:   #94a3b8;
+      --text-subtle:  #64748b;
+      --green:        #4ade80;
+      --shadow:       0 4px 24px rgba(0,0,0,0.35);
+      --radius:       12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .badge {
+      font-size: 0.75rem;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+      border-radius: 999px;
+      padding: 0.15rem 0.65rem;
+      font-weight: 500;
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 2rem 5rem;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.03em;
+    }
+
+    .effective {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 2.5rem;
+    }
+
+    .pledge {
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .pledge h2 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .pledge ul {
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .pledge ul li {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.45rem;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .pledge ul li::before {
+      content: '✓';
+      color: var(--accent);
+      font-weight: 700;
+      position: absolute;
+      left: 0;
+    }
+
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .toc h2 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-subtle);
+      margin-bottom: 0.75rem;
+    }
+
+    .toc ol { padding-left: 1.25rem; }
+    .toc li { margin-bottom: 0.3rem; }
+    .toc a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .toc a:hover { text-decoration: underline; }
+
+    section { margin-bottom: 2.75rem; }
+
+    section h2 {
+      font-size: 1.15rem;
+      font-weight: 650;
+      color: var(--text-heading);
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-heading);
+      margin: 1.25rem 0 0.4rem;
+    }
+
+    p { margin-bottom: 0.9rem; color: var(--text); }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol { padding-left: 1.5rem; margin-bottom: 0.9rem; }
+    li { margin-bottom: 0.4rem; color: var(--text); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.25rem;
+      font-size: 0.875rem;
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--surface-muted);
+      color: var(--text-subtle);
+      text-align: left;
+      padding: 0.65rem 0.9rem;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 0.7rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .highlight {
+      background: var(--accent-glow);
+      border-left: 3px solid var(--accent);
+      padding: 0.85rem 1.1rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.1rem 0;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    a { color: var(--accent); }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-subtle);
+    }
+
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    @media (max-width: 600px) {
+      main { padding: 2rem 1.25rem 4rem; }
+      .page-title { font-size: 1.6rem; }
+      header { padding: 1rem 1.25rem; }
+      table { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="https://jali.app">J<span>A</span>LI</a>
+  <span class="badge">Legal</span>
+</header>
+
+<main>
+  <h1 class="page-title">Privacy Policy</h1>
+  <p class="effective">Effective date: June 13, 2026 &nbsp;·&nbsp; Last updated: June 13, 2026</p>
+
+  <div class="pledge">
+    <h2>Our Privacy Pledge</h2>
+    <ul>
+      <li>We do not sell your family data — ever.</li>
+      <li>We do not sell, rent, or share your personal information with advertisers.</li>
+      <li>We do not use your content to train AI models.</li>
+      <li>We do not share your family tree with other users without your explicit invitation.</li>
+      <li>You can delete your account and all your data at any time.</li>
+      <li>You can export everything you've put into Jali.</li>
+    </ul>
+  </div>
+
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#what-we-collect">What We Collect</a></li>
+      <li><a href="#how-we-use">How We Use Your Data</a></li>
+      <li><a href="#what-we-dont">What We Don't Do With Your Data</a></li>
+      <li><a href="#sharing">When We Share Data</a></li>
+      <li><a href="#storage">Storage and Security</a></li>
+      <li><a href="#retention">Data Retention</a></li>
+      <li><a href="#your-rights">Your Rights</a></li>
+      <li><a href="#children">Children's Privacy</a></li>
+      <li><a href="#cookies">Cookies and Tracking</a></li>
+      <li><a href="#changes">Changes to This Policy</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </div>
+
+  <section id="what-we-collect">
+    <h2>1. What We Collect</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>What it includes</th>
+          <th>Why we collect it</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Account data</strong></td>
+          <td>Name, email address, hashed password</td>
+          <td>To create and secure your account</td>
+        </tr>
+        <tr>
+          <td><strong>Family tree data</strong></td>
+          <td>Person profiles, names, birth/death dates, biographical text, relationships</td>
+          <td>Core product — what you enter to build your tree</td>
+        </tr>
+        <tr>
+          <td><strong>Voice memos &amp; audio</strong></td>
+          <td>Audio recordings you upload or record, transcripts we generate</td>
+          <td>To store and display your oral history</td>
+        </tr>
+        <tr>
+          <td><strong>Photos</strong></td>
+          <td>Images you upload and attach to people in your tree</td>
+          <td>To display alongside family profiles</td>
+        </tr>
+        <tr>
+          <td><strong>Usage data</strong></td>
+          <td>Pages visited, features used, session timestamps</td>
+          <td>To improve the product and diagnose issues</td>
+        </tr>
+        <tr>
+          <td><strong>Billing data</strong></td>
+          <td>Subscription status, payment method type (card last 4 digits). Full card details are stored by Stripe, not us.</td>
+          <td>To manage your subscription</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>What We Do Not Collect</h3>
+    <ul>
+      <li>DNA or genetic data</li>
+      <li>Medical records or health history</li>
+      <li>Government ID numbers or immigration documents</li>
+      <li>Location data beyond what you voluntarily enter (e.g., birthplace)</li>
+    </ul>
+  </section>
+
+  <section id="how-we-use">
+    <h2>2. How We Use Your Data</h2>
+    <p>We use your data only to:</p>
+    <ul>
+      <li><strong>Provide the service</strong> — store your tree, display your family members, play back voice memos, generate transcripts</li>
+      <li><strong>Maintain your account</strong> — authentication, password resets, email notifications you've opted into</li>
+      <li><strong>Improve Jali</strong> — understand which features are used and where users get stuck, using aggregated and anonymized data</li>
+      <li><strong>Process billing</strong> — manage your subscription via Stripe</li>
+      <li><strong>Communicate with you</strong> — product updates, policy changes, and responses to your support requests</li>
+      <li><strong>Ensure security</strong> — detect and prevent fraud, abuse, or unauthorized access</li>
+    </ul>
+    <p>We do not use your personal information or family data for any other purpose without your explicit consent.</p>
+  </section>
+
+  <section id="what-we-dont">
+    <h2>3. What We Don't Do With Your Data</h2>
+    <div class="highlight">
+      We do not sell your family data. Full stop. This includes voice memos, photos, family relationships, biographical text, and any other content you add to Jali.
+    </div>
+    <ul>
+      <li>We do not sell or rent your personal information to data brokers or marketers</li>
+      <li>We do not use your family tree content to serve you targeted advertising</li>
+      <li>We do not share your data with insurance companies, employers, or government agencies unless legally compelled</li>
+      <li>We do not use your voice memos or photos to train AI or machine learning models</li>
+      <li>We do not share your family history with other Jali users who are not your invited collaborators</li>
+      <li>We do not combine your data with third-party data to build a profile for advertising purposes</li>
+    </ul>
+  </section>
+
+  <section id="sharing">
+    <h2>4. When We Share Data</h2>
+    <p>We share your data only in these limited circumstances:</p>
+
+    <h3>With your collaborators</h3>
+    <p>People you explicitly invite to your family tree can view and edit its contents. You control who has access.</p>
+
+    <h3>With service providers</h3>
+    <p>We use a small number of trusted third-party providers to operate the service. Each receives only the data they need to do their job and is contractually prohibited from using it for any other purpose.</p>
+    <table>
+      <thead>
+        <tr><th>Provider</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Render</td><td>Cloud hosting and infrastructure</td></tr>
+        <tr><td>Neo4j Aura</td><td>Graph database for family tree storage</td></tr>
+        <tr><td>Supabase / PostgreSQL</td><td>Relational database for account data</td></tr>
+        <tr><td>Stripe</td><td>Payment processing</td></tr>
+        <tr><td>OpenAI Whisper (or equivalent)</td><td>Voice memo transcription</td></tr>
+      </tbody>
+    </table>
+
+    <h3>For legal reasons</h3>
+    <p>We may disclose your data if required by law, court order, or to protect the safety of our users or the public. We will notify you of such requests where legally permitted to do so.</p>
+
+    <h3>Business transfers</h3>
+    <p>If Jali is acquired or merges with another entity, your data may be transferred as part of that transaction. We will notify you in advance and ensure the new operator is bound by equivalent privacy commitments.</p>
+  </section>
+
+  <section id="storage">
+    <h2>5. Storage and Security</h2>
+    <p>Your data is stored on servers in the United States. We use industry-standard security practices including:</p>
+    <ul>
+      <li>Encrypted connections (HTTPS/TLS) for all data in transit</li>
+      <li>Hashed passwords (never stored in plaintext)</li>
+      <li>Access controls limiting which team members can access production data</li>
+      <li>Regular security reviews of our infrastructure</li>
+    </ul>
+    <p>No system is perfectly secure. If we become aware of a data breach affecting your personal information, we will notify you promptly and take steps to contain and investigate it.</p>
+  </section>
+
+  <section id="retention">
+    <h2>6. Data Retention</h2>
+    <p>We keep your data for as long as your account is active. When you delete your account:</p>
+    <ul>
+      <li>Your family tree data, voice memos, and photos are permanently deleted within <strong>30 days</strong></li>
+      <li>Account metadata (email, billing history) may be retained for up to <strong>90 days</strong> for legal and accounting purposes</li>
+      <li>Backups containing your data are purged on a rolling basis within <strong>90 days</strong></li>
+    </ul>
+    <p>You can request early deletion of all your data by contacting us at <a href="mailto:nvafeomo05@gmail.com">nvafeomo05@gmail.com</a>.</p>
+  </section>
+
+  <section id="your-rights">
+    <h2>7. Your Rights</h2>
+    <p>You have the following rights over your data, regardless of where you live:</p>
+    <ul>
+      <li><strong>Access</strong> — Request a copy of the personal data we hold about you</li>
+      <li><strong>Correction</strong> — Ask us to correct inaccurate data</li>
+      <li><strong>Deletion</strong> — Delete your account and all your data at any time</li>
+      <li><strong>Export</strong> — Download your full family archive (paid subscribers get a structured ZIP; free users can export individual profiles)</li>
+      <li><strong>Portability</strong> — Receive your data in a machine-readable format</li>
+      <li><strong>Objection</strong> — Object to processing of your data where we rely on legitimate interest</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <a href="mailto:nvafeomo05@gmail.com">nvafeomo05@gmail.com</a>. We will respond within 30 days.</p>
+
+    <h3>California Residents (CCPA)</h3>
+    <p>California residents have additional rights under the CCPA, including the right to know what personal information is sold or disclosed and to opt out of such sales. We do not sell personal information, so there is nothing to opt out of — but you are entitled to this disclosure.</p>
+
+    <h3>EU/UK Residents (GDPR / UK GDPR)</h3>
+    <p>If you are located in the EU or UK, you also have the right to lodge a complaint with your local data protection authority. Our lawful basis for processing your data is performance of contract (to provide the service you signed up for) and legitimate interest (security and service improvement).</p>
+  </section>
+
+  <section id="children">
+    <h2>8. Children's Privacy</h2>
+    <p>Jali accounts are for users aged 13 and over. We do not knowingly collect personal information from children under 13. If we learn that we have collected information from a child under 13 without parental consent, we will delete it promptly.</p>
+    <p>Note: Jali allows you to add children and minors as <em>family members within your tree</em>. This is profile information you enter, not accounts created by those children. Please use discretion when adding information about living minors.</p>
+  </section>
+
+  <section id="cookies">
+    <h2>9. Cookies and Tracking</h2>
+    <p>Jali uses minimal cookies:</p>
+    <ul>
+      <li><strong>Authentication cookies</strong> — to keep you logged in. These are strictly necessary and cannot be disabled without breaking the service.</li>
+      <li><strong>Session cookies</strong> — temporary cookies that expire when you close your browser.</li>
+    </ul>
+    <p>We do not use third-party advertising cookies, social media tracking pixels, or cross-site tracking of any kind.</p>
+  </section>
+
+  <section id="changes">
+    <h2>10. Changes to This Policy</h2>
+    <p>If we make material changes to this Privacy Policy — particularly changes that affect how we use or share your data — we will notify you by email and display a notice in the app at least 14 days before the changes take effect.</p>
+    <p>Minor changes (like clarifying language or fixing typos) may be made without notice but will be reflected in the "Last updated" date at the top of this page.</p>
+  </section>
+
+  <section id="contact">
+    <h2>11. Contact</h2>
+    <p>Questions, concerns, or requests about your privacy? We take this seriously.</p>
+    <ul>
+      <li>Email: <a href="mailto:nvafeomo05@gmail.com">nvafeomo05@gmail.com</a></li>
+    </ul>
+    <p>We aim to respond to all privacy-related inquiries within 5 business days.</p>
+  </section>
+</main>
+
+<footer>
+  <p>
+    &copy; 2026 Jali &nbsp;·&nbsp;
+    <a href="../tos/">Terms of Service</a> &nbsp;·&nbsp;
+    <a href="mailto:nvafeomo05@gmail.com">Contact</a>
+  </p>
+  <p style="margin-top:0.4rem;">Your family's history stays yours.</p>
+</footer>
+
+</body>
+</html>

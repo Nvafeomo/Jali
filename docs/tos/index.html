@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Service — Jali</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0f172a;
+      --surface:      #1e1e2e;
+      --surface-muted:#2a2a3e;
+      --border:       #334155;
+      --accent:       #a78bfa;
+      --accent-hover: #8b5cf6;
+      --accent-glow:  rgba(167, 139, 250, 0.14);
+      --accent-ring:  rgba(167, 139, 250, 0.22);
+      --accent-border:rgba(167, 139, 250, 0.18);
+      --text:         #e2e8f0;
+      --text-heading: #f1f5f9;
+      --text-muted:   #94a3b8;
+      --text-subtle:  #64748b;
+      --green:        #4ade80;
+      --shadow:       0 4px 24px rgba(0,0,0,0.35);
+      --shadow-lg:    0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03) inset;
+      --radius:       12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .badge {
+      font-size: 0.75rem;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+      border-radius: 999px;
+      padding: 0.15rem 0.65rem;
+      font-weight: 500;
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 2rem 5rem;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.03em;
+    }
+
+    .effective {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 2.5rem;
+    }
+
+    .intro {
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.5rem;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .toc h2 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-subtle);
+      margin-bottom: 0.75rem;
+    }
+
+    .toc ol { padding-left: 1.25rem; }
+    .toc li { margin-bottom: 0.3rem; }
+    .toc a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .toc a:hover { text-decoration: underline; }
+
+    section { margin-bottom: 2.75rem; }
+
+    section h2 {
+      font-size: 1.15rem;
+      font-weight: 650;
+      color: var(--text-heading);
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-heading);
+      margin: 1.25rem 0 0.4rem;
+    }
+
+    p { margin-bottom: 0.9rem; color: var(--text); }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol { padding-left: 1.5rem; margin-bottom: 0.9rem; }
+    li { margin-bottom: 0.4rem; color: var(--text); }
+
+    .highlight {
+      background: var(--accent-glow);
+      border-left: 3px solid var(--accent);
+      padding: 0.85rem 1.1rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.1rem 0;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    a { color: var(--accent); }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-subtle);
+    }
+
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    @media (max-width: 600px) {
+      main { padding: 2rem 1.25rem 4rem; }
+      .page-title { font-size: 1.6rem; }
+      header { padding: 1rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="https://jali.app">J<span>A</span>LI</a>
+  <span class="badge">Legal</span>
+</header>
+
+<main>
+  <h1 class="page-title">Terms of Service</h1>
+  <p class="effective">Effective date: June 13, 2026 &nbsp;·&nbsp; Last updated: June 13, 2026</p>
+
+  <div class="intro">
+    Please read these Terms carefully before using Jali. By creating an account or using the service, you agree to be bound by these Terms. If you do not agree, do not use Jali.
+  </div>
+
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#about">About Jali</a></li>
+      <li><a href="#accounts">Accounts and Eligibility</a></li>
+      <li><a href="#your-content">Your Content</a></li>
+      <li><a href="#acceptable-use">Acceptable Use</a></li>
+      <li><a href="#subscriptions">Subscriptions and Billing</a></li>
+      <li><a href="#privacy">Privacy and Data</a></li>
+      <li><a href="#intellectual-property">Intellectual Property</a></li>
+      <li><a href="#termination">Termination</a></li>
+      <li><a href="#disclaimers">Disclaimers</a></li>
+      <li><a href="#liability">Limitation of Liability</a></li>
+      <li><a href="#changes">Changes to These Terms</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </div>
+
+  <section id="about">
+    <h2>1. About Jali</h2>
+    <p>Jali is a family history platform built for families whose history was spoken, not written. It allows users to build family trees, record and upload voice memos, preserve biographical information, and share family history with invited collaborators.</p>
+    <p>Jali is operated as an independent project. References to "we," "us," or "our" mean Jali and its operator. References to "you" or "your" mean you, the individual using the service.</p>
+  </section>
+
+  <section id="accounts">
+    <h2>2. Accounts and Eligibility</h2>
+    <h3>Eligibility</h3>
+    <p>You must be at least 13 years old to create an account. If you are under 18, you represent that a parent or guardian has reviewed and agreed to these Terms on your behalf.</p>
+    <h3>Account Responsibility</h3>
+    <p>You are responsible for keeping your login credentials secure and for all activity that occurs under your account. Notify us immediately at <a href="mailto:nvafeomo05@gmail.com">nvafeomo05@gmail.com</a> if you suspect unauthorized access.</p>
+    <h3>One Account Per Person</h3>
+    <p>Each person may maintain one account. You may not create accounts on behalf of others without their knowledge and consent.</p>
+  </section>
+
+  <section id="your-content">
+    <h2>3. Your Content</h2>
+    <h3>You Own Your Content</h3>
+    <p>Everything you add to Jali — family member profiles, biographical text, voice memos, photos, and relationships — belongs to you. We do not claim ownership of your family data.</p>
+    <h3>License to Operate the Service</h3>
+    <p>By uploading content to Jali, you grant us a limited, non-exclusive, royalty-free license to store, process, and display your content solely to operate and provide the service to you and your invited collaborators. We do not use your content for advertising or to train AI models.</p>
+    <h3>Your Responsibility for Content</h3>
+    <p>You are responsible for the accuracy of the information you enter and for ensuring you have the right to upload any content you add (e.g., photos, audio). Do not upload content that violates another person's privacy without their consent.</p>
+    <h3>Data Export</h3>
+    <p>Paid subscribers may export their full family archive at any time. We will not hold your data hostage — if you choose to leave Jali, you can take your content with you.</p>
+  </section>
+
+  <section id="acceptable-use">
+    <h2>4. Acceptable Use</h2>
+    <p>You agree not to use Jali to:</p>
+    <ul>
+      <li>Upload content that is illegal, defamatory, or infringes on another person's rights</li>
+      <li>Upload content about a living person without their knowledge or consent</li>
+      <li>Attempt to access, scrape, or extract other users' family data</li>
+      <li>Reverse engineer, decompile, or create derivative works from the Jali platform</li>
+      <li>Interfere with the security or integrity of the service</li>
+      <li>Use the service for commercial genealogy research or resale without prior written agreement</li>
+      <li>Impersonate another person or misrepresent your affiliation</li>
+    </ul>
+    <p>We reserve the right to suspend or terminate accounts that violate these rules.</p>
+  </section>
+
+  <section id="subscriptions">
+    <h2>5. Subscriptions and Billing</h2>
+    <h3>Free Tier</h3>
+    <p>Jali offers a free tier with limits on the number of person nodes, voice memos, and photos. The free tier is genuinely usable — it is not a trial that expires.</p>
+    <h3>Paid Plans</h3>
+    <p>Paid subscriptions unlock additional capacity (unlimited nodes, voice memos, and photos) and full data export. Pricing and plan details are published on the Jali website.</p>
+    <h3>Billing</h3>
+    <p>Payments are processed securely via Stripe. Your card is charged at the start of each billing period (monthly or annual). Prices are in USD unless otherwise stated.</p>
+    <h3>Cancellation</h3>
+    <p>You may cancel your subscription at any time. Cancellation takes effect at the end of your current billing period. We do not offer refunds for partial periods, except where required by law.</p>
+    <h3>Price Changes</h3>
+    <p>We will give you at least 30 days' notice before raising prices on your existing plan. You may cancel before the new price takes effect.</p>
+  </section>
+
+  <section id="privacy">
+    <h2>6. Privacy and Data</h2>
+    <div class="highlight">
+      We do not sell your family data. We do not sell, rent, license, or share your personal information or your family's information with third parties for their marketing or commercial purposes.
+    </div>
+    <p>Your privacy is central to what Jali is. See our full <a href="../privacy-policy/">Privacy Policy</a> for details on what we collect, how we use it, and your rights.</p>
+  </section>
+
+  <section id="intellectual-property">
+    <h2>7. Intellectual Property</h2>
+    <p>The Jali name, logo, and platform code are owned by Jali and its operator. Nothing in these Terms transfers any intellectual property rights to you beyond the right to use the service as described.</p>
+    <p>If you believe content on Jali infringes your copyright, please contact us at <a href="mailto:nvafeomo05@gmail.com">nvafeomo05@gmail.com</a> with a description of the alleged infringement.</p>
+  </section>
+
+  <section id="termination">
+    <h2>8. Termination</h2>
+    <h3>By You</h3>
+    <p>You may delete your account at any time from your account settings. Upon deletion, your data is scheduled for permanent removal within 30 days, except where we are required by law to retain it longer.</p>
+    <h3>By Us</h3>
+    <p>We may suspend or terminate your account if you materially breach these Terms, if required by law, or if continuing to operate your account poses a security or legal risk. We will give notice where reasonably possible.</p>
+    <h3>Effect of Termination</h3>
+    <p>Upon termination, your right to use the service ends. Paid subscribers will receive a pro-rated refund for any unused portion of a prepaid annual plan.</p>
+  </section>
+
+  <section id="disclaimers">
+    <h2>9. Disclaimers</h2>
+    <p>Jali is provided "as is" and "as available." We make no warranties, express or implied, about the reliability, accuracy, or fitness of the service for any particular purpose.</p>
+    <p>We are not responsible for the accuracy of genealogical information entered by users. Family history records are inherently uncertain — Jali is a tool to preserve what families know, not an authoritative record.</p>
+    <p>We make reasonable efforts to keep the service available but cannot guarantee uninterrupted access. We may perform maintenance that temporarily takes the service offline.</p>
+  </section>
+
+  <section id="liability">
+    <h2>10. Limitation of Liability</h2>
+    <p>To the fullest extent permitted by law, Jali and its operator will not be liable for indirect, incidental, special, consequential, or punitive damages arising from your use of, or inability to use, the service — including loss of data, loss of revenue, or emotional distress.</p>
+    <p>Our total liability to you for any claim arising from these Terms or your use of the service will not exceed the amount you paid to Jali in the 12 months preceding the claim, or $50 USD, whichever is greater.</p>
+  </section>
+
+  <section id="changes">
+    <h2>11. Changes to These Terms</h2>
+    <p>We may update these Terms from time to time. When we make material changes, we will notify you by email and by displaying a notice in the app at least 14 days before the changes take effect.</p>
+    <p>Your continued use of Jali after the effective date of updated Terms constitutes your acceptance of the changes. If you do not agree to the updated Terms, you should cancel your account before they take effect.</p>
+  </section>
+
+  <section id="contact">
+    <h2>12. Contact</h2>
+    <p>Questions about these Terms? We're reachable at:</p>
+    <ul>
+      <li>Email: <a href="mailto:nvafeomo05@gmail.com">nvafeomo05@gmail.com</a></li>
+    </ul>
+    <p>We aim to respond to all inquiries within 5 business days.</p>
+  </section>
+</main>
+
+<footer>
+  <p>
+    &copy; 2026 Jali &nbsp;·&nbsp;
+    <a href="../privacy-policy/">Privacy Policy</a> &nbsp;·&nbsp;
+    <a href="mailto:nvafeomo05@gmail.com">Contact</a>
+  </p>
+  <p style="margin-top:0.4rem;">Built for families whose history was spoken, not written.</p>
+</footer>
+
+</body>
+</html>
