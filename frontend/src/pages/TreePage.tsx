@@ -35,8 +35,11 @@ const EmptyTreeGraphic = () => (
 const TreePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [onboardingFromSignup] = useState(
+    () => (location.state as { onboarding?: boolean } | null)?.onboarding === true,
+  );
+  const [manualAddPanel, setManualAddPanel] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
-  const [showAddPanel, setShowAddPanel] = useState(false);
   const [linkPick, setLinkPick] = useState<LinkPickState | null>(null);
 
   const { email, isAuthenticated, logout } = useAuth();
@@ -45,19 +48,14 @@ const TreePage = () => {
 
   const isEmptyTree = !loading && !error && people.length === 0;
   const isFirstPersonFlow = isEmptyTree;
+  const showAddPanel =
+    isEmptyTree || (onboardingFromSignup && loading) || manualAddPanel;
 
   useEffect(() => {
-    if (location.state?.onboarding === true) {
-      setShowAddPanel(true);
+    if (onboardingFromSignup) {
       navigate('/tree', { replace: true, state: null });
     }
-  }, [location.state, navigate]);
-
-  useEffect(() => {
-    if (isEmptyTree) {
-      setShowAddPanel(true);
-    }
-  }, [isEmptyTree]);
+  }, [onboardingFromSignup, navigate]);
 
   const lookup = useMemo(() => peopleById(people), [people]);
   const treePartition = useMemo(() => partitionTreeMembers(people), [people]);
@@ -79,7 +77,7 @@ const TreePage = () => {
 
   const handlePersonSelect = useCallback(
     (person: Person) => {
-      setShowAddPanel(false);
+      setManualAddPanel(false);
       const onTree = treeMemberIds.has(person.id);
 
       if (linkPick?.picking) {
@@ -111,7 +109,7 @@ const TreePage = () => {
 
   const handleOpenAdd = () => {
     setSelectedPersonId(null);
-    setShowAddPanel(true);
+    setManualAddPanel(true);
     setLinkPick(null);
   };
 
@@ -253,10 +251,10 @@ const TreePage = () => {
               treeHasMembers={people.length > 0}
               isFirstPerson={isFirstPersonFlow}
               onClose={() => {
-                if (!isFirstPersonFlow) setShowAddPanel(false);
+                if (!isFirstPersonFlow) setManualAddPanel(false);
               }}
               onCreated={() => {
-                if (!isFirstPersonFlow) setShowAddPanel(false);
+                if (!isFirstPersonFlow) setManualAddPanel(false);
               }}
             />
           </aside>
