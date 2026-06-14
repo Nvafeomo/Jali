@@ -1,6 +1,8 @@
 package com.jali.service;
 
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -63,7 +65,7 @@ public class PersonGraphService {
 					DETACH DELETE p
 					""")
 					.bind(familyTreeId).to("familyTreeId")
-					.bind(treeCreatedAt).to("treeCreatedAt")
+					.bind(toNeo4jDateTime(treeCreatedAt)).to("treeCreatedAt")
 					.run();
 		}
 		catch (Exception ex) {
@@ -143,22 +145,12 @@ public class PersonGraphService {
 			byUuid.put(person.getUuid(), person);
 		}
 
-		wireTreeRelationships(familyTreeId, treeCreatedAt, byUuid);
+		wireTreeRelationships(familyTreeId, byUuid);
 		return new ArrayList<>(byUuid.values());
 	}
 
 	public long countPeopleInTree(Long familyTreeId) {
-		Instant treeCreatedAt = requireTreeCreatedAt(familyTreeId);
-		return neo4jClient.query("""
-				MATCH (p:Person {familyTreeId: $familyTreeId})
-				WHERE p.createdAt IS NOT NULL AND p.createdAt >= $treeCreatedAt
-				RETURN count(p) AS c
-				""")
-				.bind(familyTreeId).to("familyTreeId")
-				.bind(treeCreatedAt).to("treeCreatedAt")
-				.fetchAs(Long.class)
-				.one()
-				.orElse(0L);
+		return findAllPeopleInTree(familyTreeId).size();
 	}
 
 	public List<Person> findAllPeopleInTree(Long familyTreeId) {
@@ -171,18 +163,15 @@ public class PersonGraphService {
 
 	private void wireTreeRelationships(
 			Long familyTreeId,
-			Instant treeCreatedAt,
 			Map<String, Person> byUuid) {
 		neo4jClient.query("""
 				MATCH (p:Person {familyTreeId: $familyTreeId})-[r:PARENT_OF]->(c:Person {familyTreeId: $familyTreeId})
-				WHERE p.createdAt >= $treeCreatedAt AND c.createdAt >= $treeCreatedAt
 				RETURN p.uuid AS fromUuid, c.uuid AS toUuid,
 				       coalesce(r.confidenceScore, 1.0) AS confidenceScore,
 				       coalesce(r.disputed, false) AS disputed,
 				       r.parentRole AS parentRole
 				""")
 				.bind(familyTreeId).to("familyTreeId")
-				.bind(treeCreatedAt).to("treeCreatedAt")
 				.fetch().all().forEach(row -> {
 			Person parent = byUuid.get((String) row.get("fromUuid"));
 			Person child = byUuid.get((String) row.get("toUuid"));
@@ -198,12 +187,10 @@ public class PersonGraphService {
 
 		neo4jClient.query("""
 				MATCH (p:Person {familyTreeId: $familyTreeId})-[r:MARRIED_TO]->(s:Person {familyTreeId: $familyTreeId})
-				WHERE p.createdAt >= $treeCreatedAt AND s.createdAt >= $treeCreatedAt
 				RETURN p.uuid AS fromUuid, s.uuid AS toUuid,
 				       coalesce(r.confidenceScore, 1.0) AS confidenceScore
 				""")
 				.bind(familyTreeId).to("familyTreeId")
-				.bind(treeCreatedAt).to("treeCreatedAt")
 				.fetch().all().forEach(row -> {
 					Person person = byUuid.get((String) row.get("fromUuid"));
 					Person spouse = byUuid.get((String) row.get("toUuid"));
@@ -217,13 +204,11 @@ public class PersonGraphService {
 
 		neo4jClient.query("""
 				MATCH (p:Person {familyTreeId: $familyTreeId})-[r:SIBLING_OF]->(s:Person {familyTreeId: $familyTreeId})
-				WHERE p.createdAt >= $treeCreatedAt AND s.createdAt >= $treeCreatedAt
 				RETURN p.uuid AS fromUuid, s.uuid AS toUuid,
 				       coalesce(r.confidenceScore, 1.0) AS confidenceScore,
 				       coalesce(r.halfSibling, false) AS halfSibling
 				""")
 				.bind(familyTreeId).to("familyTreeId")
-				.bind(treeCreatedAt).to("treeCreatedAt")
 				.fetch().all().forEach(row -> {
 					Person person = byUuid.get((String) row.get("fromUuid"));
 					Person sibling = byUuid.get((String) row.get("toUuid"));
@@ -325,6 +310,10 @@ public class PersonGraphService {
 				.all()).stream()
 				.filter(p -> belongsToTree(p, treeCreatedAt))
 				.toList();
+	}
+
+	private static ZonedDateTime toNeo4jDateTime(Instant instant) {
+		return instant.atZone(ZoneOffset.UTC);
 	}
 
 	private static int clampDepth(int depth) {
