@@ -1,6 +1,8 @@
 type Query {
 	person(uuid: String!): Person
 	myTree: [Person]
+	myTreePersonCount: Int!
+	myTreePeople: [Person]
 	ancestors(uuid: String!, depth: Int = 4): [Person]
 	descendants(uuid: String!, depth: Int = 4): [Person]
 }

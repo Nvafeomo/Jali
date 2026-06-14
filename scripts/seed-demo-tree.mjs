@@ -84,9 +84,9 @@ async function auth() {
 async function treeHasPeople(token) {
   const data = await gql(
     token,
-    `query { myTree { uuid fullName } }`,
+    `query { myTreePersonCount }`,
   );
-  return data.myTree?.length ?? 0;
+  return data.myTreePersonCount ?? 0;
 }
 
 async function createPerson(token, person) {
@@ -141,10 +141,10 @@ async function renameTree(token, name) {
 async function fetchPeopleByName(token) {
   const data = await gql(
     token,
-    `query { myTree { uuid fullName birthDate } }`,
+    `query { myTreePeople { uuid fullName birthDate } }`,
   );
   const byKey = new Map();
-  for (const person of data.myTree ?? []) {
+  for (const person of data.myTreePeople ?? []) {
     const lookup = `${person.fullName}\0${person.birthDate ?? ''}`;
     if (byKey.has(lookup)) {
       throw new Error(`Duplicate person in tree: ${person.fullName} (${person.birthDate ?? 'no birthDate'})`);

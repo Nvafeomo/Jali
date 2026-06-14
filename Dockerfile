@@ -15,7 +15,7 @@ WORKDIR /app
 COPY --from=build /app/target/jali-0.0.1-SNAPSHOT.jar app.jar
 
 # Render injects PORT at runtime — application.properties reads ${PORT:8080}
-ENV JAVA_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Dspring.jmx.enabled=false"
+ENV JAVA_OPTS="-Xmx384m -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Dspring.jmx.enabled=false"
 
 EXPOSE 8080
 

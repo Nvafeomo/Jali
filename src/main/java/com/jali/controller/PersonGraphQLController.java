@@ -51,6 +51,16 @@ public class PersonGraphQLController {
 	}
 
 	@QueryMapping
+	public long myTreePersonCount(@AuthenticationPrincipal UserPrincipal principal) {
+		return personGraphService.countPeopleInTree(principal.familyTreeId());
+	}
+
+	@QueryMapping
+	public List<Person> myTreePeople(@AuthenticationPrincipal UserPrincipal principal) {
+		return personGraphService.findAllPeopleInTree(principal.familyTreeId());
+	}
+
+	@QueryMapping
 	public List<Person> ancestors(
 			@Argument String uuid,
 			@Argument Integer depth,

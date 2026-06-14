@@ -3,6 +3,7 @@ package com.jali.service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +16,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.jali.dto.CreatePersonRequest;
 import com.jali.entity.FamilyTree;
+import com.jali.neo4j.MarriedToRelationship;
+import com.jali.neo4j.ParentOfRelationship;
 import com.jali.neo4j.Person;
+import com.jali.neo4j.SiblingOfRelationship;
 import com.jali.repository.jpa.FamilyTreeRepository;
 import com.jali.repository.neo4j.PersonRepository;
 
@@ -127,15 +131,120 @@ public class PersonGraphService {
 
 	public List<Person> findAllInTreeWithRelationships(Long familyTreeId) {
 		Instant treeCreatedAt = requireTreeCreatedAt(familyTreeId);
+
+		Map<String, Person> byUuid = new LinkedHashMap<>();
+		for (Person person : personRepository.findAllByFamilyTreeId(familyTreeId)) {
+			if (!familyTreeId.equals(person.getFamilyTreeId()) || !belongsToTree(person, treeCreatedAt)) {
+				continue;
+			}
+			person.setChildren(new ArrayList<>());
+			person.setSpouses(new ArrayList<>());
+			person.setSiblings(new ArrayList<>());
+			byUuid.put(person.getUuid(), person);
+		}
+
+		wireTreeRelationships(familyTreeId, treeCreatedAt, byUuid);
+		return new ArrayList<>(byUuid.values());
+	}
+
+	public long countPeopleInTree(Long familyTreeId) {
+		Instant treeCreatedAt = requireTreeCreatedAt(familyTreeId);
+		return neo4jClient.query("""
+				MATCH (p:Person {familyTreeId: $familyTreeId})
+				WHERE p.createdAt IS NOT NULL AND p.createdAt >= $treeCreatedAt
+				RETURN count(p) AS c
+				""")
+				.bind(familyTreeId).to("familyTreeId")
+				.bind(treeCreatedAt).to("treeCreatedAt")
+				.fetchAs(Long.class)
+				.one()
+				.orElse(0L);
+	}
+
+	public List<Person> findAllPeopleInTree(Long familyTreeId) {
+		Instant treeCreatedAt = requireTreeCreatedAt(familyTreeId);
 		return personRepository.findAllByFamilyTreeId(familyTreeId).stream()
 				.filter(person -> familyTreeId.equals(person.getFamilyTreeId()))
 				.filter(person -> belongsToTree(person, treeCreatedAt))
-				.map(person -> personRepository.findById(person.getId())
-						.orElseThrow(() -> new ResponseStatusException(
-								HttpStatus.NOT_FOUND, "Person not found in this family tree")))
-				.filter(person -> belongsToTree(person, treeCreatedAt))
-				.map(person -> sanitizeRelationships(person, familyTreeId, treeCreatedAt))
 				.toList();
+	}
+
+	private void wireTreeRelationships(
+			Long familyTreeId,
+			Instant treeCreatedAt,
+			Map<String, Person> byUuid) {
+		neo4jClient.query("""
+				MATCH (p:Person {familyTreeId: $familyTreeId})-[r:PARENT_OF]->(c:Person {familyTreeId: $familyTreeId})
+				WHERE p.createdAt >= $treeCreatedAt AND c.createdAt >= $treeCreatedAt
+				RETURN p.uuid AS fromUuid, c.uuid AS toUuid,
+				       coalesce(r.confidenceScore, 1.0) AS confidenceScore,
+				       coalesce(r.disputed, false) AS disputed,
+				       r.parentRole AS parentRole
+				""")
+				.bind(familyTreeId).to("familyTreeId")
+				.bind(treeCreatedAt).to("treeCreatedAt")
+				.fetch().all().forEach(row -> {
+			Person parent = byUuid.get((String) row.get("fromUuid"));
+			Person child = byUuid.get((String) row.get("toUuid"));
+			if (parent == null || child == null) {
+				return;
+			}
+			ParentOfRelationship rel = new ParentOfRelationship(relationshipStub(child));
+			rel.setConfidenceScore(((Number) row.get("confidenceScore")).doubleValue());
+			rel.setDisputed(Boolean.TRUE.equals(row.get("disputed")));
+			rel.setParentRole((String) row.get("parentRole"));
+			parent.getChildren().add(rel);
+		});
+
+		neo4jClient.query("""
+				MATCH (p:Person {familyTreeId: $familyTreeId})-[r:MARRIED_TO]->(s:Person {familyTreeId: $familyTreeId})
+				WHERE p.createdAt >= $treeCreatedAt AND s.createdAt >= $treeCreatedAt
+				RETURN p.uuid AS fromUuid, s.uuid AS toUuid,
+				       coalesce(r.confidenceScore, 1.0) AS confidenceScore
+				""")
+				.bind(familyTreeId).to("familyTreeId")
+				.bind(treeCreatedAt).to("treeCreatedAt")
+				.fetch().all().forEach(row -> {
+					Person person = byUuid.get((String) row.get("fromUuid"));
+					Person spouse = byUuid.get((String) row.get("toUuid"));
+					if (person == null || spouse == null) {
+						return;
+					}
+					MarriedToRelationship rel = new MarriedToRelationship(relationshipStub(spouse));
+					rel.setConfidenceScore(((Number) row.get("confidenceScore")).doubleValue());
+					person.getSpouses().add(rel);
+				});
+
+		neo4jClient.query("""
+				MATCH (p:Person {familyTreeId: $familyTreeId})-[r:SIBLING_OF]->(s:Person {familyTreeId: $familyTreeId})
+				WHERE p.createdAt >= $treeCreatedAt AND s.createdAt >= $treeCreatedAt
+				RETURN p.uuid AS fromUuid, s.uuid AS toUuid,
+				       coalesce(r.confidenceScore, 1.0) AS confidenceScore,
+				       coalesce(r.halfSibling, false) AS halfSibling
+				""")
+				.bind(familyTreeId).to("familyTreeId")
+				.bind(treeCreatedAt).to("treeCreatedAt")
+				.fetch().all().forEach(row -> {
+					Person person = byUuid.get((String) row.get("fromUuid"));
+					Person sibling = byUuid.get((String) row.get("toUuid"));
+					if (person == null || sibling == null) {
+						return;
+					}
+					SiblingOfRelationship rel = new SiblingOfRelationship(relationshipStub(sibling));
+					rel.setConfidenceScore(((Number) row.get("confidenceScore")).doubleValue());
+					rel.setHalfSibling(Boolean.TRUE.equals(row.get("halfSibling")));
+					person.getSiblings().add(rel);
+				});
+	}
+
+	private static Person relationshipStub(Person target) {
+		Person stub = new Person();
+		stub.setUuid(target.getUuid());
+		stub.setFullName(target.getFullName());
+		stub.setConfidenceScore(target.getConfidenceScore());
+		stub.setIsUnknownPlaceholder(target.getIsUnknownPlaceholder());
+		stub.setFamilyTreeId(target.getFamilyTreeId());
+		return stub;
 	}
 
 	private Instant requireTreeCreatedAt(Long familyTreeId) {
