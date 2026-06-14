@@ -8,8 +8,10 @@ import {
   centerAllNodes,
   layoutGen0ParentsByFootprint,
   layoutParentGenerationByBranch,
+  layoutRemainingAtGeneration,
   type PositionedNode,
 } from './branchLayout';
+import { resolveRowOverlaps } from './layoutSpacing';
 import {
   H_GAP,
   NODE_HEIGHT,
@@ -279,7 +281,7 @@ function addPedigreeEdges(edges: LayoutEdge[], people: Person[]) {
   }
 }
 
-export const LAYOUT_VERSION = 5;
+export const LAYOUT_VERSION = 6;
 
 export function buildLayout(people: Person[]): {
   nodes: LayoutNode[];
@@ -304,21 +306,27 @@ export function buildLayout(people: Person[]): {
 
   const addNodes = (newNodes: PositionedNode[]) => {
     for (const n of newNodes) {
+      if (nodeById.has(n.id)) continue;
       nodes.push(n);
       nodeById.set(n.id, n);
     }
   };
 
+  const placedAtGen = (genY: number): Set<string> =>
+    new Set([...nodeById.values()].filter(n => n.position.y === genY).map(n => n.id));
+
   if (maxGen === 0) {
     const genY = 0;
     addNodes(layoutGenerationRow(byGen.get(0) ?? [], genY, byId));
   } else {
-    for (let gen = maxGen; gen >= 0; gen--) {
+    // Phase 1: one packed row per generation (children under their parent branch).
+    for (let gen = 1; gen <= maxGen; gen++) {
       const genY = gen * (NODE_HEIGHT + V_GAP);
       const genPeople = byGen.get(gen) ?? [];
+      const genIds = new Set(genPeople.map(p => p.id));
 
-      if (gen === maxGen) {
-        const childNodes = layoutChildGenerationByBranch(
+      addNodes(
+        layoutChildGenerationByBranch(
           gen,
           gen - 1,
           genY,
@@ -326,48 +334,52 @@ export function buildLayout(people: Person[]): {
           pedigreeGroups,
           genPeople,
           byId,
-        );
-        addNodes(childNodes);
+        ),
+      );
 
-        const assigned = new Set(childNodes.map(n => n.id));
-        const remaining = genPeople.filter(p => !assigned.has(p.id));
-        if (remaining.length > 0) {
-          addNodes(layoutGenerationRow(remaining, genY, byId));
-        }
-      } else if (gen === 0) {
-        const parentNodes = layoutGen0ParentsByFootprint(
-          genPeople,
-          genY,
-          genMap,
-          byId,
-          nodeById,
+      const remaining = genPeople.filter(p => !placedAtGen(genY).has(p.id));
+      if (remaining.length > 0) {
+        addNodes(
+          layoutRemainingAtGeneration(remaining, genY, nodes, genIds, byId),
         );
-        addNodes(parentNodes);
-
-        const assigned = new Set(parentNodes.map(n => n.id));
-        const remaining = genPeople.filter(p => !assigned.has(p.id));
-        if (remaining.length > 0) {
-          addNodes(layoutGenerationRow(remaining, genY, byId));
-        }
-      } else {
-        const parentNodes = layoutParentGenerationByBranch(
-          gen,
-          gen + 1,
-          genY,
-          genMap,
-          pedigreeGroups,
-          genPeople,
-          byId,
-          nodeById,
-        );
-        addNodes(parentNodes);
-
-        const assigned = new Set(parentNodes.map(n => n.id));
-        const remaining = genPeople.filter(p => !assigned.has(p.id));
-        if (remaining.length > 0) {
-          addNodes(layoutGenerationRow(remaining, genY, byId));
-        }
       }
+
+      resolveRowOverlaps(nodes, genY);
+    }
+
+    // Phase 2: parents centered above the child row (skip people already on that row).
+    for (let gen = maxGen - 1; gen >= 0; gen--) {
+      const genY = gen * (NODE_HEIGHT + V_GAP);
+      const genPeople = byGen.get(gen) ?? [];
+      const genIds = new Set(genPeople.map(p => p.id));
+
+      if (gen === 0) {
+        addNodes(
+          layoutGen0ParentsByFootprint(genPeople, genY, genMap, byId, nodeById),
+        );
+      } else {
+        addNodes(
+          layoutParentGenerationByBranch(
+            gen,
+            gen + 1,
+            genY,
+            genMap,
+            pedigreeGroups,
+            genPeople,
+            byId,
+            nodeById,
+          ),
+        );
+      }
+
+      const remaining = genPeople.filter(p => !placedAtGen(genY).has(p.id));
+      if (remaining.length > 0) {
+        addNodes(
+          layoutRemainingAtGeneration(remaining, genY, nodes, genIds, byId),
+        );
+      }
+
+      resolveRowOverlaps(nodes, genY);
     }
   }
 

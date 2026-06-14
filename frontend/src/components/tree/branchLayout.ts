@@ -14,6 +14,7 @@ import {
   sortPeopleByBirthOldestFirst,
 } from './siblingOrder';
 import { layoutSiblingBandOnParentRow, middleChildCenterX } from './siblingParentRowLayout';
+import { placeBlockOnRow } from './layoutSpacing';
 
 export interface PositionedNode {
   id: string;
@@ -226,6 +227,25 @@ export function layoutChildGenerationByBranch(
   return allNodes;
 }
 
+/** Pack unplaced people at genY to the right of nodes already on that row. */
+export function layoutRemainingAtGeneration(
+  remaining: Person[],
+  genY: number,
+  existingNodes: PositionedNode[],
+  genIds: Set<string>,
+  byId: Map<string, Person>,
+): PositionedNode[] {
+  if (remaining.length === 0) return [];
+
+  const onRow = existingNodes.filter(n => n.position.y === genY);
+  const startX =
+    onRow.length > 0
+      ? Math.max(...onRow.map(n => n.position.x)) + LAYOUT_NODE_WIDTH + H_GAP
+      : 0;
+
+  return layoutClustersInRow(remaining, startX, genY, genIds, byId);
+}
+
 /**
  * Place each sibling (+ spouses) centered above their own children. Siblings without
  * children sit just outside the previous branch's child span.
@@ -275,10 +295,16 @@ export function layoutParentGenerationByBranch(
       parentGen,
       genMap,
     )) {
-      if (!placedNodeIds.has(node.id)) {
+      if (placedNodeIds.has(node.id)) continue;
+
+      const alreadyOnRow = existingNodes.get(node.id);
+      if (alreadyOnRow && alreadyOnRow.position.y === genY) {
         placedNodeIds.add(node.id);
-        allNodes.push(node);
+        continue;
       }
+
+      placedNodeIds.add(node.id);
+      allNodes.push(node);
     }
   }
 
@@ -326,11 +352,13 @@ export function layoutParentGenerationByBranch(
     const childMax = Math.max(...childNodes.map(n => n.position.x)) + LAYOUT_NODE_WIDTH;
     const centerX = middleChildCenterX(childNodes) ?? (childMin + childMax) / 2;
 
-    allNodes.push({
+    const node: PositionedNode = {
       id: person.id,
       position: { x: centerX - LAYOUT_NODE_WIDTH / 2, y: genY },
       data: person,
-    });
+    };
+    placeBlockOnRow([node], genY, [...existingNodes.values(), ...allNodes]);
+    allNodes.push(node);
     placedIds.add(person.id);
   }
 

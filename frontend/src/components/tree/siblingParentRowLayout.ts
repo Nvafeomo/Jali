@@ -12,6 +12,7 @@ import {
   hasKnownBirthYear,
   sortPeopleByBirthOldestFirst,
 } from './siblingOrder';
+import { placeBlockOnRow } from './layoutSpacing';
 
 export interface PositionedNode {
   id: string;
@@ -332,6 +333,7 @@ function placeByBirthOrder(
         genY,
         byId,
       );
+      placeBlockOnRow(unitNodes, genY, nodes);
       nodes.push(...unitNodes);
       if (unitNodes.length > 0) {
         placedClusters.push({
@@ -360,6 +362,7 @@ function placeByBirthOrder(
     }
 
     const bandNodes = placeSpouseClusterAt(item.cluster, clusterLeft, genY, byId);
+    placeBlockOnRow(bandNodes, genY, nodes);
     nodes.push(...bandNodes);
     placedClusters.push({
       min: clusterLeft,
@@ -383,12 +386,12 @@ function placeBySpacePacking(
   const childless = items.filter(i => i.childNodes.length === 0);
 
   if (withChildren.length === 0) {
-    let cursor = 0;
     for (const item of sortPeopleByBirthOldestFirst(childless.map(i => i.rep)).map(rep =>
       childless.find(i => i.rep.id === rep.id)!,
     )) {
-      nodes.push(...placeSpouseClusterAt(item.cluster, cursor, genY, byId));
-      cursor += item.clusterWidth + H_GAP;
+      const bandNodes = placeSpouseClusterAt(item.cluster, 0, genY, byId);
+      placeBlockOnRow(bandNodes, genY, nodes);
+      nodes.push(...bandNodes);
     }
     return nodes;
   }
@@ -397,29 +400,28 @@ function placeBySpacePacking(
     item.childNodes.length > best.childNodes.length ? item : best,
   );
 
-  nodes.push(
-    ...layoutBranchParentUnit(
-      hub.rep.id,
-      byBranch,
-      hub.childNodes,
-      parentGen,
-      genMap,
-      genY,
-      byId,
-    ),
+  const hubNodes = layoutBranchParentUnit(
+    hub.rep.id,
+    byBranch,
+    hub.childNodes,
+    parentGen,
+    genMap,
+    genY,
+    byId,
   );
+  nodes.push(...hubNodes);
 
   // Childless siblings must clear ALL placed parents, not just the hub.
-  // E.g. if Nvasiki (withChildren) has children starting at x=0, a childless sibling
-  // placed at hubFoot.min-H_GAP would land on top of Nvasiki. Use the global min.
   const allChildrenMinX = Math.min(...withChildren.map(i => childFootprint(i.childNodes)!.min));
   let leftCursor = allChildrenMinX - H_GAP;
   for (const item of sortPeopleByBirthOldestFirst(childless.map(i => i.rep)).map(rep =>
     childless.find(i => i.rep.id === rep.id)!,
   )) {
     const clusterLeft = leftCursor - item.clusterWidth;
-    nodes.push(...placeSpouseClusterAt(item.cluster, clusterLeft, genY, byId));
-    leftCursor = clusterLeft - H_GAP;
+    const bandNodes = placeSpouseClusterAt(item.cluster, clusterLeft, genY, byId);
+    placeBlockOnRow(bandNodes, genY, nodes);
+    nodes.push(...bandNodes);
+    leftCursor = Math.min(...bandNodes.map(n => n.position.x)) - H_GAP;
   }
 
   const others = withChildren.filter(i => i.rep.id !== hub.rep.id);
@@ -430,17 +432,17 @@ function placeBySpacePacking(
   });
 
   for (const item of others) {
-    nodes.push(
-      ...layoutBranchParentUnit(
-        item.rep.id,
-        byBranch,
-        item.childNodes,
-        parentGen,
-        genMap,
-        genY,
-        byId,
-      ),
+    const unitNodes = layoutBranchParentUnit(
+      item.rep.id,
+      byBranch,
+      item.childNodes,
+      parentGen,
+      genMap,
+      genY,
+      byId,
     );
+    placeBlockOnRow(unitNodes, genY, nodes);
+    nodes.push(...unitNodes);
   }
 
   return nodes;
