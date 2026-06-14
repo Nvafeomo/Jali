@@ -30,9 +30,10 @@ Plan on two subdomains:
 | `DB_URL` | `jdbc:postgresql://<host>:<port>/<dbname>` (from Render Postgres) |
 | `DB_USERNAME` | from Render Postgres |
 | `DB_PASSWORD` | from Render Postgres |
-| `NEO4J_URI` | your Neo4j Aura URI (e.g. `neo4j+s://xxxx.databases.neo4j.io`) |
+| `NEO4J_URI` | your Neo4j Aura URI (must use **`neo4j+s://`** — not `bolt://`) |
 | `NEO4J_USERNAME` | `neo4j` |
 | `NEO4J_PASSWORD` | your Aura password |
+| `NEO4J_DATABASE` | `neo4j` (Aura default; required for routing) |
 | `JWT_SECRET` | a random 64-char string (PowerShell: `-join ((1..32 \| ForEach-Object { '{0:x2}' -f (Get-Random -Maximum 256) }))`) |
 | `CORS_ALLOWED_ORIGINS` | `https://yourdomain.com,https://www.yourdomain.com` |
 | `GRAPHIQL_ENABLED` | `false` |

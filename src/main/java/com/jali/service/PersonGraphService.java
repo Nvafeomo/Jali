@@ -40,8 +40,11 @@ public class PersonGraphService {
 
 	public Person requireInTreeWithRelationships(String uuid, Long familyTreeId) {
 		Person person = requireInTree(uuid, familyTreeId);
-		return personRepository.findById(person.getId())
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found in this family tree"));
+		return sanitizeRelationships(
+				personRepository.findById(person.getId())
+						.orElseThrow(() -> new ResponseStatusException(
+								HttpStatus.NOT_FOUND, "Person not found in this family tree")),
+				familyTreeId);
 	}
 
 	public Person saveInTree(Person person, Long familyTreeId) {
@@ -77,10 +80,32 @@ public class PersonGraphService {
 
 	public List<Person> findAllInTreeWithRelationships(Long familyTreeId) {
 		return personRepository.findAllByFamilyTreeId(familyTreeId).stream()
+				.filter(person -> familyTreeId.equals(person.getFamilyTreeId()))
 				.map(person -> personRepository.findById(person.getId())
 						.orElseThrow(() -> new ResponseStatusException(
 								HttpStatus.NOT_FOUND, "Person not found in this family tree")))
+				.filter(person -> familyTreeId.equals(person.getFamilyTreeId()))
+				.map(person -> sanitizeRelationships(person, familyTreeId))
 				.toList();
+	}
+
+	private static Person sanitizeRelationships(Person person, Long familyTreeId) {
+		if (person.getChildren() != null) {
+			person.setChildren(person.getChildren().stream()
+					.filter(r -> r.getChild() != null && familyTreeId.equals(r.getChild().getFamilyTreeId()))
+					.toList());
+		}
+		if (person.getSpouses() != null) {
+			person.setSpouses(person.getSpouses().stream()
+					.filter(r -> r.getSpouse() != null && familyTreeId.equals(r.getSpouse().getFamilyTreeId()))
+					.toList());
+		}
+		if (person.getSiblings() != null) {
+			person.setSiblings(person.getSiblings().stream()
+					.filter(r -> r.getSibling() != null && familyTreeId.equals(r.getSibling().getFamilyTreeId()))
+					.toList());
+		}
+		return person;
 	}
 
 	public List<Person> findAncestors(String uuid, Long familyTreeId, int depth) {

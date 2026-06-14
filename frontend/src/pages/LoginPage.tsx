@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { saveAuthSession, authLogin } from '../auth/session';
+import client from '../graphql/client';
 import AuthShell from '../components/auth/AuthShell';
 import formStyles from '../components/auth/AuthForm.module.css';
 
@@ -20,6 +21,7 @@ const LoginPage = () => {
     try {
       const data = await authLogin(email, password);
       saveAuthSession({ token: data.token, email: data.email });
+      await client.clearStore();
       navigate('/tree', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not connect to server.');

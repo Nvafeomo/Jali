@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import FamilyTree from '../components/tree/FamilyTree';
 import EditableTreeName from '../components/tree/EditableTreeName';
 import PersonDrawer from '../components/profile/PersonDrawer';
@@ -32,6 +33,8 @@ const EmptyTreeGraphic = () => (
 );
 
 const TreePage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [linkPick, setLinkPick] = useState<LinkPickState | null>(null);
@@ -39,6 +42,22 @@ const TreePage = () => {
   const { email, isAuthenticated, logout } = useAuth();
   const { treeName, updateTreeName, canEdit: canEditTreeName } = useFamilyTree();
   const { people, loading, error } = useMyTree();
+
+  const isEmptyTree = !loading && !error && people.length === 0;
+  const isFirstPersonFlow = isEmptyTree;
+
+  useEffect(() => {
+    if (location.state?.onboarding === true) {
+      setShowAddPanel(true);
+      navigate('/tree', { replace: true, state: null });
+    }
+  }, [location.state, navigate]);
+
+  useEffect(() => {
+    if (isEmptyTree) {
+      setShowAddPanel(true);
+    }
+  }, [isEmptyTree]);
 
   const lookup = useMemo(() => peopleById(people), [people]);
   const treePartition = useMemo(() => partitionTreeMembers(people), [people]);
@@ -194,10 +213,14 @@ const TreePage = () => {
             <div className={`${styles.centered} ${styles.errorState}`}>
               <p className={styles.errorTitle}>Could not load tree</p>
               <p className={styles.errorDetail}>{error.message}</p>
+              <p className={styles.errorHint}>
+                If this persists, the family database may be unavailable — try again in a
+                minute or contact support.
+              </p>
             </div>
           )}
 
-          {!loading && !error && people.length === 0 && (
+          {isEmptyTree && (
             <div className={styles.centered}>
               <div className={styles.emptyState}>
                 <EmptyTreeGraphic />
@@ -228,8 +251,13 @@ const TreePage = () => {
           <aside className={styles.drawer}>
             <AddPersonPanel
               treeHasMembers={people.length > 0}
-              onClose={() => setShowAddPanel(false)}
-              onCreated={() => setShowAddPanel(false)}
+              isFirstPerson={isFirstPersonFlow}
+              onClose={() => {
+                if (!isFirstPersonFlow) setShowAddPanel(false);
+              }}
+              onCreated={() => {
+                if (!isFirstPersonFlow) setShowAddPanel(false);
+              }}
             />
           </aside>
         )}

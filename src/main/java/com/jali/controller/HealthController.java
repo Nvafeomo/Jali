@@ -7,6 +7,8 @@ import javax.sql.DataSource;
 
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.SessionConfig;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,10 +19,15 @@ public class HealthController {
 
 	private final DataSource dataSource;
 	private final Driver neo4jDriver;
+	private final String neo4jDatabase;
 
-	public HealthController(DataSource dataSource, Driver neo4jDriver) {
+	public HealthController(
+			DataSource dataSource,
+			Driver neo4jDriver,
+			@Value("${spring.neo4j.database:neo4j}") String neo4jDatabase) {
 		this.dataSource = dataSource;
 		this.neo4jDriver = neo4jDriver;
+		this.neo4jDatabase = neo4jDatabase;
 	}
 
 	@GetMapping("/health/live")
@@ -57,7 +64,7 @@ public class HealthController {
 	}
 
 	private boolean checkNeo4j() {
-		try (Session session = neo4jDriver.session()) {
+		try (Session session = neo4jDriver.session(SessionConfig.forDatabase(neo4jDatabase))) {
 			session.run("RETURN 1").consume();
 			return true;
 		}

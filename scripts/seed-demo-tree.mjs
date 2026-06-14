@@ -7,11 +7,11 @@
  *   API_URL=https://jali-api.onrender.com node scripts/seed-demo-tree.mjs
  *   DEMO_EMAIL=demo@jali.app DEMO_PASSWORD=DemoTree2026! API_URL=https://jali-api.onrender.com node scripts/seed-demo-tree.mjs
  *
- * Registers (or logs in if the email exists), creates ~35 people with bios,
+ * Registers (or logs in if the email exists), creates 100 people with bios,
  * links relationships, and renames the tree.
  */
 
-import { DEMO_TREE_NAME, PEOPLE, RELATIONSHIPS } from './demo-tree-data.mjs';
+import { DEMO_TREE_NAME, DEMO_PERSON_COUNT, PEOPLE, RELATIONSHIPS } from './demo-tree-data.mjs';
 
 const API_URL = (process.env.API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const DEMO_EMAIL = process.env.DEMO_EMAIL ?? 'demo@jali.app';
@@ -142,13 +142,17 @@ async function main() {
   const token = await auth();
 
   const existing = await treeHasPeople(token);
-  if (existing >= PEOPLE.length) {
-    console.log(`Tree already has ${existing} people — looks fully seeded. Skipping.`);
+  if (existing >= DEMO_PERSON_COUNT) {
+    console.log(`Tree already has ${existing} people (target ${DEMO_PERSON_COUNT}) — skipping.`);
     console.log(`Login: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
     return;
   }
   if (existing > 0) {
-    console.log(`Tree has ${existing} existing people — adding demo family anyway…`);
+    console.error(
+      `Tree has ${existing} people but this script seeds ${DEMO_PERSON_COUNT} on a fresh account.`,
+    );
+    console.error('Use a new DEMO_EMAIL or delete the existing tree before re-seeding.');
+    process.exit(1);
   }
 
   console.log(`Creating ${PEOPLE.length} people…`);
@@ -191,7 +195,7 @@ async function main() {
   console.log('\nDemo tree ready.');
   console.log(`  Email:    ${DEMO_EMAIL}`);
   console.log(`  Password: ${DEMO_PASSWORD}`);
-  console.log(`  People:   ${PEOPLE.length}`);
+  console.log(`  People:   ${DEMO_PERSON_COUNT}`);
   console.log(`  Tree:     ${DEMO_TREE_NAME}`);
 }
 

@@ -255,6 +255,14 @@
   line-height: 1.45;
 }
 
+.errorHint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--jali-text-muted);
+  max-width: 360px;
+  line-height: 1.45;
+}
+
 .hint {
   font-size: 0.85rem;
   color: var(--jali-text-subtle);

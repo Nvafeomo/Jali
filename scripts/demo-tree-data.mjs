@@ -1,8 +1,11 @@
-/** Demo Kouyaté family — 4 generations, ~40 people, Mandinka / West African diaspora. */
+/** Demo Kouyaté family — 5 generations, 100 people, Mandinka / West African diaspora. */
+
+import { buildExpansion } from './demo-tree-expansion.mjs';
 
 export const DEMO_TREE_NAME = 'Kouyaté Family Tree';
+export const DEMO_PERSON_COUNT = 100;
 
-export const PEOPLE = [
+const CORE_PEOPLE = [
   // —— Generation 0 ——
   {
     key: 'musa_g0',
@@ -303,7 +306,7 @@ export const PEOPLE = [
 ];
 
 /** from → to, relationshipType, optional parentRole */
-export const RELATIONSHIPS = [
+const CORE_RELATIONSHIPS = [
   // Gen 0 parents
   { from: 'musa_g0', to: 'ibrahim_g1', type: 'PARENT_OF', parentRole: 'FATHER' },
   { from: 'fatoumata_g0', to: 'ibrahim_g1', type: 'PARENT_OF', parentRole: 'MOTHER' },
@@ -370,3 +373,12 @@ export const RELATIONSHIPS = [
   { from: 'mamadou_b_g3', to: 'sira_g4', type: 'PARENT_OF', parentRole: 'FATHER' },
   { from: 'kadiatou_g4', to: 'sira_g4', type: 'PARENT_OF', parentRole: 'MOTHER' },
 ];
+
+const { people: expansionPeople, rels: expansionRels } = buildExpansion(CORE_PEOPLE.length);
+
+export const PEOPLE = [...CORE_PEOPLE, ...expansionPeople];
+export const RELATIONSHIPS = [...CORE_RELATIONSHIPS, ...expansionRels];
+
+if (PEOPLE.length !== DEMO_PERSON_COUNT) {
+  throw new Error(`Demo tree must have ${DEMO_PERSON_COUNT} people, got ${PEOPLE.length}`);
+}

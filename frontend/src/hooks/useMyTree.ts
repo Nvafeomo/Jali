@@ -152,11 +152,12 @@ function mapToPersons(rawList: RawPerson[]): Person[] {
 
 export function useMyTree() {
   const { data, loading, error, refetch } = useQuery<{ myTree: RawPerson[] }>(MY_TREE_QUERY, {
-    errorPolicy: 'all',
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'network-only',
+    notifyOnNetworkStatusChange: true,
   });
 
-  const people: Person[] = data?.myTree ? mapToPersons(data.myTree) : [];
+  // Never show cached tree data from a previous session when the fetch failed.
+  const people: Person[] = !error && data?.myTree ? mapToPersons(data.myTree) : [];
 
   return {
     people,

@@ -17,9 +17,16 @@ interface Props {
   onCreated: () => void;
   /** When the tree already has members, new people land in Unlinked until linked. */
   treeHasMembers?: boolean;
+  /** First person in an empty tree — placed on the canvas immediately. */
+  isFirstPerson?: boolean;
 }
 
-const AddPersonPanel = ({ onClose, onCreated, treeHasMembers = false }: Props) => {
+const AddPersonPanel = ({
+  onClose,
+  onCreated,
+  treeHasMembers = false,
+  isFirstPerson = false,
+}: Props) => {
   const [fullName, setFullName] = useState('');
   const [birthMode, setBirthMode] = useState<BirthMode>('unknown');
   const [birthYear, setBirthYear] = useState('');
@@ -71,16 +78,28 @@ const AddPersonPanel = ({ onClose, onCreated, treeHasMembers = false }: Props) =
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Add person</h2>
-        <button className={styles.close} onClick={onClose} aria-label="Close">✕</button>
+        <h2 className={styles.title}>
+          {isFirstPerson ? 'Add your first family member' : 'Add person'}
+        </h2>
+        {!isFirstPerson && (
+          <button className={styles.close} onClick={onClose} aria-label="Close">✕</button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
-        {treeHasMembers && (
+        {isFirstPerson ? (
           <p className={styles.unlinkedHint}>
-            New people appear in the <strong>Unlinked</strong> panel until you connect
-            them to someone on the tree.
+            This person becomes the anchor of your tree and appears on the canvas right
+            away. Everyone you add after this starts in <strong>Unlinked</strong> until
+            you connect them.
           </p>
+        ) : (
+          treeHasMembers && (
+            <p className={styles.unlinkedHint}>
+              New people appear in the <strong>Unlinked</strong> panel until you connect
+              them to someone on the tree.
+            </p>
+          )
         )}
 
         <label className={styles.label}>
@@ -160,7 +179,7 @@ const AddPersonPanel = ({ onClose, onCreated, treeHasMembers = false }: Props) =
             Cancel
           </button>
           <button type="submit" className={styles.submit} disabled={loading}>
-            {loading ? 'Adding…' : 'Add person'}
+            {loading ? 'Adding…' : isFirstPerson ? 'Start my tree' : 'Add person'}
           </button>
         </div>
       </form>
