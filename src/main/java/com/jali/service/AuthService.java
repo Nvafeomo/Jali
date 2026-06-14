@@ -39,6 +39,10 @@ public class AuthService {
 
 	@Transactional
 	public AuthResponse register(RegisterRequest request) {
+		if (!request.termsAccepted()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You must accept the Terms of Service to register.");
+		}
+
 		String email = normalizeEmail(request.email());
 		if (userRepository.existsByEmail(email)) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
@@ -48,6 +52,7 @@ public class AuthService {
 				email,
 				passwordEncoder.encode(request.password()),
 				Role.USER);
+		user.setTermsAcceptedAt(Instant.now());
 		user = userRepository.save(user);
 
 		FamilyTree familyTree = familyTreeRepository.save(

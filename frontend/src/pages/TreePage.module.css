@@ -280,3 +280,24 @@
     display: none;
   }
 }
+
+.legalFooter {
+  position: fixed;
+  bottom: 0.6rem;
+  right: 1rem;
+  font-size: 0.72rem;
+  color: var(--jali-text-subtle);
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.legalFooter a {
+  color: var(--jali-text-subtle);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.legalFooter a:hover {
+  color: var(--jali-text-muted);
+  text-decoration: underline;
+}

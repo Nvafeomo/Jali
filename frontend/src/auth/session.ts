@@ -110,10 +110,10 @@ export async function authLogin(email: string, password: string): Promise<AuthRe
   );
 }
 
-export async function authRegister(email: string, password: string): Promise<AuthResponse> {
+export async function authRegister(email: string, password: string, termsAccepted: boolean): Promise<AuthResponse> {
   return authRequest(
     '/auth/register',
-    { email: email.trim().toLowerCase(), password },
+    { email: email.trim().toLowerCase(), password, termsAccepted },
     'Could not create account. Try again.',
   );
 }

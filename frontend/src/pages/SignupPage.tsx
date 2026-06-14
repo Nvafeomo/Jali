@@ -4,12 +4,16 @@ import { saveAuthSession, authRegister } from '../auth/session';
 import AuthShell from '../components/auth/AuthShell';
 import formStyles from '../components/auth/AuthForm.module.css';
 
+const TOS_URL = 'https://nvafeomo.github.io/Jali/tos/';
+const PP_URL = 'https://nvafeomo.github.io/Jali/privacy-policy/';
+
 const SignupPage = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +33,7 @@ const SignupPage = () => {
     setError(null);
 
     try {
-      const data = await authRegister(email, password);
+      const data = await authRegister(email, password, termsAccepted);
       saveAuthSession({ token: data.token, email: data.email });
       navigate('/tree', { replace: true });
     } catch (err) {
@@ -85,9 +89,27 @@ const SignupPage = () => {
           />
         </label>
 
+        <label className={formStyles.tosRow}>
+          <input
+            type="checkbox"
+            className={formStyles.checkbox}
+            checked={termsAccepted}
+            onChange={e => setTermsAccepted(e.target.checked)}
+            required
+          />
+          I agree to the{' '}
+          <a href={TOS_URL} target="_blank" rel="noopener noreferrer">
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a href={PP_URL} target="_blank" rel="noopener noreferrer">
+            Privacy Policy
+          </a>
+        </label>
+
         {error && <p className={formStyles.error}>{error}</p>}
 
-        <button type="submit" className={formStyles.button} disabled={loading}>
+        <button type="submit" className={formStyles.button} disabled={loading || !termsAccepted}>
           {loading ? 'Creating account…' : 'Create account'}
         </button>
       </form>

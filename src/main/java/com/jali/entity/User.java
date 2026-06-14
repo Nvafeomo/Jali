@@ -39,6 +39,9 @@ public class User {
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
+	@Column(name = "terms_accepted_at")
+	private Instant termsAcceptedAt;
+
 	@PrePersist
 	void onCreate() {
 		if (createdAt == null) {

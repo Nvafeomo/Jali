@@ -255,6 +255,16 @@ const TreePage = () => {
           </aside>
         )}
       </div>
+
+      <footer className={styles.legalFooter}>
+        <a href="https://nvafeomo.github.io/Jali/tos/" target="_blank" rel="noopener noreferrer">
+          Terms of Service
+        </a>
+        {' · '}
+        <a href="https://nvafeomo.github.io/Jali/privacy-policy/" target="_blank" rel="noopener noreferrer">
+          Privacy Policy
+        </a>
+      </footer>
     </div>
   );
 };

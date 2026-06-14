@@ -122,3 +122,18 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+.legal {
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--jali-text-subtle);
+}
+
+.legal a {
+  color: var(--jali-text-subtle);
+  font-weight: 400;
+}
+
+.legal a:hover {
+  color: var(--jali-text-muted);
+}
